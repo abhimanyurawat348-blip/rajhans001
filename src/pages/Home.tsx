@@ -1,10 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { School, Users, FileText, BookOpen, ArrowRight } from 'lucide-react';
+import { School, Users, FileText, BookOpen, ArrowRight, Calendar, CalendarDays, UserPlus } from 'lucide-react';
 
 const Home: React.FC = () => {
   const features = [
+    {
+      icon: <Calendar className="h-8 w-8" />,
+      title: 'Yearly Planner',
+      description: 'View academic year overview and important events',
+      link: '/yearly-planner',
+      color: 'bg-indigo-500'
+    },
+    {
+      icon: <CalendarDays className="h-8 w-8" />,
+      title: 'Monthly Planner',
+      description: 'Interactive calendar with monthly activities',
+      link: '/monthly-planner',
+      color: 'bg-teal-500'
+    },
+    {
+      icon: <UserPlus className="h-8 w-8" />,
+      title: 'Registration',
+      description: 'Register for sports teams and activities',
+      link: '/registration',
+      color: 'bg-rose-500'
+    },
     {
       icon: <Users className="h-8 w-8" />,
       title: 'Student Council',
@@ -111,6 +132,7 @@ const Home: React.FC = () => {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}

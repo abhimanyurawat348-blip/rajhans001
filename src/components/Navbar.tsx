@@ -13,6 +13,9 @@ const Navbar: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Home' },
     { path: '/login', label: 'Login' },
+    { path: '/yearly-planner', label: 'Yearly Planner' },
+    { path: '/monthly-planner', label: 'Monthly Planner' },
+    { path: '/registration', label: 'Registration' },
     { path: '/complaints', label: 'Complaints' },
     { path: '/rules', label: 'Rule Book' },
     { path: '/student-council', label: 'Student Council' },
