@@ -1,1 +1,11 @@
-{"code":"rate-limited","message":"You have hit the rate limit. Please upgrade to keep chatting.","providerLimitHit":false,"isRetryable":true}
+import React from "react";
+
+const Login: React.FC = () => {
+  return (
+    <div>
+      <h1>Login Page</h1>
+    </div>
+  );
+};
+
+export default Login;
