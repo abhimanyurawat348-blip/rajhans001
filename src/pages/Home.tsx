@@ -60,7 +60,7 @@ const Home: React.FC = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-5xl md:text-6xl font-bold text-gray-900 mb-6"
           >
-            Rajhans Public School
+            RHPS Public School
           </motion.h1>
           
           <motion.p 

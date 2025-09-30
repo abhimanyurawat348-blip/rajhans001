@@ -14,11 +14,10 @@ const Complaints: React.FC = () => {
 
   const [formData, setFormData] = useState({
     studentName: user?.name || '',
-    admissionNumber: user?.admissionNumber || '',
     class: user?.class || '',
     section: user?.section || '',
-    fatherName: '',
     email: user?.email || '',
+    fatherName: '',
     complaint: ''
   });
 
@@ -135,14 +134,14 @@ const Complaints: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="admissionNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Admission Number *
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address *
                 </label>
                 <input
-                  type="text"
-                  id="admissionNumber"
-                  name="admissionNumber"
-                  value={formData.admissionNumber}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
@@ -186,7 +185,7 @@ const Complaints: React.FC = () => {
 
             <div>
               <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-2">
-                Father's Name *
+                Father's Name (Optional)
               </label>
               <input
                 type="text"
@@ -195,22 +194,6 @@ const Complaints: React.FC = () => {
                 value={formData.fatherName}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Registered Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
 

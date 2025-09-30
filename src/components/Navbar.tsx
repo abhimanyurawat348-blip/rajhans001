@@ -17,9 +17,10 @@ const Navbar: React.FC = () => {
     { path: '/monthly-planner', label: 'Monthly Planner' },
     { path: '/registration', label: 'Registration' },
     { path: '/complaints', label: 'Complaints' },
+    { path: '/study-resources', label: 'Study Resources' },
     { path: '/rules', label: 'Rule Book' },
     { path: '/student-council', label: 'Student Council' },
-    ...(user?.role === 'teacher' ? [{ path: '/staff-portal', label: 'Staff Portal' }] : [])
+    { path: '/staff-portal', label: 'Staff Portal' }
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -32,7 +33,7 @@ const Navbar: React.FC = () => {
           <Link to="/" className="flex items-center space-x-2">
             <School className="h-8 w-8 text-blue-600" />
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-gray-900">Rajhans Public School</span>
+              <span className="font-bold text-lg text-gray-900">RHPS Public School</span>
               <span className="text-xs text-gray-500">Miyanwala, Dehradun</span>
             </div>
           </Link>

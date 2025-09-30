@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { Complaint } from '../types';
 
 interface ComplaintContextType {
   complaints: Complaint[];
-  submitComplaint: (complaint: Omit<Complaint, 'id' | 'submittedAt' | 'status'>) => Promise<boolean>;
+  submitComplaint: (complaint: Omit<Complaint, 'id' | 'submittedAt' | 'status' | 'ipAddress'>) => Promise<boolean>;
   updateComplaintStatus: (id: string, status: Complaint['status']) => void;
+  deleteComplaint: (id: string) => Promise<boolean>;
+  loadComplaints: () => Promise<void>;
 }
 
 const ComplaintContext = createContext<ComplaintContextType | undefined>(undefined);
@@ -20,20 +24,53 @@ export const useComplaints = () => {
 export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [complaints, setComplaints] = useState<Complaint[]>([]);
 
-  const submitComplaint = async (complaintData: Omit<Complaint, 'id' | 'submittedAt' | 'status'>): Promise<boolean> => {
+  const getClientIP = async (): Promise<string> => {
     try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      return 'Unknown';
+    }
+  };
+
+  const loadComplaints = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'complaints'));
+      const loadedComplaints: Complaint[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedComplaints.push({
+          id: doc.id,
+          ...data,
+          submittedAt: data.submittedAt.toDate()
+        } as Complaint);
+      });
+      
+      setComplaints(loadedComplaints);
+    } catch (error) {
+      console.error('Error loading complaints:', error);
+    }
+  };
+
+  const submitComplaint = async (complaintData: Omit<Complaint, 'id' | 'submittedAt' | 'status' | 'ipAddress'>): Promise<boolean> => {
+    try {
+      const ipAddress = await getClientIP();
+      
       const newComplaint: Complaint = {
         ...complaintData,
-        id: Date.now().toString(),
+        id: '', // Firestore will generate this
         submittedAt: new Date(),
-        status: 'pending'
+        status: 'pending',
+        ipAddress
       };
 
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, 'complaints'), newComplaint);
+      newComplaint.id = docRef.id;
+      
       setComplaints(prev => [...prev, newComplaint]);
-      
-      // Mock email sending
-      console.log('Complaint submitted and email sent to school administration:', newComplaint);
-      
       return true;
     } catch (error) {
       console.error('Error submitting complaint:', error);
@@ -41,19 +78,37 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const updateComplaintStatus = (id: string, status: Complaint['status']) => {
-    setComplaints(prev =>
-      prev.map(complaint =>
-        complaint.id === id ? { ...complaint, status } : complaint
-      )
-    );
+  const updateComplaintStatus = async (id: string, status: Complaint['status']) => {
+    try {
+      await updateDoc(doc(db, 'complaints', id), { status });
+      setComplaints(prev =>
+        prev.map(complaint =>
+          complaint.id === id ? { ...complaint, status } : complaint
+        )
+      );
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+    }
+  };
+
+  const deleteComplaint = async (id: string): Promise<boolean> => {
+    try {
+      await deleteDoc(doc(db, 'complaints', id));
+      setComplaints(prev => prev.filter(complaint => complaint.id !== id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting complaint:', error);
+      return false;
+    }
   };
 
   return (
     <ComplaintContext.Provider value={{
       complaints,
       submitComplaint,
-      updateComplaintStatus
+      updateComplaintStatus,
+      deleteComplaint,
+      loadComplaints
     }}>
       {children}
     </ComplaintContext.Provider>

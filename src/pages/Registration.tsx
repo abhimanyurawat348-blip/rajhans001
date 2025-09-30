@@ -83,15 +83,19 @@ const Registration: React.FC = () => {
     setError('');
 
     try {
-      const success = await submitRegistration({
+      const result = await submitRegistration({
         ...formData,
         dateOfBirth: new Date(formData.dateOfBirth),
         category: selectedCategory!,
         activityType: selectedActivity
       });
 
-      if (success) {
+      if (result.success) {
         setCurrentStep('success');
+        if (result.message) {
+          // Store the motivational message to display
+          sessionStorage.setItem('motivationalMessage', result.message);
+        }
       } else {
         setError('Registration failed. Please try again.');
       }
@@ -125,6 +129,8 @@ const Registration: React.FC = () => {
   };
 
   if (currentStep === 'success') {
+    const motivationalMessage = sessionStorage.getItem('motivationalMessage');
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
         <motion.div
@@ -134,6 +140,13 @@ const Registration: React.FC = () => {
         >
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Registration Successful!</h2>
+          
+          {motivationalMessage && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-blue-800 font-medium">{motivationalMessage}</p>
+            </div>
+          )}
+          
           <p className="text-gray-600 mb-6">
             You have been successfully registered for <strong>{getActivityName(selectedActivity)}</strong>.
             {formData.dateOfBirth && (
@@ -143,7 +156,10 @@ const Registration: React.FC = () => {
             )}
           </p>
           <button
-            onClick={resetForm}
+            onClick={() => {
+              sessionStorage.removeItem('motivationalMessage');
+              resetForm();
+            }}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold"
           >
             Register for Another Activity

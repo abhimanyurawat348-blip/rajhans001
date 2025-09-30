@@ -11,14 +11,14 @@ export interface User {
 export interface Complaint {
   id: string;
   studentName: string;
-  admissionNumber: string;
   class: string;
   section: string;
-  fatherName: string;
   email: string;
+  fatherName?: string;
   complaint: string;
+  ipAddress?: string;
   submittedAt: Date;
-  status: 'pending' | 'resolved' | 'in-progress';
+  status: 'pending' | 'resolved' | 'under-consideration' | 'removed';
 }
 
 export interface StudentCouncilMember {
@@ -51,4 +51,23 @@ export interface Registration {
   activityType: string;
   eligibilityCategory: 'Under 14' | 'Under 16' | 'Under 18';
   registeredAt: Date;
+  status?: 'pending' | 'approved' | 'under-consideration' | 'removed';
+}
+
+export interface LoginRecord {
+  id: string;
+  email: string;
+  ipAddress: string;
+  loginTime: Date;
+  otpVerified: boolean;
+}
+
+export interface StudyResource {
+  id: string;
+  title: string;
+  subject: string;
+  class: string;
+  type: 'previous-year' | 'sample-paper';
+  downloadUrl: string;
+  year?: string;
 }

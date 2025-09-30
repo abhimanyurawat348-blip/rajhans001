@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { generateMotivationalMessage } from '../config/gemini';
 import { Registration } from '../types';
 
 interface RegistrationContextType {
   registrations: Registration[];
-  submitRegistration: (registration: Omit<Registration, 'id' | 'registeredAt' | 'eligibilityCategory'>) => Promise<boolean>;
+  submitRegistration: (registration: Omit<Registration, 'id' | 'registeredAt' | 'eligibilityCategory' | 'status'>) => Promise<{ success: boolean; message?: string }>;
   getRegistrationsByActivity: (activityType: string) => Registration[];
+  updateRegistrationStatus: (id: string, status: Registration['status']) => Promise<void>;
+  deleteRegistration: (id: string) => Promise<boolean>;
+  loadRegistrations: () => Promise<void>;
 }
 
 const RegistrationContext = createContext<RegistrationContextType | undefined>(undefined);
@@ -34,20 +40,54 @@ const calculateEligibilityCategory = (dateOfBirth: Date): 'Under 14' | 'Under 16
 export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
 
-  const submitRegistration = async (registrationData: Omit<Registration, 'id' | 'registeredAt' | 'eligibilityCategory'>): Promise<boolean> => {
+  const loadRegistrations = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'registrations'));
+      const loadedRegistrations: Registration[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedRegistrations.push({
+          id: doc.id,
+          ...data,
+          dateOfBirth: data.dateOfBirth.toDate(),
+          registeredAt: data.registeredAt.toDate()
+        } as Registration);
+      });
+      
+      setRegistrations(loadedRegistrations);
+    } catch (error) {
+      console.error('Error loading registrations:', error);
+    }
+  };
+
+  const submitRegistration = async (registrationData: Omit<Registration, 'id' | 'registeredAt' | 'eligibilityCategory' | 'status'>): Promise<{ success: boolean; message?: string }> => {
     try {
       const newRegistration: Registration = {
         ...registrationData,
-        id: Date.now().toString(),
+        id: '', // Firestore will generate this
         registeredAt: new Date(),
-        eligibilityCategory: calculateEligibilityCategory(registrationData.dateOfBirth)
+        eligibilityCategory: calculateEligibilityCategory(registrationData.dateOfBirth),
+        status: 'pending'
       };
 
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, 'registrations'), newRegistration);
+      newRegistration.id = docRef.id;
+      
       setRegistrations(prev => [...prev, newRegistration]);
-      return true;
+      
+      // Generate motivational message using Gemini
+      const motivationalMessage = await generateMotivationalMessage(
+        registrationData.studentName,
+        registrationData.activityType,
+        newRegistration.eligibilityCategory
+      );
+      
+      return { success: true, message: motivationalMessage };
     } catch (error) {
       console.error('Error submitting registration:', error);
-      return false;
+      return { success: false };
     }
   };
 
@@ -55,11 +95,38 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return registrations.filter(reg => reg.activityType === activityType);
   };
 
+  const updateRegistrationStatus = async (id: string, status: Registration['status']) => {
+    try {
+      await updateDoc(doc(db, 'registrations', id), { status });
+      setRegistrations(prev =>
+        prev.map(reg =>
+          reg.id === id ? { ...reg, status } : reg
+        )
+      );
+    } catch (error) {
+      console.error('Error updating registration status:', error);
+    }
+  };
+
+  const deleteRegistration = async (id: string): Promise<boolean> => {
+    try {
+      await deleteDoc(doc(db, 'registrations', id));
+      setRegistrations(prev => prev.filter(reg => reg.id !== id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting registration:', error);
+      return false;
+    }
+  };
+
   return (
     <RegistrationContext.Provider value={{
       registrations,
       submitRegistration,
-      getRegistrationsByActivity
+      getRegistrationsByActivity,
+      updateRegistrationStatus,
+      deleteRegistration,
+      loadRegistrations
     }}>
       {children}
     </RegistrationContext.Provider>
