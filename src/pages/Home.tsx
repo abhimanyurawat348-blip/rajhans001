@@ -28,6 +28,13 @@ const Home: React.FC = () => {
     },
     {
       icon: <BookOpen className="h-8 w-8" />,
+      title: 'Study Resources',
+      description: 'Download previous year papers and sample papers',
+      link: '/study-resources',
+      color: 'bg-orange-500'
+    },
+    {
+      icon: <BookOpen className="h-8 w-8" />,
       title: 'School Rules',
       description: 'Guidelines for a better learning environment',
       link: '/rules',

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { User, Mail, KeyRound, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Mail, KeyRound, ArrowRight, AlertCircle, BookOpen } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, verifyOTP, isAuthenticated, otpSent, pendingAuth } = useAuth();
@@ -107,114 +108,146 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
-      >
-        <div className="text-center mb-8">
-          <User className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to access your school portal</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          {/* Role Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              I am a:
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <motion.button
-                type="button"
-                onClick={() => setRole('student')}
-                whileTap={{ scale: 0.95 }}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                  role === 'student'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-center">
-                  <User className="h-8 w-8 mx-auto mb-2" />
-                  <span className="font-medium">Student</span>
-                </div>
-              </motion.button>
-              
-              <motion.button
-                type="button"
-                onClick={() => setRole('teacher')}
-                whileTap={{ scale: 0.95 }}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                  role === 'teacher'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-center">
-                  <User className="h-8 w-8 mx-auto mb-2" />
-                  <span className="font-medium">Teacher</span>
-                </div>
-              </motion.button>
-            </div>
+      <div className="flex flex-col items-center justify-center gap-8 w-full max-w-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl shadow-2xl p-8 w-full"
+        >
+          <div className="text-center mb-8">
+            <User className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+            <p className="text-gray-600 mt-2">Sign in to access your school portal</p>
           </div>
 
-          {/* Email Input */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              School Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder={role === 'student' ? 'student@gmail.com' : 'teacher@rhpsschool.edu.in'}
-                required
-              />
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Role Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                I am a:
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <motion.button
+                  type="button"
+                  onClick={() => setRole('student')}
+                  whileTap={{ scale: 0.95 }}
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                    role === 'student'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <User className="h-8 w-8 mx-auto mb-2" />
+                    <span className="font-medium">Student</span>
+                  </div>
+                </motion.button>
+                
+                <motion.button
+                  type="button"
+                  onClick={() => setRole('teacher')}
+                  whileTap={{ scale: 0.95 }}
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                    role === 'teacher'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="text-center">
+                    <User className="h-8 w-8 mx-auto mb-2" />
+                    <span className="font-medium">Teacher</span>
+                  </div>
+                </motion.button>
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-1">
-              {role === 'student' 
-                ? 'Use your registered Gmail address' 
-                : 'Use your official school email address'
-              }
-            </p>
-          </div>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg"
+            {/* Email Input */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                School Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={role === 'student' ? 'student@gmail.com' : 'teacher@rhpsschool.edu.in'}
+                  required
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                {role === 'student' 
+                  ? 'Use your registered Gmail address' 
+                  : 'Use your official school email address'
+                }
+              </p>
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg"
+              >
+                <AlertCircle className="h-5 w-5" />
+                <span className="text-sm">{error}</span>
+              </motion.div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2"
             >
-              <AlertCircle className="h-5 w-5" />
-              <span className="text-sm">{error}</span>
-            </motion.div>
-          )}
+              {loading ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  <span>Send OTP</span>
+                  <ArrowRight className="h-5 w-5" />
+                </>
+              )}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2"
-          >
-            {loading ? (
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-            ) : (
-              <>
-                <span>Send OTP</span>
-                <ArrowRight className="h-5 w-5" />
-              </>
+          <div className="mt-6 text-center text-sm text-gray-600">
+            <p>Need help? Contact school administration</p>
+          </div>
+        </motion.div>
+
+        {/* Study Resources Flashcard */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ y: -5, scale: 1.02 }}
+          className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 w-full"
+        >
+          <Link to="/study-resources" className="block text-center">
+            <div className="bg-orange-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Explore Study Resources</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Access previous year papers & sample papers for CBSE Class 10 & 12
+            </p>
+            <div className="inline-flex items-center text-orange-600 font-medium hover:text-orange-700 transition-colors duration-200">
+              <span>Browse Resources</span>
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </div>
+          </Link>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
             )}
           </button>
-        </form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Need help? Contact school administration</p>
-        </div>
-      </motion.div>
     </div>
   );
 };
