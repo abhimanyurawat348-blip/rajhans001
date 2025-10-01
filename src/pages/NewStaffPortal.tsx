@@ -22,7 +22,15 @@ interface Notification {
   type: 'student_login' | 'new_registration' | 'new_complaint';
   timestamp: number;
   read: boolean;
-  [key: string]: unknown;
+  // Explicit fields used by UI
+  email?: string;
+  deviceName?: string;
+  ipAddress?: string;
+  studentName?: string;
+  activityType?: string;
+  class?: string;
+  section?: string;
+  category?: string;
 }
 
 interface Meeting {
@@ -79,6 +87,14 @@ interface LoginRecordDoc {
   ipAddress?: string;
   deviceName?: string;
   timestamp?: number;
+}
+
+// Helpers to safely convert Firestore-like timestamps to milliseconds
+function toMillis(input?: Date | { seconds?: number }): number {
+  if (!input) return Date.now();
+  if (input instanceof Date) return input.getTime();
+  const seconds = (input as { seconds?: number }).seconds;
+  return typeof seconds === 'number' ? seconds * 1000 : Date.now();
 }
 
 const NewStaffPortal: React.FC = () => {
@@ -532,7 +548,7 @@ const NewStaffPortal: React.FC = () => {
                             {record.deviceName} • IP: {record.ipAddress}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            {new Date(record.timestamp).toLocaleString()}
+                            {new Date(record.timestamp ?? Date.now()).toLocaleString()}
                           </p>
                         </div>
                         <CheckCircle className="h-6 w-6 text-green-500" />
@@ -559,7 +575,7 @@ const NewStaffPortal: React.FC = () => {
                         <p className="font-semibold text-gray-900">{student.username}</p>
                         <p className="text-sm text-gray-600">{student.email}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Joined: {new Date(student.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
+                          Joined: {new Date(toMillis(student.createdAt)).toLocaleDateString()}
                         </p>
                       </div>
                       <Users className="h-6 w-6 text-blue-600" />
@@ -618,7 +634,7 @@ const NewStaffPortal: React.FC = () => {
                         <p className="text-sm text-gray-700 mt-2">{complaint.complaint}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           IP: {complaint.ipAddress || 'Unknown'} •{' '}
-                          {new Date(complaint.submittedAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
+                          {new Date(toMillis(complaint.submittedAt)).toLocaleDateString()}
                         </p>
                       </div>
                       <MessageSquare className="h-6 w-6 text-red-600" />
