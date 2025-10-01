@@ -6,7 +6,6 @@ import { EventProvider } from './contexts/EventContext';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { StudyResourcesProvider } from './contexts/StudyResourcesContext';
 import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Complaints from './pages/Complaints';
@@ -18,6 +17,7 @@ import YearlyPlanner from './pages/YearlyPlanner';
 import MonthlyPlanner from './pages/MonthlyPlanner';
 import Registration from './pages/Registration';
 import StudentDashboard from './pages/StudentDashboard';
+import PlannersRegistrations from './pages/PlannersRegistrations';
 import StudentSignup from './pages/StudentSignup';
 import StudentLogin from './pages/StudentLogin';
 
@@ -40,6 +40,7 @@ function App() {
                     <Route path="/rules" element={<Rules />} />
                     <Route path="/student-council" element={<StudentCouncil />} />
                     <Route path="/yearly-planner" element={<YearlyPlanner />} />
+                    <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                     <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                     <Route path="/registration" element={<Registration />} />
                     <Route path="/staff-portal" element={<NewStaffPortal />} />

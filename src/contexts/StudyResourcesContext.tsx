@@ -127,6 +127,80 @@ const sampleResources: StudyResource[] = [
     downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Biology_SQP.pdf',
     year: '2024'
   }
+  ,
+  // Notes additions
+  {
+    id: 'n-10-math-1',
+    title: 'Class 10 Mathematics Notes - Real Numbers',
+    subject: 'Mathematics',
+    class: '10',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class10/maths/real-numbers.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-10-math-2',
+    title: 'Class 10 Mathematics Notes - Polynomials',
+    subject: 'Mathematics',
+    class: '10',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class10/maths/polynomials.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-12-math-1',
+    title: 'Class 12 Mathematics Notes - Relations & Functions',
+    subject: 'Mathematics',
+    class: '12',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class12/maths/relations-functions.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-9-sci-1',
+    title: 'Class 9 Science Notes - Matter in Our Surroundings',
+    subject: 'Science',
+    class: '9',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class9/science/matter.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-10-sci-1',
+    title: 'Class 10 Science Notes - Chemical Reactions & Equations',
+    subject: 'Science',
+    class: '10',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class10/science/chemical-reactions.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-12-phy-1',
+    title: 'Class 12 Physics Notes - Electrostatics',
+    subject: 'Physics',
+    class: '12',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class12/physics/electrostatics.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-12-chem-1',
+    title: 'Class 12 Chemistry Notes - Solid State',
+    subject: 'Chemistry',
+    class: '12',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class12/chemistry/solid-state.pdf',
+    year: 'Notes'
+  },
+  {
+    id: 'n-12-bio-1',
+    title: 'Class 12 Biology Notes - Reproduction in Organisms',
+    subject: 'Biology',
+    class: '12',
+    type: 'sample-paper',
+    downloadUrl: 'https://example.com/notes/class12/biology/reproduction.pdf',
+    year: 'Notes'
+  }
 ];
 
 export const StudyResourcesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

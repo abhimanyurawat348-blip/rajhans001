@@ -36,7 +36,8 @@ const StudentCouncil: React.FC = () => {
   const blueHouse = studentCouncilMembers.filter(m => m.house === 'Blue');
   const activities = studentCouncilMembers.filter(m => m.category === 'activity');
 
-  const MemberCard: React.FC<{ member: any; index: number }> = ({ member, index }) => (
+  interface Member { name: string; position: string; house?: string; category: string }
+  const MemberCard: React.FC<{ member: Member; index: number }> = ({ member, index }) => (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}

@@ -169,7 +169,7 @@ const StaffPortal: React.FC = () => {
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as any)}
+                onClick={() => setActiveTab(id as 'complaints' | 'registrations' | 'logins')}
                 className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-colors duration-200 ${
                   activeTab === id
                     ? 'bg-white text-blue-600 shadow-sm'

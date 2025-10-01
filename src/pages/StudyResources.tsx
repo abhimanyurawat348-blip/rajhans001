@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
+// import { useAuth } from '../contexts/AuthContext';
 import { useStudyResources } from '../contexts/StudyResourcesContext';
-import { Navigate } from 'react-router-dom';
-import { BookOpen, Download, Filter, Search, FileText, GraduationCap } from 'lucide-react';
+// import { Navigate } from 'react-router-dom';
+import { BookOpen, Download, Search, FileText, GraduationCap } from 'lucide-react';
 
 const StudyResources: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
-  const { resources, getResourcesByClass, downloadResource } = useStudyResources();
+  // const { isAuthenticated, user } = useAuth();
+  const { resources, downloadResource } = useStudyResources();
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!isAuthenticated || user?.role !== 'student') {
-    return <Navigate to="/login" replace />;
-  }
+  // Public access - no login required
 
   const classes = ['10', '12'];
   const subjects = ['Mathematics', 'Science', 'English', 'Social Science', 'Physics', 'Chemistry', 'Biology'];

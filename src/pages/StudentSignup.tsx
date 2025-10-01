@@ -64,12 +64,13 @@ const StudentSignup: React.FC = () => {
       setTimeout(() => {
         navigate('/student-login');
       }, 2000);
-    } catch (err: any) {
-      if (err.code === 'auth/email-already-in-use') {
+    } catch (err: unknown) {
+      const errorObj = err as { code?: string };
+      if (errorObj.code === 'auth/email-already-in-use') {
         setError('This email is already registered. Please login instead.');
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (errorObj.code === 'auth/invalid-email') {
         setError('Invalid email address');
-      } else if (err.code === 'auth/weak-password') {
+      } else if (errorObj.code === 'auth/weak-password') {
         setError('Password is too weak. Please use a stronger password.');
       } else {
         setError('Failed to create account. Please try again.');

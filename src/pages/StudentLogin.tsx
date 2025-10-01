@@ -28,7 +28,7 @@ const StudentLogin: React.FC = () => {
       const response = await fetch('https://api.ipify.org?format=json');
       const data = await response.json();
       return data.ip;
-    } catch (error) {
+    } catch {
       return 'Unknown';
     }
   };
@@ -117,10 +117,11 @@ const StudentLogin: React.FC = () => {
       await logLoginRecord(formData.email, userCredential.user.uid);
 
       navigate('/registration');
-    } catch (err: any) {
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+    } catch (err: unknown) {
+      const errorObj = err as { code?: string };
+      if (errorObj.code === 'auth/invalid-credential' || errorObj.code === 'auth/user-not-found' || errorObj.code === 'auth/wrong-password') {
         setError('Invalid email or password');
-      } else if (err.code === 'auth/too-many-requests') {
+      } else if (errorObj.code === 'auth/too-many-requests') {
         setError('Too many failed attempts. Please try again later.');
       } else {
         setError('Login failed. Please try again.');

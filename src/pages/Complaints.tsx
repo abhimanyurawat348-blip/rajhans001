@@ -1,41 +1,26 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
+// Login not required for complaints
 import { useComplaints } from '../contexts/ComplaintContext';
-import { Navigate } from 'react-router-dom';
 import { FileText, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
 const Complaints: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
   const { submitComplaint } = useComplaints();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    studentName: user?.name || '',
-    class: user?.class || '',
-    section: user?.section || '',
-    email: user?.email || '',
+    studentName: '',
+    class: '',
+    section: '',
+    email: '',
     fatherName: '',
+    motherName: '',
     complaint: ''
   });
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user?.role !== 'student') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-8 text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600">Only students can submit complaints.</p>
-        </div>
-      </div>
-    );
-  }
+  // No access gating
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +34,7 @@ const Complaints: React.FC = () => {
       } else {
         setError('Failed to submit complaint. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -185,7 +170,7 @@ const Complaints: React.FC = () => {
 
             <div>
               <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-2">
-                Father's Name (Optional)
+                Father's Name *
               </label>
               <input
                 type="text"
@@ -194,6 +179,22 @@ const Complaints: React.FC = () => {
                 value={formData.fatherName}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="motherName" className="block text-sm font-medium text-gray-700 mb-2">
+                Mother's Name *
+              </label>
+              <input
+                type="text"
+                id="motherName"
+                name="motherName"
+                value={formData.motherName}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
               />
             </div>
 

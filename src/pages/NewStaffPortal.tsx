@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, updateDoc, doc, deleteDoc, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import {
@@ -10,11 +10,8 @@ import {
   FileText,
   Calendar,
   ClipboardList,
-  Eye,
   Trash2,
   CheckCircle,
-  Clock,
-  AlertTriangle,
   LogOut,
   MessageSquare,
   Monitor
@@ -25,7 +22,7 @@ interface Notification {
   type: 'student_login' | 'new_registration' | 'new_complaint';
   timestamp: number;
   read: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Meeting {
@@ -47,8 +44,45 @@ interface Notice {
   createdBy: string;
 }
 
+interface StudentDoc {
+  id: string;
+  username?: string;
+  email?: string;
+  createdAt?: { seconds?: number } | Date;
+}
+
+interface RegistrationDoc {
+  id: string;
+  studentName?: string;
+  class?: string;
+  section?: string;
+  activityType?: string;
+  eligibilityCategory?: string;
+}
+
+interface ComplaintDoc {
+  id: string;
+  studentName?: string;
+  class?: string;
+  section?: string;
+  email?: string;
+  fatherName?: string;
+  motherName?: string;
+  complaint?: string;
+  ipAddress?: string;
+  submittedAt?: { seconds?: number } | Date;
+}
+
+interface LoginRecordDoc {
+  id: string;
+  email?: string;
+  ipAddress?: string;
+  deviceName?: string;
+  timestamp?: number;
+}
+
 const NewStaffPortal: React.FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [authenticated, setAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,12 +90,12 @@ const NewStaffPortal: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'dashboard' | 'students' | 'registrations' | 'complaints' | 'meetings' | 'notices'>('dashboard');
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [registrations, setRegistrations] = useState<any[]>([]);
-  const [complaints, setComplaints] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentDoc[]>([]);
+  const [registrations, setRegistrations] = useState<RegistrationDoc[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintDoc[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]);
-  const [loginRecords, setLoginRecords] = useState<any[]>([]);
+  const [loginRecords, setLoginRecords] = useState<LoginRecordDoc[]>([]);
 
   const [showMeetingForm, setShowMeetingForm] = useState(false);
   const [showNoticeForm, setShowNoticeForm] = useState(false);
@@ -99,21 +133,21 @@ const NewStaffPortal: React.FC = () => {
       const usersData = usersSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
-      setStudents(usersData.filter((u: any) => u.role === 'student'));
+      })) as StudentDoc[];
+      setStudents(usersData.filter((u) => (u as { role?: string }).role === 'student'));
 
       const registrationsSnap = await getDocs(collection(db, 'registrations'));
       const registrationsData = registrationsSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as RegistrationDoc[];
       setRegistrations(registrationsData);
 
       const complaintsSnap = await getDocs(collection(db, 'complaints'));
       const complaintsData = complaintsSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as ComplaintDoc[];
       setComplaints(complaintsData);
 
       const loginRecordsSnap = await getDocs(
@@ -122,7 +156,7 @@ const NewStaffPortal: React.FC = () => {
       const loginRecordsData = loginRecordsSnap.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as LoginRecordDoc[];
       setLoginRecords(loginRecordsData);
 
       const meetingsSnap = await getDocs(collection(db, 'meetings'));
@@ -343,7 +377,7 @@ const NewStaffPortal: React.FC = () => {
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setActiveSection(id as any)}
+              onClick={() => setActiveSection(id as typeof activeSection)}
               className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-200 ${
                 activeSection === id
                   ? 'bg-blue-600 text-white shadow-lg'
@@ -576,11 +610,14 @@ const NewStaffPortal: React.FC = () => {
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900">{complaint.studentName}</p>
                         <p className="text-sm text-gray-600">
-                          {complaint.category} • Class {complaint.class}-{complaint.section}
+                          Class {complaint.class}-{complaint.section} • Email: {complaint.email}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Father: {complaint.fatherName || 'N/A'} • Mother: {complaint.motherName || 'N/A'}
                         </p>
                         <p className="text-sm text-gray-700 mt-2">{complaint.complaint}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          IP: {complaint.ipAddress} •{' '}
+                          IP: {complaint.ipAddress || 'Unknown'} •{' '}
                           {new Date(complaint.submittedAt?.seconds * 1000 || Date.now()).toLocaleDateString()}
                         </p>
                       </div>
@@ -725,7 +762,7 @@ const NewStaffPortal: React.FC = () => {
                     />
                     <select
                       value={newNotice.priority}
-                      onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value as any })}
+                      onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value as 'low' | 'medium' | 'high' })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     >
                       <option value="low">Low Priority</option>

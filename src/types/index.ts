@@ -15,6 +15,7 @@ export interface Complaint {
   section: string;
   email: string;
   fatherName?: string;
+  motherName?: string;
   complaint: string;
   ipAddress?: string;
   submittedAt: Date;

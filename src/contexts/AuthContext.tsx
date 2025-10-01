@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { 
-  signInWithEmailAndPassword, 
   sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink,
   signOut
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { User } from '../types';
 
@@ -40,7 +39,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await fetch('https://api.ipify.org?format=json');
       const data = await response.json();
       return data.ip;
-    } catch (error) {
+    } catch {
       return 'Unknown';
     }
   };

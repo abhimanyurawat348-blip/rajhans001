@@ -4,7 +4,7 @@ import { useEvents } from '../contexts/EventContext';
 import { CalendarDays, ChevronLeft, ChevronRight, Clock, MapPin, X } from 'lucide-react';
 
 const MonthlyPlanner: React.FC = () => {
-  const { events, getEventsByDate } = useEvents();
+  const { getEventsByDate } = useEvents();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -165,7 +165,7 @@ const MonthlyPlanner: React.FC = () => {
                     
                     {/* Event indicators */}
                     <div className="space-y-1">
-                      {getEventsByDate(date).slice(0, 3).map((event, eventIndex) => (
+                      {getEventsByDate(date).slice(0, 3).map((event) => (
                         <div
                           key={event.id}
                           className={`

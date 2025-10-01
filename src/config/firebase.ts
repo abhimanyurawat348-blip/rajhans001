@@ -1,23 +1,33 @@
 import { initializeApp } from 'firebase/app';
+import { getAnalytics, isSupported as analyticsIsSupported } from 'firebase/analytics';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
-  authDomain: "rajhans001-fa156.firebaseapp.com",
-  projectId: "rajhans001-fa156",
-  storageBucket: "rajhans001-fa156.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "demo-app-id"
+  apiKey: 'AIzaSyB4Lcm36gvIon6hM93f_O4vBFubDe7PB5U',
+  authDomain: 'rajhans001-fa156.firebaseapp.com',
+  projectId: 'rajhans001-fa156',
+  storageBucket: 'rajhans001-fa156.firebasestorage.app',
+  messagingSenderId: '372023550449',
+  appId: '1:372023550449:web:4410d181e6315ed9976450',
+  measurementId: 'G-Y2YY37ET32'
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
+
+export let analytics: ReturnType<typeof getAnalytics> | null = null;
+// Initialize Analytics only when supported and in browser
+(async () => {
+  try {
+    if (typeof window !== 'undefined' && (await analyticsIsSupported())) {
+      analytics = getAnalytics(app);
+    }
+  } catch {
+    analytics = null;
+  }
+})();
 
 export default app;

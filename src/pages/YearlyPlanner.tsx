@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEvents } from '../contexts/EventContext';
-import { Calendar, Clock, MapPin, Plus, Filter, Search } from 'lucide-react';
+import { Calendar, Clock, MapPin, Filter, Search } from 'lucide-react';
 
 const YearlyPlanner: React.FC = () => {
   const { events } = useEvents();

@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import Papa from 'papaparse';
 import { Complaint, Registration } from '../types';
 
-export const exportToCSV = (data: any[], filename: string) => {
+export const exportToCSV = (data: Array<Record<string, unknown>>, filename: string) => {
   const csv = Papa.unparse(data);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -15,7 +15,7 @@ export const exportToCSV = (data: any[], filename: string) => {
   document.body.removeChild(link);
 };
 
-export const exportToPDF = (data: any[], filename: string, title: string) => {
+export const exportToPDF = (data: Array<Record<string, unknown>>, filename: string, title: string) => {
   const doc = new jsPDF();
   
   // Add title
