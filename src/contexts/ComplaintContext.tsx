@@ -75,6 +75,9 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
         type: 'new_complaint',
         complaintId: docRef.id,
         studentName: complaintData.studentName,
+        class: complaintData.class,
+        section: complaintData.section,
+        email: complaintData.email,
         timestamp: Date.now(),
         createdAt: new Date(),
         read: false

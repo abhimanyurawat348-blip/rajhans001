@@ -505,7 +505,7 @@ const NewStaffPortal: React.FC = () => {
                                 <strong>{notification.studentName}</strong> submitted a complaint
                               </p>
                               <p className="text-xs text-gray-500 mt-1">
-                                {notification.category} • {new Date(notification.timestamp).toLocaleString()}
+                                Class {notification.class}-{notification.section} • {notification.email} • {new Date(notification.timestamp).toLocaleString()}
                               </p>
                             </>
                           )}
