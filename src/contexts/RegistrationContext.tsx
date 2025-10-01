@@ -71,19 +71,30 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
         status: 'pending'
       };
 
-      // Add to Firestore
       const docRef = await addDoc(collection(db, 'registrations'), newRegistration);
       newRegistration.id = docRef.id;
-      
+
       setRegistrations(prev => [...prev, newRegistration]);
-      
-      // Generate motivational message using Gemini
+
+      await addDoc(collection(db, 'staffNotifications'), {
+        type: 'new_registration',
+        registrationId: docRef.id,
+        studentName: registrationData.studentName,
+        activityType: registrationData.activityType,
+        category: registrationData.category,
+        class: registrationData.class,
+        section: registrationData.section,
+        timestamp: Date.now(),
+        createdAt: new Date(),
+        read: false
+      });
+
       const motivationalMessage = await generateMotivationalMessage(
         registrationData.studentName,
         registrationData.activityType,
         newRegistration.eligibilityCategory
       );
-      
+
       return { success: true, message: motivationalMessage };
     } catch (error) {
       console.error('Error submitting registration:', error);

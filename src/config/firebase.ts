@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "demo-api-key",
-  authDomain: "rhps-school.firebaseapp.com",
-  projectId: "rhps-school",
-  storageBucket: "rhps-school.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "demo-app-id"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
+  authDomain: "rajhans001-fa156.firebaseapp.com",
+  projectId: "rajhans001-fa156",
+  storageBucket: "rajhans001-fa156.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "demo-app-id"
 };
 
 // Initialize Firebase

@@ -18,81 +18,114 @@ export const useStudyResources = () => {
   return context;
 };
 
-// Sample study resources data
 const sampleResources: StudyResource[] = [
-  // Class 10 Resources
   {
     id: '1',
-    title: 'Mathematics Previous Year Paper 2024',
-    subject: 'Mathematics',
+    title: 'Class 10 Science Question Paper 2024',
+    subject: 'Science',
     class: '10',
     type: 'previous-year',
-    downloadUrl: '/resources/class10/math_2024.pdf',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassX_2023_24/Science_SQP.pdf',
     year: '2024'
   },
   {
     id: '2',
-    title: 'Science Previous Year Paper 2024',
+    title: 'Class 10 Science Question Paper 2023',
     subject: 'Science',
     class: '10',
     type: 'previous-year',
-    downloadUrl: '/resources/class10/science_2024.pdf',
-    year: '2024'
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassX_2022_23/Science_SQP.pdf',
+    year: '2023'
   },
   {
     id: '3',
-    title: 'English Sample Paper 2025',
-    subject: 'English',
+    title: 'Class 10 Science Sample Paper 2025',
+    subject: 'Science',
     class: '10',
     type: 'sample-paper',
-    downloadUrl: '/resources/class10/english_sample_2025.pdf',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassX_2023_24/Science_SQP.pdf',
     year: '2025'
   },
   {
     id: '4',
-    title: 'Social Science Sample Paper 2025',
-    subject: 'Social Science',
+    title: 'Class 10 Mathematics Previous Year Paper 2024',
+    subject: 'Mathematics',
     class: '10',
-    type: 'sample-paper',
-    downloadUrl: '/resources/class10/social_sample_2025.pdf',
-    year: '2025'
-  },
-  // Class 12 Resources
-  {
-    id: '5',
-    title: 'Physics Previous Year Paper 2024',
-    subject: 'Physics',
-    class: '12',
     type: 'previous-year',
-    downloadUrl: '/resources/class12/physics_2024.pdf',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassX_2023_24/Mathematics_Standard_SQP.pdf',
     year: '2024'
   },
   {
+    id: '5',
+    title: 'Class 12 Physics Problem Solving & HOTS',
+    subject: 'Physics',
+    class: '12',
+    type: 'sample-paper',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Physics_SQP.pdf',
+    year: '2025'
+  },
+  {
     id: '6',
-    title: 'Chemistry Previous Year Paper 2024',
-    subject: 'Chemistry',
+    title: 'Class 12 Physics Question Paper 2024',
+    subject: 'Physics',
     class: '12',
     type: 'previous-year',
-    downloadUrl: '/resources/class12/chemistry_2024.pdf',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Physics_SQP.pdf',
     year: '2024'
   },
   {
     id: '7',
-    title: 'Mathematics Sample Paper 2025',
-    subject: 'Mathematics',
+    title: 'Class 12 Physics Question Paper 2023',
+    subject: 'Physics',
     class: '12',
-    type: 'sample-paper',
-    downloadUrl: '/resources/class12/math_sample_2025.pdf',
-    year: '2025'
+    type: 'previous-year',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2022_23/Physics_SQP.pdf',
+    year: '2023'
   },
   {
     id: '8',
-    title: 'Biology Sample Paper 2025',
-    subject: 'Biology',
+    title: 'Class 12 Mathematics HOTS & Problem Solving',
+    subject: 'Mathematics',
     class: '12',
     type: 'sample-paper',
-    downloadUrl: '/resources/class12/biology_sample_2025.pdf',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Mathematics_SQP.pdf',
     year: '2025'
+  },
+  {
+    id: '9',
+    title: 'Class 12 Mathematics Question Paper 2024',
+    subject: 'Mathematics',
+    class: '12',
+    type: 'previous-year',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Mathematics_SQP.pdf',
+    year: '2024'
+  },
+  {
+    id: '10',
+    title: 'Class 12 Mathematics Question Paper 2023',
+    subject: 'Mathematics',
+    class: '12',
+    type: 'previous-year',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2022_23/Mathematics_SQP.pdf',
+    year: '2023'
+  },
+  {
+    id: '11',
+    title: 'Class 12 Chemistry Question Paper 2024',
+    subject: 'Chemistry',
+    class: '12',
+    type: 'previous-year',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Chemistry_SQP.pdf',
+    year: '2024'
+  },
+  {
+    id: '12',
+    title: 'Class 12 Biology Question Paper 2024',
+    subject: 'Biology',
+    class: '12',
+    type: 'previous-year',
+    downloadUrl: 'https://cbseacademic.nic.in/web_material/SQP/ClassXII_2023_24/Biology_SQP.pdf',
+    year: '2024'
   }
 ];
 

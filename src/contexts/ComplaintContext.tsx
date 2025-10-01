@@ -57,7 +57,7 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
   const submitComplaint = async (complaintData: Omit<Complaint, 'id' | 'submittedAt' | 'status' | 'ipAddress'>): Promise<boolean> => {
     try {
       const ipAddress = await getClientIP();
-      
+
       const newComplaint: Complaint = {
         ...complaintData,
         id: '', // Firestore will generate this
@@ -66,11 +66,22 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
         ipAddress
       };
 
-      // Add to Firestore
       const docRef = await addDoc(collection(db, 'complaints'), newComplaint);
       newComplaint.id = docRef.id;
-      
+
       setComplaints(prev => [...prev, newComplaint]);
+
+      await addDoc(collection(db, 'staffNotifications'), {
+        type: 'new_complaint',
+        complaintId: docRef.id,
+        studentName: complaintData.studentName,
+        category: complaintData.category,
+        subject: complaintData.subject,
+        timestamp: Date.now(),
+        createdAt: new Date(),
+        read: false
+      });
+
       return true;
     } catch (error) {
       console.error('Error submitting complaint:', error);

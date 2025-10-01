@@ -10,13 +10,16 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Complaints from './pages/Complaints';
-import StaffPortal from './pages/StaffPortal';
+import NewStaffPortal from './pages/NewStaffPortal';
 import StudyResources from './pages/StudyResources';
 import Rules from './pages/Rules';
 import StudentCouncil from './pages/StudentCouncil';
 import YearlyPlanner from './pages/YearlyPlanner';
 import MonthlyPlanner from './pages/MonthlyPlanner';
 import Registration from './pages/Registration';
+import StudentDashboard from './pages/StudentDashboard';
+import StudentSignup from './pages/StudentSignup';
+import StudentLogin from './pages/StudentLogin';
 
 function App() {
   return (
@@ -31,28 +34,17 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
+                    <Route path="/student-dashboard" element={<StudentDashboard />} />
+                    <Route path="/student-signup" element={<StudentSignup />} />
+                    <Route path="/student-login" element={<StudentLogin />} />
                     <Route path="/rules" element={<Rules />} />
                     <Route path="/student-council" element={<StudentCouncil />} />
                     <Route path="/yearly-planner" element={<YearlyPlanner />} />
                     <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                     <Route path="/registration" element={<Registration />} />
-                    <Route path="/staff-portal" element={<StaffPortal />} />
-                    <Route 
-                      path="/complaints" 
-                      element={
-                        <ProtectedRoute requiredRole="student">
-                          <Complaints />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/study-resources" 
-                      element={
-                        <ProtectedRoute requiredRole="student">
-                          <StudyResources />
-                        </ProtectedRoute>
-                      } 
-                    />
+                    <Route path="/staff-portal" element={<NewStaffPortal />} />
+                    <Route path="/complaints" element={<Complaints />} />
+                    <Route path="/study-resources" element={<StudyResources />} />
                   </Routes>
                 </div>
               </Router>
