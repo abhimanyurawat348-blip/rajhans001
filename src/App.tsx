@@ -20,6 +20,12 @@ import StudentDashboard from './pages/StudentDashboard';
 import PlannersRegistrations from './pages/PlannersRegistrations';
 import StudentSignup from './pages/StudentSignup';
 import StudentLogin from './pages/StudentLogin';
+import QuizHome from './pages/QuizHome';
+import QuizStart from './pages/QuizStart';
+import QuizClassSelect from './pages/QuizClassSelect';
+import QuizSubjectSelect from './pages/QuizSubjectSelect';
+import QuizPlay from './pages/QuizPlay';
+import QuizResults from './pages/QuizResults';
 
 function App() {
   return (
@@ -46,6 +52,12 @@ function App() {
                     <Route path="/staff-portal" element={<NewStaffPortal />} />
                     <Route path="/complaints" element={<Complaints />} />
                     <Route path="/study-resources" element={<StudyResources />} />
+                    <Route path="/quiz" element={<QuizHome />} />
+                    <Route path="/quiz/start" element={<QuizStart />} />
+                    <Route path="/quiz/select-class" element={<QuizClassSelect />} />
+                    <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
+                    <Route path="/quiz/play" element={<QuizPlay />} />
+                    <Route path="/quiz/results" element={<QuizResults />} />
                   </Routes>
                 </div>
               </Router>

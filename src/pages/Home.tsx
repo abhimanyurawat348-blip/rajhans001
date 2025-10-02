@@ -1,10 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { School, Users, FileText, BookOpen, Calendar, ArrowRight } from 'lucide-react';
+import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain } from 'lucide-react';
 
 const Home: React.FC = () => {
   const features = [
+    {
+      icon: <Brain className="h-8 w-8" />,
+      title: 'Quiz Zone',
+      description: 'Challenge yourself with interactive quizzes and compete with peers',
+      link: '/quiz',
+      color: 'bg-gradient-to-r from-pink-500 to-purple-500',
+      special: true
+    },
     {
       icon: <Users className="h-8 w-8" />,
       title: 'Student Council',
@@ -140,13 +148,22 @@ const Home: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.2, duration: 0.6 }}
-                whileHover={{ y: -10 }}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300"
+                whileHover={{ y: -10, scale: feature.special ? 1.05 : 1 }}
+                className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 ${
+                  feature.special ? 'border-4 border-purple-300 relative overflow-hidden' : ''
+                }`}
               >
-                <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 mx-auto`}>
+                {feature.special && (
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    NEW
+                  </div>
+                )}
+                <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 mx-auto shadow-lg`}>
                   {feature.icon}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+                <h3 className={`text-2xl font-bold mb-4 text-center ${
+                  feature.special ? 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent' : 'text-gray-900'
+                }`}>
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-center mb-6">
@@ -155,9 +172,13 @@ const Home: React.FC = () => {
                 <div className="text-center">
                   <Link
                     to={feature.link}
-                    className="inline-flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors duration-200"
+                    className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                      feature.special
+                        ? 'text-purple-600 hover:text-purple-700'
+                        : 'text-blue-600 hover:text-blue-700'
+                    }`}
                   >
-                    Learn More
+                    {feature.special ? 'Start Quiz Now' : 'Learn More'}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </div>
