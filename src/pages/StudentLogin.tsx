@@ -116,7 +116,7 @@ const StudentLogin: React.FC = () => {
 
       await logLoginRecord(formData.email, userCredential.user.uid);
 
-      navigate('/registration');
+      navigate('/student-home');
     } catch (err: unknown) {
       const errorObj = err as { code?: string };
       if (errorObj.code === 'auth/invalid-credential' || errorObj.code === 'auth/user-not-found' || errorObj.code === 'auth/wrong-password') {

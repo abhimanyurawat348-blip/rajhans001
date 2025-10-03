@@ -20,6 +20,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import PlannersRegistrations from './pages/PlannersRegistrations';
 import StudentSignup from './pages/StudentSignup';
 import StudentLogin from './pages/StudentLogin';
+import StudentHome from './pages/StudentHome';
 import QuizHome from './pages/QuizHome';
 import QuizStart from './pages/QuizStart';
 import QuizClassSelect from './pages/QuizClassSelect';
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/student-dashboard" element={<StudentDashboard />} />
                     <Route path="/student-signup" element={<StudentSignup />} />
                     <Route path="/student-login" element={<StudentLogin />} />
+                    <Route path="/student-home" element={<StudentHome />} />
                     <Route path="/rules" element={<Rules />} />
                     <Route path="/student-council" element={<StudentCouncil />} />
                     <Route path="/yearly-planner" element={<YearlyPlanner />} />

@@ -62,7 +62,7 @@ const StudentSignup: React.FC = () => {
       setSuccess(true);
 
       setTimeout(() => {
-        navigate('/student-login');
+        navigate('/student-home');
       }, 2000);
     } catch (err: unknown) {
       const errorObj = err as { code?: string };
