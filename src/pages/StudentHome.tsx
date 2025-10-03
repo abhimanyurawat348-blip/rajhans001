@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Heart, CheckSquare, LogOut } from 'lucide-react';
+import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
@@ -47,6 +47,24 @@ const StudentHome: React.FC = () => {
       bgGradient: 'from-green-50 to-teal-50',
       onClick: () => setTodoModalOpen(true),
     },
+    {
+      id: 'registrations',
+      title: 'Registrations',
+      description: 'Register for school events, activities, and programs.',
+      icon: Calendar,
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-50 to-cyan-50',
+      onClick: () => navigate('/registration'),
+    },
+    {
+      id: 'quiz',
+      title: 'Quiz Challenge',
+      description: 'Test your knowledge with interactive quizzes across subjects.',
+      icon: Brain,
+      gradient: 'from-violet-500 to-fuchsia-500',
+      bgGradient: 'from-violet-50 to-fuchsia-50',
+      onClick: () => navigate('/quiz'),
+    },
   ];
 
   return (
@@ -79,13 +97,35 @@ const StudentHome: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {flashcards.map((card, index) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {flashcards.slice(0, 3).map((card, index) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -10, scale: 1.02 }}
+              onClick={card.onClick}
+              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300`}
+            >
+              <div className="text-center">
+                <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
+                  <card.icon className="h-10 w-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{card.title}</h3>
+                <p className="text-gray-700 leading-relaxed">{card.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {flashcards.slice(3).map((card, index) => (
+            <motion.div
+              key={card.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: (index + 3) * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
               onClick={card.onClick}
               className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300`}

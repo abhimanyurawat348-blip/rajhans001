@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-Three interactive AI-powered flashcards have been successfully integrated into the RHPS Student Portal:
+Five interactive flashcards have been successfully integrated into the RHPS Student Portal:
 
 ### 1. Career Guidance Flashcard
 - **Purpose**: Help students discover suitable career paths based on their interests and skills
@@ -32,13 +32,29 @@ Three interactive AI-powered flashcards have been successfully integrated into t
   - Stores notes in Firebase under `users/{uid}/todoList/{noteId}`
   - Timestamp tracking for all notes
 
+### 4. Registrations Flashcard
+- **Purpose**: Access school event and activity registrations
+- **Features**:
+  - Navigate to registration system for school events
+  - Register for activities and programs
+  - Blue/cyan themed design
+  - Direct access to existing registration functionality
+
+### 5. Quiz Challenge Flashcard
+- **Purpose**: Interactive learning through quizzes
+- **Features**:
+  - Access to quiz system across multiple subjects
+  - Test knowledge with interactive questions
+  - Violet/fuchsia themed design
+  - Direct access to existing quiz functionality
+
 ## Technical Implementation
 
 ### New Components Created
 - `CareerGuidanceModal.tsx` - Career guidance chat interface
 - `StressReliefModal.tsx` - Stress relief chat interface
 - `TodoListModal.tsx` - Note-taking interface
-- `StudentHome.tsx` - Dashboard with all three flashcards
+- `StudentHome.tsx` - Dashboard with all five flashcards
 
 ### Utility Functions
 - `dronacharyaChat.ts` - AI integration using OpenRouter API with Google Gemini Pro model
@@ -54,8 +70,8 @@ Three interactive AI-powered flashcards have been successfully integrated into t
 ### User Flow
 1. Student signs up or logs in
 2. Redirected to Student Home dashboard
-3. Three flashcards displayed with hover animations
-4. Click any flashcard to open interactive modal
+3. Five flashcards displayed with hover animations (3 in top row, 2 in bottom row)
+4. Click any flashcard to open interactive modal or navigate to feature
 5. All interactions saved to Firebase in real-time
 
 ## Technologies Used
