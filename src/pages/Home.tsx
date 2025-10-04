@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain } from 'lucide-react';
+import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain, Heart, Briefcase, ListTodo, MessageCircle } from 'lucide-react';
+import CareerGuidanceModal from '../components/CareerGuidanceModal';
+import StressReliefModal from '../components/StressReliefModal';
+import TodoListModal from '../components/TodoListModal';
+import HomeworkHelpModal from '../components/HomeworkHelpModal';
 
 const Home: React.FC = () => {
+  const [isCareerModalOpen, setIsCareerModalOpen] = useState(false);
+  const [isStressModalOpen, setIsStressModalOpen] = useState(false);
+  const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
+  const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
+
   const features = [
     {
       icon: <Brain className="h-8 w-8" />,
@@ -12,6 +21,42 @@ const Home: React.FC = () => {
       link: '/quiz',
       color: 'bg-gradient-to-r from-pink-500 to-purple-500',
       special: true
+    },
+    {
+      icon: <Briefcase className="h-8 w-8" />,
+      title: 'Career Guidance',
+      description: 'Get personalized career advice from Dronacharya AI',
+      onClick: () => setIsCareerModalOpen(true),
+      color: 'bg-gradient-to-r from-amber-500 to-orange-500',
+      special: true,
+      isNew: true
+    },
+    {
+      icon: <Heart className="h-8 w-8" />,
+      title: 'Stress Relief',
+      description: 'Talk to Dronacharya AI for stress management and support',
+      onClick: () => setIsStressModalOpen(true),
+      color: 'bg-gradient-to-r from-rose-500 to-pink-500',
+      special: true,
+      isNew: true
+    },
+    {
+      icon: <ListTodo className="h-8 w-8" />,
+      title: 'To-Do List',
+      description: 'Organize your tasks and boost your productivity',
+      onClick: () => setIsTodoModalOpen(true),
+      color: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+      special: true,
+      isNew: true
+    },
+    {
+      icon: <MessageCircle className="h-8 w-8" />,
+      title: 'Homework Help',
+      description: 'Need homework help? Talk to Dronacharya AI',
+      onClick: () => setIsHomeworkModalOpen(true),
+      color: 'bg-gradient-to-r from-yellow-500 to-amber-500',
+      special: true,
+      isNew: true
     },
     {
       icon: <Users className="h-8 w-8" />,
@@ -149,12 +194,13 @@ const Home: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.2, duration: 0.6 }}
                 whileHover={{ y: -10, scale: feature.special ? 1.05 : 1 }}
+                onClick={feature.onClick}
                 className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 ${
                   feature.special ? 'border-4 border-purple-300 relative overflow-hidden' : ''
-                }`}
+                } ${feature.onClick ? 'cursor-pointer' : ''}`}
               >
-                {feature.special && (
-                  <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                {feature.isNew && (
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
                     NEW
                   </div>
                 )}
@@ -170,17 +216,30 @@ const Home: React.FC = () => {
                   {feature.description}
                 </p>
                 <div className="text-center">
-                  <Link
-                    to={feature.link}
-                    className={`inline-flex items-center font-semibold transition-colors duration-200 ${
-                      feature.special
-                        ? 'text-purple-600 hover:text-purple-700'
-                        : 'text-blue-600 hover:text-blue-700'
-                    }`}
-                  >
-                    {feature.special ? 'Start Quiz Now' : 'Learn More'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+                  {feature.link ? (
+                    <Link
+                      to={feature.link}
+                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                        feature.special
+                          ? 'text-purple-600 hover:text-purple-700'
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                    >
+                      {feature.title === 'Quiz Zone' ? 'Start Quiz Now' : 'Learn More'}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <button
+                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                        feature.special
+                          ? 'text-purple-600 hover:text-purple-700'
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                    >
+                      Open Now
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -215,6 +274,11 @@ const Home: React.FC = () => {
           </motion.div>
         </div>
       </section>
+
+      <CareerGuidanceModal isOpen={isCareerModalOpen} onClose={() => setIsCareerModalOpen(false)} />
+      <StressReliefModal isOpen={isStressModalOpen} onClose={() => setIsStressModalOpen(false)} />
+      <TodoListModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} />
+      <HomeworkHelpModal isOpen={isHomeworkModalOpen} onClose={() => setIsHomeworkModalOpen(false)} />
     </div>
   );
 };

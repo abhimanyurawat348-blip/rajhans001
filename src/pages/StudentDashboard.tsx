@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { UserPlus, LogIn, GraduationCap } from 'lucide-react';
+import { UserPlus, LogIn, GraduationCap, Sparkles, Bot } from 'lucide-react';
+import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,56 @@ const StudentDashboard: React.FC = () => {
           <p className="text-xl text-gray-600">
             Welcome to RHPS Public School Student Portal
           </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="max-w-4xl mx-auto mb-12 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 rounded-2xl shadow-xl p-8 border-4 border-amber-400 relative overflow-hidden"
+        >
+          <div
+            className="absolute inset-0 opacity-5"
+            style={{
+              backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 800 600\'%3E%3Cpath fill=\'%23d97706\' d=\'M400 300 L450 250 L500 300 L450 350 Z M200 200 L250 150 L300 200 L250 250 Z M600 400 L650 350 L700 400 L650 450 Z\'/%3E%3C/svg%3E")',
+            }}
+          ></div>
+          <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+            NEW FEATURE
+          </div>
+          <div className="flex items-start gap-6 relative z-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-full flex items-center justify-center shadow-lg border-4 border-white flex-shrink-0">
+              <Bot className="h-10 w-10 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-700 to-orange-700 bg-clip-text text-transparent">
+                  Dronacharya AI
+                </h2>
+                <Sparkles className="h-6 w-6 text-amber-600" />
+              </div>
+              <p className="text-gray-700 text-lg leading-relaxed mb-4">
+                Meet your personal AI mentor inspired by the legendary teacher from Indian mythology. Dronacharya AI is here to guide you through career decisions, help you manage stress, and assist with your homework questions. Get personalized advice and support whenever you need it!
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-amber-300">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-gray-700">Career Guidance</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-rose-300">
+                  <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-gray-700">Stress Relief</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-yellow-300">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-gray-700">Homework Help</span>
+                </div>
+              </div>
+              <p className="text-amber-700 text-sm mt-4 font-medium">
+                Look for the glowing AI button at the bottom right to start chatting!
+              </p>
+            </div>
+          </div>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -88,6 +139,8 @@ const StudentDashboard: React.FC = () => {
           </p>
         </motion.div>
       </div>
+
+      <FloatingDronacharyaButton />
     </div>
   );
 };

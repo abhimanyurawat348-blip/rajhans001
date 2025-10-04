@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain } from 'lucide-react';
+import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import TodoListModal from '../components/TodoListModal';
+import HomeworkHelpModal from '../components/HomeworkHelpModal';
+import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 
 const StudentHome: React.FC = () => {
   const { user, logout } = useAuth();
@@ -13,6 +15,7 @@ const StudentHome: React.FC = () => {
   const [careerModalOpen, setCareerModalOpen] = useState(false);
   const [stressModalOpen, setStressModalOpen] = useState(false);
   const [todoModalOpen, setTodoModalOpen] = useState(false);
+  const [homeworkModalOpen, setHomeworkModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -28,6 +31,7 @@ const StudentHome: React.FC = () => {
       gradient: 'from-amber-500 to-orange-500',
       bgGradient: 'from-amber-50 to-orange-50',
       onClick: () => setCareerModalOpen(true),
+      isNew: true,
     },
     {
       id: 'stress',
@@ -37,6 +41,7 @@ const StudentHome: React.FC = () => {
       gradient: 'from-pink-500 to-purple-500',
       bgGradient: 'from-pink-50 to-purple-50',
       onClick: () => setStressModalOpen(true),
+      isNew: true,
     },
     {
       id: 'todo',
@@ -46,6 +51,17 @@ const StudentHome: React.FC = () => {
       gradient: 'from-green-500 to-teal-500',
       bgGradient: 'from-green-50 to-teal-50',
       onClick: () => setTodoModalOpen(true),
+      isNew: true,
+    },
+    {
+      id: 'homework',
+      title: 'Homework Help',
+      description: 'Need help with homework? Ask Dronacharya AI anything!',
+      icon: MessageCircle,
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-50 to-amber-50',
+      onClick: () => setHomeworkModalOpen(true),
+      isNew: true,
     },
     {
       id: 'registrations',
@@ -97,8 +113,8 @@ const StudentHome: React.FC = () => {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {flashcards.slice(0, 3).map((card, index) => (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {flashcards.slice(0, 4).map((card, index) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 30 }}
@@ -106,8 +122,13 @@ const StudentHome: React.FC = () => {
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
               onClick={card.onClick}
-              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300`}
+              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 relative overflow-hidden`}
             >
+              {card.isNew && (
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                  NEW
+                </div>
+              )}
               <div className="text-center">
                 <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
                   <card.icon className="h-10 w-10 text-white" />
@@ -120,16 +141,21 @@ const StudentHome: React.FC = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {flashcards.slice(3).map((card, index) => (
+          {flashcards.slice(4).map((card, index) => (
             <motion.div
               key={card.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index + 3) * 0.1 }}
+              transition={{ delay: (index + 4) * 0.1 }}
               whileHover={{ y: -10, scale: 1.02 }}
               onClick={card.onClick}
-              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300`}
+              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 relative overflow-hidden`}
             >
+              {card.isNew && (
+                <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                  NEW
+                </div>
+              )}
               <div className="text-center">
                 <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
                   <card.icon className="h-10 w-10 text-white" />
@@ -159,6 +185,8 @@ const StudentHome: React.FC = () => {
       <CareerGuidanceModal isOpen={careerModalOpen} onClose={() => setCareerModalOpen(false)} />
       <StressReliefModal isOpen={stressModalOpen} onClose={() => setStressModalOpen(false)} />
       <TodoListModal isOpen={todoModalOpen} onClose={() => setTodoModalOpen(false)} />
+      <HomeworkHelpModal isOpen={homeworkModalOpen} onClose={() => setHomeworkModalOpen(false)} />
+      <FloatingDronacharyaButton />
     </div>
   );
 };
