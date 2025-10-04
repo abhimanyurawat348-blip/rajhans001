@@ -22,20 +22,34 @@ export async function dronacharyaChat(
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'google/gemini-pro',
+        model: 'google/gemini-2.0-flash-exp:free',
         messages,
       },
       {
         headers: {
           Authorization: `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Dronacharya AI Mentor',
         },
       }
     );
 
-    return response.data.choices[0].message.content;
-  } catch (err) {
+    if (response.data?.choices?.[0]?.message?.content) {
+      return response.data.choices[0].message.content;
+    } else {
+      throw new Error('Invalid response format from API');
+    }
+  } catch (err: any) {
     console.error('Dronacharya Chat Error:', err);
-    return '⚠️ Error: Could not connect to Dronacharya. Please try again later.';
+
+    if (err.response) {
+      const errorMessage = err.response.data?.error?.message || 'API error occurred';
+      return `I apologize, but I encountered an issue: ${errorMessage}. Please try again in a moment.`;
+    } else if (err.request) {
+      return "I'm having trouble connecting right now. Please check your internet connection and try again.";
+    } else {
+      return 'Something unexpected happened. Please try again.';
+    }
   }
 }
