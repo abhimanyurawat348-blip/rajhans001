@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_KEY = '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';
+const API_KEY = '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';
 
 export async function dronacharyaChat(
   userMessage: string,
