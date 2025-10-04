@@ -22,16 +22,19 @@ export async function dronacharyaChat(
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'google/gemini-2.0-flash-exp:free',
+        model: 'meta-llama/llama-3.2-3b-instruct:free',
         messages,
+        temperature: 0.7,
+        max_tokens: 500,
       },
       {
         headers: {
           Authorization: `Bearer ${API_KEY}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': window.location.origin,
+          'HTTP-Referer': 'https://dronacharyaai.com',
           'X-Title': 'Dronacharya AI Mentor',
         },
+        timeout: 30000,
       }
     );
 
@@ -42,10 +45,17 @@ export async function dronacharyaChat(
     }
   } catch (err: any) {
     console.error('Dronacharya Chat Error:', err);
+    console.error('Error details:', err.response?.data);
 
     if (err.response) {
-      const errorMessage = err.response.data?.error?.message || 'API error occurred';
-      return `I apologize, but I encountered an issue: ${errorMessage}. Please try again in a moment.`;
+      const errorData = err.response.data;
+      const errorMessage = errorData?.error?.message || errorData?.message || 'API error occurred';
+
+      if (errorMessage.includes('User not found') || errorMessage.includes('Invalid API key')) {
+        return "Hi there! I'm Dronacharya, your mentor. The AI service needs to be configured properly. For now, let me help you manually. What would you like to know about your career path or stress management?";
+      }
+
+      return `I apologize for the technical issue. ${errorMessage}. Let's try again!`;
     } else if (err.request) {
       return "I'm having trouble connecting right now. Please check your internet connection and try again.";
     } else {
