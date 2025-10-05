@@ -161,7 +161,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
           </div>
 
           <div className="p-4 bg-white border-t-4 border-amber-400 rounded-b-xl">
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-3">
               <input
                 type="text"
                 value={input}
@@ -179,6 +179,9 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
                 <Send className="h-5 w-5" />
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center">
+              Dronacharya AI provides educational and motivational guidance only — not medical or clinical advice.
+            </p>
           </div>
         </motion.div>
       </motion.div>

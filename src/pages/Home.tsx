@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain, Heart, Briefcase, ListTodo, MessageCircle } from 'lucide-react';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
-import TodoListModal from '../components/TodoListModal';
+import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
 
 const Home: React.FC = () => {
@@ -277,7 +277,7 @@ const Home: React.FC = () => {
 
       <CareerGuidanceModal isOpen={isCareerModalOpen} onClose={() => setIsCareerModalOpen(false)} />
       <StressReliefModal isOpen={isStressModalOpen} onClose={() => setIsStressModalOpen(false)} />
-      <TodoListModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} />
+      <EnhancedTodoListModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} />
       <HomeworkHelpModal isOpen={isHomeworkModalOpen} onClose={() => setIsHomeworkModalOpen(false)} />
     </div>
   );

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
-import TodoListModal from '../components/TodoListModal';
+import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 
@@ -184,7 +184,7 @@ const StudentHome: React.FC = () => {
 
       <CareerGuidanceModal isOpen={careerModalOpen} onClose={() => setCareerModalOpen(false)} />
       <StressReliefModal isOpen={stressModalOpen} onClose={() => setStressModalOpen(false)} />
-      <TodoListModal isOpen={todoModalOpen} onClose={() => setTodoModalOpen(false)} />
+      <EnhancedTodoListModal isOpen={todoModalOpen} onClose={() => setTodoModalOpen(false)} />
       <HomeworkHelpModal isOpen={homeworkModalOpen} onClose={() => setHomeworkModalOpen(false)} />
       <FloatingDronacharyaButton />
     </div>

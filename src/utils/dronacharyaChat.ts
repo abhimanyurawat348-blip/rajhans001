@@ -1,73 +1,72 @@
 import axios from 'axios';
 
+const GROQ_API_KEY = import.meta.env.VITE_AI_KEY;
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+
 export async function dronacharyaChat(
   userMessage: string,
   mode: 'career' | 'stress' = 'stress',
   conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<string> {
   try {
+    if (!GROQ_API_KEY) {
+      throw new Error('API key not configured');
+    }
+
     const systemPrompt =
       mode === 'career'
-        ? 'You are Dronacharya, a wise but slightly savage ancient Indian warrior-sage mentor. Ask students career-related questions about their hobbies, skills, favorite subjects, and interests. After gathering information, suggest 2-3 suitable career options with brief explanations. Support Hindi, English, and Hinglish. Keep responses conversational and engaging.'
-        : 'You are Dronacharya, a savage but supportive ancient Indian warrior-sage mentor for stress relief. Listen to students problems and provide helpful, slightly humorous advice to lighten their mood. Support Hindi, English, and Hinglish. Be casual, supportive, and a bit witty to keep students engaged.';
+        ? 'You are Dronacharya, a wise but slightly savage ancient Indian warrior-sage mentor. Ask students career-related questions about their hobbies, skills, favorite subjects, and interests. After gathering information, suggest 2-3 suitable career options with brief explanations. Support Hindi, English, and Hinglish. Keep responses conversational and engaging. Keep responses under 250 words.'
+        : 'You are Dronacharya, a savage but supportive ancient Indian warrior-sage mentor for stress relief. Listen to students problems and provide helpful, slightly humorous advice to lighten their mood. Support Hindi, English, and Hinglish. Be casual, supportive, and a bit witty to keep students engaged. Keep responses under 250 words.';
 
-    const conversationContext = conversationHistory
-      .map(msg => `${msg.role === 'assistant' ? 'Dronacharya' : 'Student'}: ${msg.content}`)
-      .join('\n');
-
-    const fullPrompt = `${systemPrompt}
-
-Previous conversation:
-${conversationContext}
-
-Student: ${userMessage}
-
-Dronacharya:`;
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...conversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      })),
+      { role: 'user', content: userMessage }
+    ];
 
     const response = await axios.post(
-      'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
+      GROQ_API_URL,
       {
-        inputs: fullPrompt,
-        parameters: {
-          max_new_tokens: 250,
-          temperature: 0.7,
-          top_p: 0.95,
-          return_full_text: false,
-        },
+        model: 'mixtral-8x7b-32768',
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: 500,
+        top_p: 0.95,
       },
       {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
         },
         timeout: 30000,
       }
     );
 
-    let aiResponse = '';
+    const aiResponse = response.data?.choices?.[0]?.message?.content?.trim();
 
-    if (Array.isArray(response.data) && response.data[0]?.generated_text) {
-      aiResponse = response.data[0].generated_text.trim();
-    } else if (response.data?.generated_text) {
-      aiResponse = response.data.generated_text.trim();
-    } else {
+    if (!aiResponse) {
       throw new Error('Invalid response format from API');
     }
 
-    if (aiResponse.includes('Student:')) {
-      aiResponse = aiResponse.split('Student:')[0].trim();
-    }
-    if (aiResponse.includes('Dronacharya:')) {
-      aiResponse = aiResponse.replace('Dronacharya:', '').trim();
-    }
-
-    return aiResponse || "I'm here to help! Could you tell me more about that?";
+    return aiResponse;
 
   } catch (err: any) {
     console.error('Dronacharya Chat Error:', err);
     console.error('Error details:', err.response?.data);
 
-    if (err.response?.status === 503) {
-      return "I'm warming up right now. Please try again in a moment!";
+    if (err.response?.status === 429) {
+      return "Dronacharya AI is resting. Please try again in a moment.";
+    }
+
+    if (err.response?.status === 401) {
+      return "Dronacharya AI needs to be configured. Please contact support.";
+    }
+
+    if (err.message === 'API key not configured') {
+      return "Dronacharya AI is not yet configured. Please try again later.";
     }
 
     if (mode === 'career') {
