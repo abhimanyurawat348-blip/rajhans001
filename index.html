@@ -6,25 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RHPS School Portal</title>
 
-    <!-- n8n Chat styles -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css"
-      rel="stylesheet"
-    />
+    <!-- ✅ Clean head section: No external n8n CSS -->
+    <meta name="description" content="RHPS School Portal - Smart Learning Platform with Dronacharya AI" />
   </head>
+
   <body>
+    <!-- React app root -->
     <div id="root"></div>
+
+    <!-- Load React/Vite app -->
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- n8n Chat embed -->
-    <script type="module">
-      import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
-
-      createChat({
-        webhookUrl: 'https://raj001-vercel.app.n8n.cloud/webhook/776a026b-0c1a-4b79-a70e-fce5b6b42dc0/chat',
-        chatTitle: 'Dronacharya AI Assistant', // optional custom title
-        target: 'body' // attach to body by default
-      });
-    </script>
+    <!-- Optional: Floating AI button or modal (you’ll handle via React) -->
+    <!-- Example placeholder div for Dronacharya -->
+    <div id="dronacharya-ai"></div>
   </body>
 </html>
