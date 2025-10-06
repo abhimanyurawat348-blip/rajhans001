@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { quizData } from '../data/quizQuestions';
 import { QuizQuestion } from '../types/quiz';
+
+// Function to randomly select n items from an array
+const getRandomQuestions = (questions: QuizQuestion[], count: number): QuizQuestion[] => {
+  // Shuffle array using Fisher-Yates algorithm
+  const shuffled = [...questions].sort(() => 0.5 - Math.random());
+  // Return first 'count' items
+  return shuffled.slice(0, count);
+};
 
 const QuizPlay: React.FC = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<number[]>([]);
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]); // Store all answers
   const [timeLeft, setTimeLeft] = useState(120);
   const [startTime] = useState(Date.now());
 
@@ -26,7 +33,11 @@ const QuizPlay: React.FC = () => {
 
     const quizQuestions = quizData[classNum]?.[subject];
     if (quizQuestions) {
-      setQuestions(quizQuestions);
+      // Select 10 random questions from the available questions
+      const selectedQuestions = getRandomQuestions(quizQuestions, 10);
+      setQuestions(selectedQuestions);
+      // Initialize selectedAnswers array with null values
+      setSelectedAnswers(Array(selectedQuestions.length).fill(null));
     } else {
       navigate('/quiz/start');
     }
@@ -46,12 +57,11 @@ const QuizPlay: React.FC = () => {
   }, [timeLeft]);
 
   const handleFinishQuiz = () => {
-    const finalAnswers = selectedAnswer !== null ? [...answers, selectedAnswer] : answers;
     const endTime = Date.now();
     const timeTaken = Math.floor((endTime - startTime) / 1000);
 
     let score = 0;
-    finalAnswers.forEach((answer, index) => {
+    selectedAnswers.forEach((answer, index) => {
       if (questions[index] && answer === questions[index].correctAnswer) {
         score++;
       }
@@ -61,28 +71,33 @@ const QuizPlay: React.FC = () => {
       score,
       totalQuestions: questions.length,
       timeTaken,
-      answers: finalAnswers,
+      answers: selectedAnswers,
     };
 
     localStorage.setItem('quizResults', JSON.stringify(quizResults));
     navigate('/quiz/results');
   };
 
+  const handleAnswerSelect = (answerIndex: number) => {
+    const newSelectedAnswers = [...selectedAnswers];
+    newSelectedAnswers[currentQuestionIndex] = answerIndex;
+    setSelectedAnswers(newSelectedAnswers);
+  };
+
   const handleNext = () => {
-    if (selectedAnswer === null) {
-      alert('Please select an answer');
-      return;
-    }
-
-    const newAnswers = [...answers, selectedAnswer];
-    setAnswers(newAnswers);
-
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-    } else {
-      handleFinishQuiz();
     }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleFinish = () => {
+    handleFinishQuiz();
   };
 
   if (questions.length === 0) {
@@ -94,6 +109,7 @@ const QuizPlay: React.FC = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+  const selectedAnswer = selectedAnswers[currentQuestionIndex]; // Get answer for current question
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const formatTime = (seconds: number) => {
@@ -165,7 +181,7 @@ const QuizPlay: React.FC = () => {
                   key={index}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedAnswer(index)}
+                  onClick={() => handleAnswerSelect(index)}
                   className={`p-5 rounded-2xl border-2 cursor-pointer transition-all ${
                     selectedAnswer === index
                       ? 'border-teal-500 bg-gradient-to-r from-teal-50 to-emerald-50 shadow-lg'
@@ -193,15 +209,43 @@ const QuizPlay: React.FC = () => {
           </motion.div>
         </AnimatePresence>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handleNext}
-            className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-12 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+            onClick={handlePrevious}
+            disabled={currentQuestionIndex === 0}
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold shadow-lg transition-all ${
+              currentQuestionIndex === 0
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-xl'
+            }`}
           >
-            {currentQuestionIndex < questions.length - 1 ? 'Next Question →' : 'Finish Quiz ✓'}
+            <ArrowLeft className="h-5 w-5" />
+            Previous
           </motion.button>
+
+          {currentQuestionIndex < questions.length - 1 ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNext}
+              className="flex items-center gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              Next
+              <ArrowRight className="h-5 w-5" />
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleFinish}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              Finish Quiz
+              <CheckCircle className="h-5 w-5" />
+            </motion.button>
+          )}
         </div>
       </div>
     </div>

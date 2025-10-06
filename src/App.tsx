@@ -11,7 +11,7 @@ import Navbar from './components/Navbar';
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Complaints = lazy(() => import('./pages/Complaints'));
-const NewStaffPortal = lazy(() => import('./pages/NewStaffPortal'));
+const EnhancedStaffPortal = lazy(() => import('./pages/EnhancedStaffPortal'));
 const StudyResources = lazy(() => import('./pages/StudyResources'));
 const Rules = lazy(() => import('./pages/Rules'));
 const StudentCouncil = lazy(() => import('./pages/StudentCouncil'));
@@ -29,6 +29,8 @@ const QuizClassSelect = lazy(() => import('./pages/QuizClassSelect'));
 const QuizSubjectSelect = lazy(() => import('./pages/QuizSubjectSelect'));
 const QuizPlay = lazy(() => import('./pages/QuizPlay'));
 const QuizResults = lazy(() => import('./pages/QuizResults'));
+const ParentPortal = lazy(() => import('./pages/ParentPortal'));
+const Homework = lazy(() => import('./pages/Homework'));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -64,7 +66,7 @@ function App() {
                         <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                         <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                         <Route path="/registration" element={<Registration />} />
-                        <Route path="/staff-portal" element={<NewStaffPortal />} />
+                        <Route path="/staff-portal" element={<EnhancedStaffPortal />} />
                         <Route path="/complaints" element={<Complaints />} />
                         <Route path="/study-resources" element={<StudyResources />} />
                         <Route path="/quiz" element={<QuizHome />} />
@@ -73,6 +75,8 @@ function App() {
                         <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
                         <Route path="/quiz/play" element={<QuizPlay />} />
                         <Route path="/quiz/results" element={<QuizResults />} />
+                        <Route path="/parent-portal" element={<ParentPortal />} />
+                        <Route path="/homework" element={<Homework />} />
                       </Routes>
                     </Suspense>
                   </div>

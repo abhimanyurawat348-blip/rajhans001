@@ -1,7 +1,8 @@
-import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const GROQ_API_KEY = import.meta.env.VITE_AI_KEY;
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Get the API key from environment variables
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+console.log('GEMINI_API_KEY from env:', GEMINI_API_KEY ? 'Key present' : 'Key missing');
 
 export async function dronacharyaChat(
   userMessage: string,
@@ -9,43 +10,53 @@ export async function dronacharyaChat(
   conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<string> {
   try {
-    if (!GROQ_API_KEY) {
+    console.log('Attempting to use Google Gemini API with key:', GEMINI_API_KEY ? 'Key present' : 'Key missing');
+    
+    if (!GEMINI_API_KEY) {
       throw new Error('API key not configured');
     }
+
+    // Initialize Google Generative AI
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const systemPrompt =
       mode === 'career'
         ? 'You are Dronacharya, a wise but slightly savage ancient Indian warrior-sage mentor. Ask students career-related questions about their hobbies, skills, favorite subjects, and interests. After gathering information, suggest 2-3 suitable career options with brief explanations. Support Hindi, English, and Hinglish. Keep responses conversational and engaging. Keep responses under 250 words.'
         : 'You are Dronacharya, a savage but supportive ancient Indian warrior-sage mentor for stress relief. Listen to students problems and provide helpful, slightly humorous advice to lighten their mood. Support Hindi, English, and Hinglish. Be casual, supportive, and a bit witty to keep students engaged. Keep responses under 250 words.';
 
-    const messages = [
-      { role: 'system', content: systemPrompt },
-      ...conversationHistory.map(msg => ({
-        role: msg.role === 'assistant' ? 'assistant' : 'user',
-        content: msg.content
-      })),
-      { role: 'user', content: userMessage }
-    ];
+    // For Gemini, we need to send the latest user message as a prompt
+    // and include the system prompt in the generation config
+    const prompt = systemPrompt + '\n\nStudent: ' + userMessage;
+    
+    // Add conversation history to the prompt
+    let fullPrompt = prompt;
+    if (conversationHistory.length > 0) {
+      fullPrompt += '\n\nConversation history:\n';
+      conversationHistory.forEach((msg, index) => {
+        const role = msg.role === 'assistant' ? 'Dronacharya' : 'Student';
+        fullPrompt += `${role}: ${msg.content}\n`;
+      });
+    }
 
-    const response = await axios.post(
-      GROQ_API_URL,
-      {
-        model: 'mixtral-8x7b-32768',
-        messages: messages,
+    console.log('Making request to Google Gemini API with prompt:', fullPrompt);
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: fullPrompt }]
+      }],
+      generationConfig: {
         temperature: 0.7,
-        max_tokens: 500,
-        top_p: 0.95,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
-        },
-        timeout: 30000,
+        maxOutputTokens: 500,
+        topP: 0.95,
       }
-    );
+    });
 
-    const aiResponse = response.data?.choices?.[0]?.message?.content?.trim();
+    const response = result.response;
+    const aiResponse = response.text().trim();
+
+    console.log('Full API response:', aiResponse);
 
     if (!aiResponse) {
       throw new Error('Invalid response format from API');
@@ -55,13 +66,18 @@ export async function dronacharyaChat(
 
   } catch (err: any) {
     console.error('Dronacharya Chat Error:', err);
-    console.error('Error details:', err.response?.data);
-
-    if (err.response?.status === 429) {
-      return "Dronacharya AI is resting. Please try again in a moment.";
+    console.error('Error name:', err.name);
+    console.error('Error message:', err.message);
+    console.error('Error code:', err.code);
+    
+    // For Google API errors
+    if (err.message && typeof err.message === 'string') {
+      console.error('Error details:', err.message);
     }
+    
+    console.error('Stack trace:', err.stack);
 
-    if (err.response?.status === 401) {
+    if (err.message && err.message.includes('API_KEY_INVALID')) {
       return "Dronacharya AI needs to be configured. Please contact support.";
     }
 

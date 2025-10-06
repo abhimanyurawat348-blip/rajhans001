@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection
+    match /users/{userId} {
+      // Allow users to read their own data
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Allow users to create their own account
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow users to update their own data
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Allow staff to read all user data
+      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Login records - students can create, staff can read
+    match /loginRecords/{recordId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Registrations - students can create, staff can read/update
+    match /registrations/{regId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Complaints - students can create, staff can read/update
+    match /complaints/{complaintId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Staff notifications - staff only
+    match /staffNotifications/{notifId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Meetings - staff only
+    match /meetings/{meetingId} {
+      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Notices - staff only
+    match /notices/{noticeId} {
+      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Homework - students can read their own, staff can read all
+    match /homework/{homeworkId} {
+      // Students can read their own homework
+      allow read: if request.auth != null && 
+        resource.data.studentId == request.auth.uid;
+      // Staff can read all homework
+      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
+      // Staff can create and update homework
+      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Marks - students can read their own, staff can read all
+    match /marks/{markId} {
+      // Students can read their own marks
+      allow read: if request.auth != null && 
+        resource.data.studentId == request.auth.uid;
+      // Parents can read their child's marks
+      allow read: if request.auth.token.email in getParentsEmails(resource.data.studentId);
+      // Staff can read all marks
+      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
+      // Staff can create and update marks
+      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Attendance - students can read their own, staff can read all
+    match /attendance/{attendanceId} {
+      // Students can read their own attendance
+      allow read: if request.auth != null && 
+        resource.data.studentId == request.auth.uid;
+      // Parents can read their child's attendance
+      allow read: if request.auth.token.email in getParentsEmails(resource.data.studentId);
+      // Staff can read all attendance
+      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
+      // Staff can create and update attendance
+      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Parent-Teacher Meetings - students and parents can read, staff can read/write
+    match /ptm_schedule/{ptmId} {
+      // Parents can read PTMs assigned to them
+      allow read: if request.auth != null && 
+        request.auth.token.email != 'rajhans_001@gmail.com' &&
+        request.auth.uid in resource.data.parentIds;
+      // Staff can read and write PTMs
+      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Parent-Teacher Meetings - students and parents can read, staff can read/write
+    match /parentTeacherMeetings/{meetingId} {
+      // Students can read meetings for their class
+      allow read: if request.auth != null && 
+        resource.data.class == getUserClass(request.auth.uid);
+      // Parents can read meetings for their child's class
+      allow read: if request.auth.token.email in getParentsEmails(getStudentIdFromParentEmail(request.auth.token.email));
+      // Staff can read and write meetings
+      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
+    }
+
+    // Helper functions
+    function getParentsEmails(studentId) {
+      // This would need to be implemented based on your data structure
+      // For now, we'll return a hardcoded list
+      return ['rajhans_001@gmail.com'];
+    }
+    
+    function getUserClass(userId) {
+      // This would need to be implemented based on your data structure
+      // For now, we'll return a default value
+      return '10';
+    }
+    
+    function getStudentIdFromParentEmail(parentEmail) {
+      // This would need to be implemented based on your data structure
+      // For now, we'll return a default value
+      return 'student_id';
+    }
+  }
+}

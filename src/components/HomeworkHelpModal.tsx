@@ -49,7 +49,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
 
       const homeworkPrompt = `You are Dronacharya, a wise teacher helping a student with their homework. The student asks: "${input}". Provide a clear, educational response that guides them to understand the concept rather than just giving the answer. Support Hindi, English, and Hinglish. Keep it encouraging and educational.`;
 
-      const response = await dronacharyaChat(homeworkPrompt, 'career', conversationHistory);
+      const response = await dronacharyaChat(homeworkPrompt, 'stress', conversationHistory);
       const aiMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
