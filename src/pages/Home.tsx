@@ -244,7 +244,11 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
+<<<<<<< HEAD
             className="flex flex-wrap justify-center gap-4"
+=======
+            className="flex flex-wrap gap-4 justify-center"
+>>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
           >
             <Link
               to="/student-dashboard"
@@ -255,13 +259,21 @@ const Home: React.FC = () => {
             </Link>
             <Link
               to="/parent-portal"
+<<<<<<< HEAD
               className="inline-flex items-center px-8 py-4 bg-purple-600 text-white font-semibold rounded-full hover:bg-purple-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+=======
+              className="inline-flex items-center px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+>>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
             >
               Parent Portal
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
+<<<<<<< HEAD
               to="/staff-portal"
+=======
+              to="/enhanced-staff-portal"
+>>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
               className="inline-flex items-center px-8 py-4 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Staff Portal

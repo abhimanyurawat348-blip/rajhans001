@@ -12,7 +12,13 @@ const StudentSignup: React.FC = () => {
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    admissionNumber: '',
+    class: '',
+    section: '',
+    dateOfBirth: '',
+    fatherName: '',
+    motherName: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +61,27 @@ const StudentSignup: React.FC = () => {
         username: formData.username,
         email: formData.email,
         role: 'student',
+        admissionNumber: formData.admissionNumber,
+        class: formData.class,
+        section: formData.section,
+        dateOfBirth: formData.dateOfBirth,
+        fatherName: formData.fatherName,
+        motherName: formData.motherName,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await setDoc(doc(db, 'students', formData.admissionNumber), {
+        uid: userCredential.user.uid,
+        username: formData.username,
+        email: formData.email,
+        admissionNumber: formData.admissionNumber,
+        class: formData.class,
+        section: formData.section,
+        dateOfBirth: formData.dateOfBirth,
+        fatherName: formData.fatherName,
+        motherName: formData.motherName,
+        password: formData.password,
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -123,21 +150,128 @@ const StudentSignup: React.FC = () => {
           <p className="text-gray-600">Create your student account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="admissionNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Admission Number
+              </label>
               <input
                 type="text"
-                id="username"
-                name="username"
-                value={formData.username}
+                id="admissionNumber"
+                name="admissionNumber"
+                value={formData.admissionNumber}
                 onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your username"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., RHPS2025001"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="class" className="block text-sm font-medium text-gray-700 mb-2">
+                Class
+              </label>
+              <select
+                id="class"
+                name="class"
+                value={formData.class}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select Class</option>
+                {[3, 4, 5, 6, 7, 8, 9, 10].map(cls => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="section" className="block text-sm font-medium text-gray-700 mb-2">
+                Section
+              </label>
+              <select
+                id="section"
+                name="section"
+                value={formData.section}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              >
+                <option value="">Select Section</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-2">
+                Father's Name
+              </label>
+              <input
+                type="text"
+                id="fatherName"
+                name="fatherName"
+                value={formData.fatherName}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter father's name"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="motherName" className="block text-sm font-medium text-gray-700 mb-2">
+                Mother's Name
+              </label>
+              <input
+                type="text"
+                id="motherName"
+                name="motherName"
+                value={formData.motherName}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter mother's name"
                 required
               />
             </div>
@@ -162,10 +296,11 @@ const StudentSignup: React.FC = () => {
             </div>
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -179,27 +314,29 @@ const StudentSignup: React.FC = () => {
                 required
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
           </div>
 
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Confirm your password"
-                required
-              />
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
             </div>
           </div>
+
+          <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
 
           {error && (
             <motion.div

@@ -30,7 +30,14 @@ const QuizSubjectSelect = lazy(() => import('./pages/QuizSubjectSelect'));
 const QuizPlay = lazy(() => import('./pages/QuizPlay'));
 const QuizResults = lazy(() => import('./pages/QuizResults'));
 const ParentPortal = lazy(() => import('./pages/ParentPortal'));
+<<<<<<< HEAD
 const Homework = lazy(() => import('./pages/Homework'));
+=======
+const ParentSignup = lazy(() => import('./pages/ParentSignup'));
+const ParentLogin = lazy(() => import('./pages/ParentLogin'));
+const ParentHome = lazy(() => import('./pages/ParentHome'));
+const EnhancedStaffPortal = lazy(() => import('./pages/EnhancedStaffPortal'));
+>>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -66,9 +73,18 @@ function App() {
                         <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                         <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                         <Route path="/registration" element={<Registration />} />
+<<<<<<< HEAD
                         <Route path="/staff-portal" element={<EnhancedStaffPortal />} />
+=======
+                        <Route path="/staff-portal" element={<NewStaffPortal />} />
+                        <Route path="/enhanced-staff-portal" element={<EnhancedStaffPortal />} />
+>>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
                         <Route path="/complaints" element={<Complaints />} />
                         <Route path="/study-resources" element={<StudyResources />} />
+                        <Route path="/parent-portal" element={<ParentPortal />} />
+                        <Route path="/parent-signup" element={<ParentSignup />} />
+                        <Route path="/parent-login" element={<ParentLogin />} />
+                        <Route path="/parent-home" element={<ParentHome />} />
                         <Route path="/quiz" element={<QuizHome />} />
                         <Route path="/quiz/start" element={<QuizStart />} />
                         <Route path="/quiz/select-class" element={<QuizClassSelect />} />
