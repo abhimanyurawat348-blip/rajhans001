@@ -147,7 +147,7 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
-            className="flex space-x-4 justify-center"
+            className="flex flex-wrap gap-4 justify-center"
           >
             <Link
               to="/student-dashboard"
@@ -157,7 +157,14 @@ const Home: React.FC = () => {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
-              to="/staff-portal"
+              to="/parent-portal"
+              className="inline-flex items-center px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              Parent Portal
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+            <Link
+              to="/enhanced-staff-portal"
               className="inline-flex items-center px-8 py-4 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Staff Portal

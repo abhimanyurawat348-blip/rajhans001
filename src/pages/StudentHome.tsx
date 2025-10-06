@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain, MessageCircle } from 'lucide-react';
+import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain, MessageCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
+import HomeworkTracker from '../components/HomeworkTracker';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 
 const StudentHome: React.FC = () => {
@@ -16,6 +17,7 @@ const StudentHome: React.FC = () => {
   const [stressModalOpen, setStressModalOpen] = useState(false);
   const [todoModalOpen, setTodoModalOpen] = useState(false);
   const [homeworkModalOpen, setHomeworkModalOpen] = useState(false);
+  const [showHomeworkTracker, setShowHomeworkTracker] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -61,6 +63,16 @@ const StudentHome: React.FC = () => {
       gradient: 'from-yellow-500 to-amber-500',
       bgGradient: 'from-yellow-50 to-amber-50',
       onClick: () => setHomeworkModalOpen(true),
+      isNew: true,
+    },
+    {
+      id: 'homework-tracker',
+      title: 'Homework Tracker',
+      description: 'Track your homework assignments and mark them as done.',
+      icon: BookOpen,
+      gradient: 'from-indigo-500 to-blue-500',
+      bgGradient: 'from-indigo-50 to-blue-50',
+      onClick: () => setShowHomeworkTracker(!showHomeworkTracker),
       isNew: true,
     },
     {
@@ -140,7 +152,17 @@ const StudentHome: React.FC = () => {
           ))}
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        {showHomeworkTracker && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-xl p-8 mb-8"
+          >
+            <HomeworkTracker />
+          </motion.div>
+        )}
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {flashcards.slice(4).map((card, index) => (
             <motion.div
               key={card.id}
