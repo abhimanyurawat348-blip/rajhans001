@@ -9,6 +9,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import NewStaffPortal from './pages/NewStaffPortal';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
@@ -36,6 +37,10 @@ const ParentLogin = lazy(() => import('./pages/ParentLogin'));
 const ParentHome = lazy(() => import('./pages/ParentHome'));
 const Homework = lazy(() => import('./pages/Homework'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ChantingPage = lazy(() => import('./pages/ChantingPage'));
+const DeitySelectionPage = lazy(() => import('./pages/DeitySelectionPage'));
+const ChantingCounterPage = lazy(() => import('./pages/ChantingCounterPage'));
+const ChantingLeaderboardPage = lazy(() => import('./pages/ChantingLeaderboardPage'));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -66,7 +71,7 @@ function App() {
                           <Route path="/student-dashboard" element={<StudentDashboard />} />
                           <Route path="/student-signup" element={<StudentSignup />} />
                           <Route path="/student-login" element={<StudentLogin />} />
-                          <Route path="/student-home" element={<StudentHome />} />
+                          <Route path="/student-home" element={<ProtectedRoute requiredRole="student"><StudentHome /></ProtectedRoute>} />
                           <Route path="/rules" element={<Rules />} />
                           <Route path="/student-council" element={<StudentCouncil />} />
                           <Route path="/yearly-planner" element={<YearlyPlanner />} />
@@ -87,6 +92,10 @@ function App() {
                           <Route path="/quiz/play" element={<QuizPlay />} />
                           <Route path="/quiz/results" element={<QuizResults />} />
                           <Route path="/homework" element={<Homework />} />
+                          <Route path="/chanting" element={<ChantingPage />} />
+                          <Route path="/chanting/:religionId" element={<DeitySelectionPage />} />
+                          <Route path="/chanting/:religionId/:deityId" element={<ChantingCounterPage />} />
+                          <Route path="/chanting-leaderboard" element={<ChantingLeaderboardPage />} />
                         </Routes>
                       </Suspense>
                     </div>

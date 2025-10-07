@@ -6,6 +6,7 @@ import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
+import ChantingFlashcard from '../components/ChantingFlashcard';
 
 const Home: React.FC = () => {
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false);
@@ -363,6 +364,7 @@ const Home: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+            <ChantingFlashcard />
           </div>
         </div>
       </section>

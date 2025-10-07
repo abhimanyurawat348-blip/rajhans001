@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   sendSignInLinkToEmail, 
   isSignInWithEmailLink, 
   signInWithEmailLink,
-  signOut
+  signOut,
+  onAuthStateChanged
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { User } from '../types';
 
@@ -17,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   otpSent: boolean;
   pendingAuth: { email: string; role: 'student' | 'teacher' } | null;
+  updateUserName: (name: string) => Promise<void>; // Add this new function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +35,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [otpSent, setOtpSent] = useState(false);
   const [pendingAuth, setPendingAuth] = useState<{ email: string; role: 'student' | 'teacher' } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          // Fetch user data from Firestore
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (userDoc.exists()) {
+            setUser({
+              id: firebaseUser.uid,
+              ...userDoc.data()
+            } as User);
+          } else {
+            // Create user document if it doesn't exist
+            const mockUser: User = {
+              id: firebaseUser.uid,
+              name: 'Student User',
+              email: firebaseUser.email || '',
+              role: 'student'
+            };
+            await setDoc(doc(db, 'users', firebaseUser.uid), mockUser);
+            setUser(mockUser);
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const getClientIP = async (): Promise<string> => {
     try {
@@ -172,16 +210,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Add this new function to update user name
+  const updateUserName = async (name: string) => {
+    if (!user) return;
+    
+    try {
+      // Update user in Firestore
+      await setDoc(doc(db, 'users', user.id), { ...user, name }, { merge: true });
+      
+      // Update local user state
+      setUser({ ...user, name });
+    } catch (error) {
+      console.error('Error updating user name:', error);
+      throw error;
+    }
+  };
+
+  const value = {
+    user,
+    login,
+    verifyOTP,
+    logout,
+    isAuthenticated: !!user,
+    otpSent,
+    pendingAuth,
+    updateUserName // Add this to the context value
+  };
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      verifyOTP,
-      logout,
-      isAuthenticated: !!user,
-      otpSent,
-      pendingAuth
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

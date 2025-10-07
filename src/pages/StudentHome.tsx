@@ -12,9 +12,11 @@ import {
   User, 
   Award,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  AlertCircle
 } from 'lucide-react';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
+import ChantingFlashcard from '../components/ChantingFlashcard';
 
 interface Marksheet {
   id: string;
@@ -34,16 +36,22 @@ const StudentHome: React.FC = () => {
   const [studentData, setStudentData] = useState<any>(null);
   const [marksheets, setMarksheets] = useState<Marksheet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStudentData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       
       try {
         // Fetch student data
         const userDoc = await getDoc(doc(db, 'users', user.id));
         if (userDoc.exists()) {
           setStudentData(userDoc.data());
+        } else {
+          setError('User data not found. Please contact support.');
         }
         
         // Fetch marks data for all exam types
@@ -51,19 +59,25 @@ const StudentHome: React.FC = () => {
         const marksData: Marksheet[] = [];
         
         for (const examType of examTypes) {
-          const marksDoc = await getDoc(doc(db, 'students', user.id, 'marks', examType));
-          if (marksDoc.exists()) {
-            marksData.push({
-              id: examType,
-              ...marksDoc.data()
-            } as Marksheet);
+          try {
+            const marksDoc = await getDoc(doc(db, 'students', user.id, 'marks', examType));
+            if (marksDoc.exists()) {
+              marksData.push({
+                id: examType,
+                ...marksDoc.data()
+              } as Marksheet);
+            }
+          } catch (examError) {
+            console.warn(`Failed to fetch marks for ${examType}:`, examError);
+            // Continue with other exam types
           }
         }
         
         setMarksheets(marksData);
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching student data:', err);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
         setLoading(false);
       }
     };
@@ -112,6 +126,34 @@ const StudentHome: React.FC = () => {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Retry
+            </button>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -228,45 +270,10 @@ const StudentHome: React.FC = () => {
               )}
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100">Class</p>
-                    <p className="text-3xl font-bold mt-1">{studentData?.class || 'N/A'}</p>
-                  </div>
-                  <Users className="h-10 w-10 text-blue-200" />
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100">Section</p>
-                    <p className="text-3xl font-bold mt-1">{studentData?.section || 'N/A'}</p>
-                  </div>
-                  <Award className="h-10 w-10 text-green-200" />
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100">Performance</p>
-                    <p className="text-3xl font-bold mt-1">
-                      {marksheets.length > 0 
-                        ? Math.round(marksheets.reduce((acc, mark) => {
-                            const examMarks = getExamMarks(mark.id);
-                            const maxMarks = getExamMaxMarks(mark.id);
-                            return acc + calculatePercentage(Number(examMarks), maxMarks);
-                          }, 0) / marksheets.length) || 'N/A'
-                        : 'N/A'}%
-                    </p>
-                  </div>
-                  <TrendingUp className="h-10 w-10 text-purple-200" />
-                </div>
-              </div>
+            {/* Spiritual Chanting Feature */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Wellness & Spirituality</h2>
+              <ChantingFlashcard />
             </div>
           </div>
         </div>
