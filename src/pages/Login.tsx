@@ -9,7 +9,8 @@ const Login: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === "rajhans2019" && password === "rajhans01") {
+    // Updated credentials as per requirements
+    if (username === "rajhans_001@gmail.com" && password === "abhimanyu001") {
       navigate("/staff-portal"); // redirect to staff portal page
     } else {
       setError("Invalid username or password. Please try again.");
@@ -25,13 +26,13 @@ const Login: React.FC = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label className="block text-gray-700">Username</label>
+            <label className="block text-gray-700">Email</label>
             <input
-              type="text"
+              type="email"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg"
-              placeholder="Enter username"
+              placeholder="Enter email"
               required
             />
           </div>
@@ -59,4 +60,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-

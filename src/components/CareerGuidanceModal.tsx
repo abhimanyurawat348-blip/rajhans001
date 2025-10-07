@@ -105,6 +105,11 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
           className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col border-4 border-amber-600"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Under Development Banner */}
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-center py-2 font-bold">
+            AI Tutor (Dronacharya) - Under Development
+          </div>
+          
           <div className="bg-gradient-to-r from-amber-600 to-orange-600 p-6 rounded-t-xl flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Sparkles className="h-8 w-8 text-amber-100" />

@@ -7,11 +7,11 @@ import { RegistrationProvider } from './contexts/RegistrationContext';
 import { StudyResourcesProvider } from './contexts/StudyResourcesContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
+import NewStaffPortal from './pages/NewStaffPortal';
 
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Complaints = lazy(() => import('./pages/Complaints'));
-const EnhancedStaffPortal = lazy(() => import('./pages/EnhancedStaffPortal'));
 const StudyResources = lazy(() => import('./pages/StudyResources'));
 const Rules = lazy(() => import('./pages/Rules'));
 const StudentCouncil = lazy(() => import('./pages/StudentCouncil'));
@@ -30,14 +30,10 @@ const QuizSubjectSelect = lazy(() => import('./pages/QuizSubjectSelect'));
 const QuizPlay = lazy(() => import('./pages/QuizPlay'));
 const QuizResults = lazy(() => import('./pages/QuizResults'));
 const ParentPortal = lazy(() => import('./pages/ParentPortal'));
-<<<<<<< HEAD
-const Homework = lazy(() => import('./pages/Homework'));
-=======
 const ParentSignup = lazy(() => import('./pages/ParentSignup'));
 const ParentLogin = lazy(() => import('./pages/ParentLogin'));
 const ParentHome = lazy(() => import('./pages/ParentHome'));
-const EnhancedStaffPortal = lazy(() => import('./pages/EnhancedStaffPortal'));
->>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
+const Homework = lazy(() => import('./pages/Homework'));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -73,12 +69,7 @@ function App() {
                         <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                         <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                         <Route path="/registration" element={<Registration />} />
-<<<<<<< HEAD
-                        <Route path="/staff-portal" element={<EnhancedStaffPortal />} />
-=======
                         <Route path="/staff-portal" element={<NewStaffPortal />} />
-                        <Route path="/enhanced-staff-portal" element={<EnhancedStaffPortal />} />
->>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
                         <Route path="/complaints" element={<Complaints />} />
                         <Route path="/study-resources" element={<StudyResources />} />
                         <Route path="/parent-portal" element={<ParentPortal />} />
@@ -91,7 +82,6 @@ function App() {
                         <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
                         <Route path="/quiz/play" element={<QuizPlay />} />
                         <Route path="/quiz/results" element={<QuizResults />} />
-                        <Route path="/parent-portal" element={<ParentPortal />} />
                         <Route path="/homework" element={<Homework />} />
                       </Routes>
                     </Suspense>

@@ -1,127 +1,120 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
-    match /users/{userId} {
-      // Allow users to read their own data
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Allow users to create their own account
-      allow create: if request.auth != null && request.auth.uid == userId;
-      // Allow users to update their own data
-      allow update: if request.auth != null && request.auth.uid == userId;
-      // Allow staff to read all user data
-      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Login records - students can create, staff can read
-    match /loginRecords/{recordId} {
-      allow create: if request.auth != null;
-      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Registrations - students can create, staff can read/update
-    match /registrations/{regId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Complaints - students can create, staff can read/update
-    match /complaints/{complaintId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Staff notifications - staff only
-    match /staffNotifications/{notifId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Meetings - staff only
-    match /meetings/{meetingId} {
-      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Notices - staff only
-    match /notices/{noticeId} {
-      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Homework - students can read their own, staff can read all
-    match /homework/{homeworkId} {
-      // Students can read their own homework
-      allow read: if request.auth != null && 
-        resource.data.studentId == request.auth.uid;
-      // Staff can read all homework
-      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
-      // Staff can create and update homework
-      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Marks - students can read their own, staff can read all
-    match /marks/{markId} {
-      // Students can read their own marks
-      allow read: if request.auth != null && 
-        resource.data.studentId == request.auth.uid;
-      // Parents can read their child's marks
-      allow read: if request.auth.token.email in getParentsEmails(resource.data.studentId);
-      // Staff can read all marks
-      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
-      // Staff can create and update marks
-      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Attendance - students can read their own, staff can read all
-    match /attendance/{attendanceId} {
-      // Students can read their own attendance
-      allow read: if request.auth != null && 
-        resource.data.studentId == request.auth.uid;
-      // Parents can read their child's attendance
-      allow read: if request.auth.token.email in getParentsEmails(resource.data.studentId);
-      // Staff can read all attendance
-      allow read: if request.auth.token.email == 'rajhans_001@gmail.com';
-      // Staff can create and update attendance
-      allow create, update: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Parent-Teacher Meetings - students and parents can read, staff can read/write
-    match /ptm_schedule/{ptmId} {
-      // Parents can read PTMs assigned to them
-      allow read: if request.auth != null && 
-        request.auth.token.email != 'rajhans_001@gmail.com' &&
-        request.auth.uid in resource.data.parentIds;
-      // Staff can read and write PTMs
-      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Parent-Teacher Meetings - students and parents can read, staff can read/write
-    match /parentTeacherMeetings/{meetingId} {
-      // Students can read meetings for their class
-      allow read: if request.auth != null && 
-        resource.data.class == getUserClass(request.auth.uid);
-      // Parents can read meetings for their child's class
-      allow read: if request.auth.token.email in getParentsEmails(getStudentIdFromParentEmail(request.auth.token.email));
-      // Staff can read and write meetings
-      allow read, write: if request.auth.token.email == 'rajhans_001@gmail.com';
-    }
-
-    // Helper functions
-    function getParentsEmails(studentId) {
-      // This would need to be implemented based on your data structure
-      // For now, we'll return a hardcoded list
-      return ['rajhans_001@gmail.com'];
+    // Function to get user role
+    function getUserRole() {
+      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
     }
     
-    function getUserClass(userId) {
-      // This would need to be implemented based on your data structure
-      // For now, we'll return a default value
-      return '10';
+    // Function to get teacher's assigned class and section
+    function getTeacherClassSection() {
+      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
     }
     
-    function getStudentIdFromParentEmail(parentEmail) {
-      // This would need to be implemented based on your data structure
-      // For now, we'll return a default value
-      return 'student_id';
+    // Function to check if user is a student
+    function isStudent() {
+      return request.auth != null && getUserRole() == 'student';
+    }
+    
+    // Function to check if user is a teacher
+    function isTeacher() {
+      return request.auth != null && getUserRole() == 'teacher';
+    }
+    
+    // Function to check if user is a parent
+    function isParent() {
+      return request.auth != null && getUserRole() == 'parent';
+    }
+    
+    // Function to check if teacher can access specific class/section
+    function canAccessClassSection(class, section) {
+      let teacherData = getTeacherClassSection();
+      return teacherData != null && 
+             teacherData.class_assigned == class && 
+             teacherData.section_assigned == section;
+    }
+    
+    // Function to get student's class and section
+    function getStudentClassSection(studentId) {
+      return get(/databases/$(database)/documents/users/$(studentId)).data;
+    }
+    
+    // Function to check if parent can access student data
+    function canAccessStudent(studentId) {
+      // Check if student exists
+      let studentDoc = get(/databases/$(database)/documents/users/$(studentId));
+      if (!studentDoc.exists) {
+        return false;
+      }
+      
+      // For parents, check if this student is their child
+      if (isParent()) {
+        let parentDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+        return parentDoc.data.studentId == studentId;
+      }
+      
+      // For students, check if it's their own data
+      if (isStudent()) {
+        return request.auth.uid == studentId;
+      }
+      
+      return false;
+    }
+    
+    // Students collection
+    match /students/{studentId} {
+      // Students can read their own data, teachers can read student data
+      allow read: if isStudent() && request.auth.uid == studentId || 
+                   isTeacher() || 
+                   isParent() && canAccessStudent(studentId);
+      
+      // Only teachers can write student data
+      allow write: if isTeacher();
+      
+      // Marks subcollection
+      match /marks/{examType} {
+        // Students can read their own marks, parents can read their children's marks, teachers can read
+        allow read: if isStudent() && request.auth.uid == studentId || 
+                     isParent() && canAccessStudent(studentId) || 
+                     isTeacher();
+        
+        // Only teachers can write marks, and only for their assigned classes
+        allow write: if isTeacher() && 
+                      canAccessClassSection(
+                        getStudentClassSection(studentId).class, 
+                        getStudentClassSection(studentId).section
+                      );
+      }
+    }
+    
+    // Parents collection
+    match /parents/{parentId} {
+      // Parents can read their own data, teachers can read parent data
+      allow read: if isParent() && request.auth.uid == parentId || isTeacher();
+      
+      // Only parents can write their own data
+      allow write: if isParent() && request.auth.uid == parentId;
+    }
+    
+    // Teachers collection
+    match /teachers/{teacherId} {
+      // Teachers can read their own data
+      allow read: if isTeacher() && request.auth.uid == teacherId;
+      
+      // Only teachers can write their own data
+      allow write: if isTeacher() && request.auth.uid == teacherId;
+    }
+    
+    // Unregistered student marks (temporary storage)
+    match /unregistered_student_marks/{document} {
+      // Only teachers can read/write
+      allow read, write: if isTeacher();
+    }
+    
+    // Allow read access to all users for public data
+    match /{document=**} {
+      allow read: if true;
     }
   }
 }

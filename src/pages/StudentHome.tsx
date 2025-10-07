@@ -1,147 +1,129 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Briefcase, Heart, CheckSquare, LogOut, Calendar, Brain, MessageCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import CareerGuidanceModal from '../components/CareerGuidanceModal';
-import StressReliefModal from '../components/StressReliefModal';
-import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
-import HomeworkHelpModal from '../components/HomeworkHelpModal';
-import HomeworkTracker from '../components/HomeworkTracker';
+import { 
+  BookOpen, 
+  Calendar, 
+  FileText, 
+  Users, 
+  LogOut, 
+  User, 
+  Award,
+  TrendingUp,
+  BarChart3
+} from 'lucide-react';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 
-interface Homework {
+interface Marksheet {
   id: string;
-  subject: string;
-  title: string;
-  description: string;
-  dueDate: Date;
-  status: 'pending' | 'submitted' | 'graded';
-  grade?: string;
-  feedback?: string;
+  unit_test_1?: number;
+  unit_test_2?: number;
+  unit_test_3?: number;
+  half_yearly?: number;
+  final_exam?: number;
+  subject?: string;
+  maxMarks?: number;
+  marks?: number; // Added to handle the marks field
+  [key: string]: any; // Allow dynamic keys
 }
 
 const StudentHome: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [careerModalOpen, setCareerModalOpen] = useState(false);
-  const [stressModalOpen, setStressModalOpen] = useState(false);
-  const [todoModalOpen, setTodoModalOpen] = useState(false);
-  const [homeworkModalOpen, setHomeworkModalOpen] = useState(false);
-<<<<<<< HEAD
-  const [homework, setHomework] = useState<Homework[]>([]);
+  const [studentData, setStudentData] = useState<any>(null);
+  const [marksheets, setMarksheets] = useState<Marksheet[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
-      // Set up real-time listener for homework
-      const homeworkQuery = query(
-        collection(db, 'homework'),
-        where('studentId', '==', user.id)
-      );
+    const fetchStudentData = async () => {
+      if (!user) return;
       
-      const unsubscribe = onSnapshot(homeworkQuery, (snapshot) => {
-        const homeworkData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Homework[];
-        setHomework(homeworkData);
-      });
-      
-      return () => unsubscribe();
-    }
-  }, [user?.id]);
-=======
-  const [showHomeworkTracker, setShowHomeworkTracker] = useState(false);
->>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
+      try {
+        // Fetch student data
+        const userDoc = await getDoc(doc(db, 'users', user.id));
+        if (userDoc.exists()) {
+          setStudentData(userDoc.data());
+        }
+        
+        // Fetch marks data for all exam types
+        const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
+        const marksData: Marksheet[] = [];
+        
+        for (const examType of examTypes) {
+          const marksDoc = await getDoc(doc(db, 'students', user.id, 'marks', examType));
+          if (marksDoc.exists()) {
+            marksData.push({
+              id: examType,
+              ...marksDoc.data()
+            } as Marksheet);
+          }
+        }
+        
+        setMarksheets(marksData);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching student data:', err);
+        setLoading(false);
+      }
+    };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/student-dashboard');
+    fetchStudentData();
+  }, [user]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Failed to log out', err);
+    }
   };
 
-  const flashcards = [
-    {
-      id: 'career',
-      title: 'Career Guidance',
-      description: 'Confused about your future? Discover careers that match your skills and interests.',
-      icon: Briefcase,
-      gradient: 'from-amber-500 to-orange-500',
-      bgGradient: 'from-amber-50 to-orange-50',
-      onClick: () => setCareerModalOpen(true),
-      isNew: true,
-    },
-    {
-      id: 'stress',
-      title: 'Stress Relief',
-      description: 'Feeling stressed? Chat with Dronacharya for support.',
-      icon: Heart,
-      gradient: 'from-pink-500 to-purple-500',
-      bgGradient: 'from-pink-50 to-purple-50',
-      onClick: () => setStressModalOpen(true),
-      isNew: true,
-    },
-    {
-      id: 'todo',
-      title: 'To-Do List',
-      description: 'Organize your day and take notes.',
-      icon: CheckSquare,
-      gradient: 'from-green-500 to-teal-500',
-      bgGradient: 'from-green-50 to-teal-50',
-      onClick: () => setTodoModalOpen(true),
-      isNew: true,
-    },
-    {
-      id: 'homework',
-      title: 'Homework Help',
-      description: 'Need help with homework? Ask Dronacharya AI anything!',
-      icon: MessageCircle,
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-50 to-amber-50',
-      onClick: () => setHomeworkModalOpen(true),
-      isNew: true,
-    },
-    {
-      id: 'homework-tracker',
-      title: 'Homework Tracker',
-      description: 'Track your homework assignments and mark them as done.',
-      icon: BookOpen,
-      gradient: 'from-indigo-500 to-blue-500',
-      bgGradient: 'from-indigo-50 to-blue-50',
-      onClick: () => setShowHomeworkTracker(!showHomeworkTracker),
-      isNew: true,
-    },
-    {
-      id: 'registrations',
-      title: 'Registrations',
-      description: 'Register for school events, activities, and programs.',
-      icon: Calendar,
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-50 to-cyan-50',
-      onClick: () => navigate('/registration'),
-    },
-    {
-      id: 'quiz',
-      title: 'Quiz Challenge',
-      description: 'Test your knowledge with interactive quizzes across subjects.',
-      icon: Brain,
-      gradient: 'from-violet-500 to-fuchsia-500',
-      bgGradient: 'from-violet-50 to-fuchsia-50',
-      onClick: () => navigate('/quiz'),
-    },
+  const examTypes = [
+    { id: 'unit_test_1', name: 'UT1', color: 'bg-blue-500' },
+    { id: 'unit_test_2', name: 'UT2', color: 'bg-green-500' },
+    { id: 'unit_test_3', name: 'UT3', color: 'bg-yellow-500' },
+    { id: 'half_yearly', name: 'Half-Yearly', color: 'bg-purple-500' },
+    { id: 'final_exam', name: 'Final', color: 'bg-red-500' }
   ];
 
-  // Count pending homework
-  const pendingHomeworkCount = homework.filter(hw => hw.status === 'pending').length;
+  const calculatePercentage = (marks: number, maxMarks: number = 100) => {
+    return Math.round((marks / maxMarks) * 100);
+  };
+
+  // Function to get marks for a specific exam
+  const getExamMarks = (examId: string) => {
+    const examData = marksheets.find(m => m.id === examId);
+    if (!examData) return 0;
+    
+    // Try different ways to get marks
+    return examData[examId] || examData.marks || 0;
+  };
+
+  // Function to get max marks for a specific exam
+  const getExamMaxMarks = (examId: string) => {
+    const examData = marksheets.find(m => m.id === examId);
+    return examData?.maxMarks || 100;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       <div className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">RHPS Student Portal</h1>
-            <p className="text-gray-600">Welcome, {user?.name || 'Student'}</p>
+            <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
+            <p className="text-gray-600">Welcome, {studentData?.username || 'Student'}</p>
           </div>
           <button
             onClick={handleLogout}
@@ -153,157 +135,143 @@ const StudentHome: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Your Dashboard</h2>
-          <p className="text-xl text-gray-600">
-            Explore interactive tools designed to help you succeed
-          </p>
-        </motion.div>
-
-        {/* Homework Summary Card */}
-        {homework.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-lg p-6 mb-8"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Your Homework</h3>
-              <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                {pendingHomeworkCount} pending
-              </span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {homework.slice(0, 3).map((hw) => (
-                <div 
-                  key={hw.id} 
-                  className={`p-4 rounded-lg border ${
-                    hw.status === 'pending' 
-                      ? 'bg-yellow-50 border-yellow-200' 
-                      : hw.status === 'submitted' 
-                        ? 'bg-blue-50 border-blue-200' 
-                        : 'bg-green-50 border-green-200'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-gray-900">{hw.subject}</h4>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      hw.status === 'pending' 
-                        ? 'bg-yellow-100 text-yellow-800' 
-                        : hw.status === 'submitted' 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-green-100 text-green-800'
-                    }`}>
-                      {hw.status}
-                    </span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Student Info Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center">
+                    <User className="h-8 w-8 text-white" />
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{hw.title}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Due: {new Date(hw.dueDate).toLocaleDateString()}
-                  </p>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900">{studentData?.username || 'Student'}</h3>
+                    <p className="text-gray-600">{user?.email}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 text-center">
-              <button 
-                onClick={() => navigate('/homework')}
-                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-              >
-                View all homework
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {flashcards.slice(0, 4).map((card, index) => (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              onClick={card.onClick}
-              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 relative overflow-hidden`}
-            >
-              {card.isNew && (
-                <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                  NEW
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Class</p>
+                    <p className="font-semibold text-gray-900">{studentData?.class || 'N/A'}</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Section</p>
+                    <p className="font-semibold text-gray-900">{studentData?.section || 'N/A'}</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Admission No</p>
+                    <p className="font-semibold text-gray-900">{studentData?.admissionNumber || 'N/A'}</p>
+                  </div>
                 </div>
-              )}
-              <div className="text-center">
-                <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
-                  <card.icon className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{card.title}</h3>
-                <p className="text-gray-700 leading-relaxed">{card.description}</p>
               </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {showHomeworkTracker && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-xl p-8 mb-8"
-          >
-            <HomeworkTracker />
-          </motion.div>
-        )}
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {flashcards.slice(4).map((card, index) => (
-            <motion.div
-              key={card.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (index + 4) * 0.1 }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              onClick={card.onClick}
-              className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 relative overflow-hidden`}
-            >
-              {card.isNew && (
-                <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                  NEW
-                </div>
-              )}
-              <div className="text-center">
-                <div className={`bg-gradient-to-r ${card.gradient} w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
-                  <card.icon className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">{card.title}</h3>
-                <p className="text-gray-700 leading-relaxed">{card.description}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 text-center"
-        >
-          <div className="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto">
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Meet Dronacharya</h3>
-            <p className="text-gray-600">
-              Your AI mentor inspired by the legendary ancient Indian warrior-sage. Dronacharya is here to guide you through career decisions and provide support when you need it most.
-            </p>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Marks Dashboard */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <BarChart3 className="h-6 w-6 mr-2 text-blue-600" />
+                  Academic Performance
+                </h2>
+              </div>
+
+              {marksheets.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {examTypes.map((exam) => {
+                    // Find marks for this exam type
+                    const examMarks = getExamMarks(exam.id);
+                    const maxMarks = getExamMaxMarks(exam.id);
+                    
+                    return (
+                      <motion.div
+                        key={exam.id}
+                        whileHover={{ y: -5, scale: 1.02 }}
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-bold text-gray-900">{exam.name}</h3>
+                          <div className={`w-3 h-3 rounded-full ${exam.color}`}></div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-2xl font-bold text-gray-900">
+                              {examMarks}
+                              <span className="text-sm font-normal text-gray-500">/{maxMarks}</span>
+                            </span>
+                            <span className="text-lg font-semibold text-gray-700">
+                              {calculatePercentage(Number(examMarks), maxMarks)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${exam.color}`}
+                              style={{ width: `${calculatePercentage(Number(examMarks), maxMarks)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No marks data available</h3>
+                  <p className="text-gray-500">Your marks will appear here once uploaded by your teachers.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100">Class</p>
+                    <p className="text-3xl font-bold mt-1">{studentData?.class || 'N/A'}</p>
+                  </div>
+                  <Users className="h-10 w-10 text-blue-200" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100">Section</p>
+                    <p className="text-3xl font-bold mt-1">{studentData?.section || 'N/A'}</p>
+                  </div>
+                  <Award className="h-10 w-10 text-green-200" />
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100">Performance</p>
+                    <p className="text-3xl font-bold mt-1">
+                      {marksheets.length > 0 
+                        ? Math.round(marksheets.reduce((acc, mark) => {
+                            const examMarks = getExamMarks(mark.id);
+                            const maxMarks = getExamMaxMarks(mark.id);
+                            return acc + calculatePercentage(Number(examMarks), maxMarks);
+                          }, 0) / marksheets.length) || 'N/A'
+                        : 'N/A'}%
+                    </p>
+                  </div>
+                  <TrendingUp className="h-10 w-10 text-purple-200" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <CareerGuidanceModal isOpen={careerModalOpen} onClose={() => setCareerModalOpen(false)} />
-      <StressReliefModal isOpen={stressModalOpen} onClose={() => setStressModalOpen(false)} />
-      <EnhancedTodoListModal isOpen={todoModalOpen} onClose={() => setTodoModalOpen(false)} />
-      <HomeworkHelpModal isOpen={homeworkModalOpen} onClose={() => setHomeworkModalOpen(false)} />
       <FloatingDronacharyaButton />
     </div>
   );

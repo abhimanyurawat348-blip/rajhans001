@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -31,6 +30,9 @@ interface StudentData {
   class: string;
   section: string;
   admissionNumber: string;
+  marks?: {
+    [key: string]: any;
+  };
 }
 
 interface Homework {
@@ -307,276 +309,46 @@ const ParentPortal: React.FC = () => {
     }
   };
 
+  // Function to load student marks for flashcards
+  const loadStudentMarksForFlashcards = async () => {
+    if (!studentData?.id) return;
+
+    try {
+      // Load marks for all exam types
+      const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
+      const marksData: any = {};
+
+      for (const examType of examTypes) {
+        const marksDoc = await getDoc(doc(db, 'students', studentData.id, 'marks', examType));
+        if (marksDoc.exists()) {
+          marksData[examType] = marksDoc.data();
+        }
+      }
+
+      // Update state with marks data
+      setStudentData(prev => prev ? {
+        ...prev,
+        marks: marksData
+      } : null);
+    } catch (err) {
+      console.error('Error loading student marks:', err);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'dashboard' && studentData?.id) {
       loadStudentData();
+      loadStudentMarksForFlashcards();
     }
   }, [activeTab, studentData?.id]);
 
-  if (activeTab === 'login' || activeTab === 'signup') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
-        >
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 mb-6"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Home</span>
-          </button>
-
-          <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Users className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {activeTab === 'login' ? 'Parent Login' : 'Parent Sign Up'}
-            </h1>
-            <p className="text-gray-600">
-              {activeTab === 'login' 
-                ? 'Access your parent dashboard' 
-                : 'Create your parent account'}
-            </p>
-          </div>
-
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-            <button
-              onClick={() => {
-                setActiveTab('login');
-                setError('');
-              }}
-              className={`flex-1 py-2 px-4 rounded-md transition-colors duration-200 ${
-                activeTab === 'login'
-                  ? 'bg-white text-purple-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('signup');
-                setError('');
-              }}
-              className={`flex-1 py-2 px-4 rounded-md transition-colors duration-200 ${
-                activeTab === 'signup'
-                  ? 'bg-white text-purple-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {activeTab === 'login' ? (
-            <form onSubmit={(e) => handleSubmit(e, 'login')} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2 font-semibold"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <Users className="h-5 w-5" />
-                    <span>Login</span>
-                  </>
-                )}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={(e) => handleSubmit(e, 'signup')} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Parent Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter your email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="studentEmail" className="block text-sm font-medium text-gray-700 mb-2">
-                  Student Email Address
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="email"
-                    id="studentEmail"
-                    name="studentEmail"
-                    value={formData.studentEmail}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter your child's email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Create a password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Confirm your password"
-                    required
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center space-x-2 font-semibold"
-              >
-                {loading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <User className="h-5 w-5" />
-                    <span>Create Account</span>
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              {activeTab === 'login' 
-                ? "Don't have an account? " 
-                : "Already have an account? "}
-              <button
-                onClick={() => {
-                  setActiveTab(activeTab === 'login' ? 'signup' : 'login');
-                  setError('');
-                }}
-                className="text-purple-600 hover:text-purple-700 font-semibold"
-              >
-                {activeTab === 'login' ? 'Sign up here' : 'Login here'}
-              </button>
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  // Helper function to get marks for a specific exam
+  const getExamMarks = (examType: string) => {
+    if (!studentData?.marks || !studentData.marks[examType]) return 'N/A';
+    const examData = studentData.marks[examType];
+    // Return the marks value
+    return examData.marks || examData[examType] || 'N/A';
+  };
 
   // Parent Dashboard
   return (
@@ -682,6 +454,48 @@ const ParentPortal: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Child Progress Flashcards */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Child Progress</h2>
+              {studentData ? (
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-5 text-white">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg">{studentData.name}</h3>
+                        <p className="text-blue-100">Class {studentData.class} - Section {studentData.section}</p>
+                      </div>
+                      <CheckCircle className="h-6 w-6 text-blue-200" />
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div className="bg-blue-400/20 rounded-lg p-2">
+                        <p className="text-xs text-blue-100">Unit Test 1</p>
+                        <p className="font-bold">{getExamMarks('unit_test_1')}/100</p>
+                      </div>
+                      <div className="bg-blue-400/20 rounded-lg p-2">
+                        <p className="text-xs text-blue-100">Unit Test 2</p>
+                        <p className="font-bold">{getExamMarks('unit_test_2')}/100</p>
+                      </div>
+                      <div className="bg-blue-400/20 rounded-lg p-2">
+                        <p className="text-xs text-blue-100">Unit Test 3</p>
+                        <p className="font-bold">{getExamMarks('unit_test_3')}/100</p>
+                      </div>
+                      <div className="bg-blue-400/20 rounded-lg p-2">
+                        <p className="text-xs text-blue-100">Half Yearly</p>
+                        <p className="font-bold">{getExamMarks('half_yearly')}/100</p>
+                      </div>
+                      <div className="bg-blue-400/20 rounded-lg p-2">
+                        <p className="text-xs text-blue-100">Final Exam</p>
+                        <p className="font-bold">{getExamMarks('final_exam')}/100</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-500">Loading child progress...</p>
+              )}
+            </div>
+
             {/* Academic Performance */}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Academic Performance</h2>
@@ -816,152 +630,9 @@ const ParentPortal: React.FC = () => {
             </div>
           </div>
         </div>
-=======
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { UserPlus, LogIn, Users, AlertCircle } from 'lucide-react';
-
-const ParentPortal: React.FC = () => {
-  const navigate = useNavigate();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <Users className="h-20 w-20 text-teal-600 mx-auto mb-6" />
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Parent Portal</h1>
-          <p className="text-xl text-gray-600">
-            Stay connected with your child's academic journey
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-4xl mx-auto mb-12"
-        >
-          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 flex items-start space-x-4">
-            <AlertCircle className="h-8 w-8 text-amber-600 flex-shrink-0 mt-1" />
-            <div>
-              <h2 className="text-xl font-bold text-amber-900 mb-2">Important: Registration Process</h2>
-              <p className="text-amber-800 leading-relaxed">
-                First register the student, then parent registration with same credentials.
-                Parents can only register if their child is already registered in the Student Portal.
-                You will need your child's admission number, class, section, and the password they set during registration.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ y: -10, scale: 1.02 }}
-            onClick={() => navigate('/parent-signup')}
-            className="bg-white rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300"
-          >
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-teal-500 to-cyan-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <UserPlus className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">Sign Up</h3>
-              <p className="text-gray-600 mb-6">
-                Create a new parent account to track your child's progress and performance.
-              </p>
-              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                <p className="text-sm text-teal-800">
-                  New parent? Register here to get started.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            whileHover={{ y: -10, scale: 1.02 }}
-            onClick={() => navigate('/parent-login')}
-            className="bg-white rounded-2xl shadow-xl p-8 cursor-pointer hover:shadow-2xl transition-all duration-300"
-          >
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-emerald-500 to-green-500 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <LogIn className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">Login</h3>
-              <p className="text-gray-600 mb-6">
-                Already have an account? Login to access your parent dashboard.
-              </p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-800">
-                  Existing parents can login with their credentials.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="text-center mt-12"
-        >
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">What You Can Do</h3>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <h4 className="font-bold text-gray-900 mb-2">Track Performance</h4>
-              <p className="text-gray-600 text-sm">
-                View your child's marks from unit tests, half-yearly, and final exams
-              </p>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <h4 className="font-bold text-gray-900 mb-2">Monitor Homework</h4>
-              <p className="text-gray-600 text-sm">
-                Check homework completion status and stay updated
-              </p>
-            </div>
-            <div className="bg-white rounded-xl p-6 shadow-md">
-              <h4 className="font-bold text-gray-900 mb-2">Parent-Teacher Meetings</h4>
-              <p className="text-gray-600 text-sm">
-                Access interactive meeting schedules and updates
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="text-center mt-12"
-        >
-          <p className="text-gray-600">
-            For student access, visit the{' '}
-            <button
-              onClick={() => navigate('/student-dashboard')}
-              className="text-teal-600 hover:text-teal-700 font-semibold underline"
-            >
-              Student Portal
-            </button>
-          </p>
-        </motion.div>
->>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748
       </div>
     </div>
   );
 };
 
-<<<<<<< HEAD
 export default ParentPortal;
-=======
-export default ParentPortal;
->>>>>>> 98375c66bbffcc4a68421a8881f5a49cb3d35748

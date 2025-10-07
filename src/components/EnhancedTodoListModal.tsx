@@ -186,6 +186,11 @@ const EnhancedTodoListModal: React.FC<EnhancedTodoListModalProps> = ({ isOpen, o
           className="bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col border-4 border-cyan-400"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Under Development Banner */}
+          <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-600 text-white text-center py-2 font-bold">
+            AI Tutor (Dronacharya) - Under Development
+          </div>
+          
           <div className="bg-gradient-to-r from-cyan-600 via-blue-600 to-teal-600 p-6 rounded-t-xl">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
