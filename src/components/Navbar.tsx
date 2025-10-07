@@ -1,17 +1,20 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { School, LogOut, Menu, X } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { School, LogOut, Menu, X, Moon, Sun } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
     { path: '/', label: 'Home' },
+    { path: '/about-us', label: 'About Us' },
     { path: '/login', label: 'Login' },
     { path: '/yearly-planner', label: 'Yearly Planner' },
     { path: '/monthly-planner', label: 'Monthly Planner' },
@@ -61,14 +64,21 @@ const Navbar: React.FC = () => {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center space-x-4">
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-gray-700">
+                <span className="text-sm text-gray-700 dark:text-gray-300">
                   Welcome, {user?.name}
                 </span>
                 <button
                   onClick={logout}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+                  className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900/50 transition-colors duration-200"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>
@@ -113,13 +123,19 @@ const Navbar: React.FC = () => {
                   {item.label}
                 </Link>
               ))}
+              <button
+                onClick={toggleDarkMode}
+                className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-200"
+              >
+                {darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => {
                     logout();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
+                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900/50 transition-colors duration-200"
                 >
                   Logout
                 </button>

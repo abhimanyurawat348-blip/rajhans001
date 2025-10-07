@@ -24,7 +24,17 @@ const StudentSignup: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const getClientIP = async (): Promise<string> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -56,6 +66,9 @@ const StudentSignup: React.FC = () => {
         formData.password
       );
 
+      // Get the user's IP address
+      const ipAddress = await getClientIP();
+
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         uid: userCredential.user.uid,
         username: formData.username,
@@ -68,7 +81,8 @@ const StudentSignup: React.FC = () => {
         fatherName: formData.fatherName,
         motherName: formData.motherName,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        ipAddress
       });
 
       await setDoc(doc(db, 'students', formData.admissionNumber), {
@@ -83,7 +97,17 @@ const StudentSignup: React.FC = () => {
         motherName: formData.motherName,
         password: formData.password,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        ipAddress
+      });
+
+      // Log signup record
+      await setDoc(doc(db, 'signupRecords', userCredential.user.uid), {
+        id: userCredential.user.uid,
+        email: formData.email,
+        ipAddress,
+        signupTime: new Date(),
+        username: formData.username
       });
 
       setSuccess(true);

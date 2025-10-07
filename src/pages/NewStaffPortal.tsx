@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { useComplaints } from '../contexts/ComplaintContext';
 import { read, utils } from 'xlsx';
 import {
   Shield,
@@ -22,7 +23,10 @@ import {
   Download,
   AlertCircle,
   Check,
-  Lock
+  Lock,
+  Eye,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 
 interface StudentDoc {
@@ -74,6 +78,7 @@ interface UnregisteredStudentMarks {
 
 const NewStaffPortal: React.FC = () => {
   const navigate = useNavigate();
+  const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLogin, setShowLogin] = useState(true); // Add the missing state
   const [loginData, setLoginData] = useState({ username: '', password: '' });
@@ -94,6 +99,8 @@ const NewStaffPortal: React.FC = () => {
   const [excelData, setExcelData] = useState<any[]>([]);
   const [uploadStatus, setUploadStatus] = useState<{ loading: boolean; message: string; error: boolean }>({ loading: false, message: '', error: false });
   const [unregisteredMarks, setUnregisteredMarks] = useState<UnregisteredStudentMarks[]>([]);
+  const [selectedComplaint, setSelectedComplaint] = useState<string | null>(null);
+  const [loginRecords, setLoginRecords] = useState<any[]>([]);
 
   // Function to auto-link unregistered student marks when a matching student registers
   const autoLinkUnregisteredMarks = useCallback(async () => {
@@ -166,7 +173,31 @@ const NewStaffPortal: React.FC = () => {
 
   useEffect(() => {
     loadAllData();
-  }, [loadAllData]);
+    loadComplaints();
+    
+    // Load login records
+    const loadLoginRecords = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'loginRecords'));
+        const records: any[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          records.push({
+            id: doc.id,
+            ...data,
+            loginTime: data.loginTime?.toDate ? data.loginTime.toDate() : data.loginTime
+          });
+        });
+        
+        setLoginRecords(records);
+      } catch (err) {
+        console.error('Error loading login records:', err);
+      }
+    };
+    
+    loadLoginRecords();
+  }, [loadAllData, loadComplaints]);
 
   const loadStudentsByClass = async (classValue: string, sectionValue: string) => {
     try {
@@ -820,6 +851,72 @@ const NewStaffPortal: React.FC = () => {
     navigate('/login');
   };
 
+  const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
+    if (action === 'remove') {
+      await deleteComplaint(id);
+    } else {
+      await updateComplaintStatus(id, action);
+    }
+  };
+
+  const handleRemoveStudent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this student?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing student:', error);
+        alert('Failed to remove student');
+      }
+    }
+  };
+
+  const handleRemoveParent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this parent?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing parent:', error);
+        alert('Failed to remove parent');
+      }
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'under-consideration':
+        return <AlertTriangle className="h-5 w-5 text-blue-500" />;
+      case 'resolved':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'under-consideration':
+        return 'bg-blue-100 text-blue-800';
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'removed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   // If not authenticated, show login form
   if (!isAuthenticated) {
     return (
@@ -1009,7 +1106,13 @@ const NewStaffPortal: React.FC = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.section}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber || 'N/A'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <button className="text-red-600 hover:text-red-900">Remove</button>
+                                <button 
+                                  onClick={() => handleRemoveStudent(student.id)}
+                                  className="text-red-600 hover:text-red-900 flex items-center"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Remove
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -1052,7 +1155,13 @@ const NewStaffPortal: React.FC = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parent.studentEmail}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <button className="text-red-600 hover:text-red-900">Remove</button>
+                                <button 
+                                  onClick={() => handleRemoveParent(parent.id)}
+                                  className="text-red-600 hover:text-red-900 flex items-center"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Remove
+                                </button>
                               </td>
                             </tr>
                           ))}
@@ -1218,9 +1327,116 @@ const NewStaffPortal: React.FC = () => {
             )}
 
             {activeSection === 'complaints' && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900">Complaints</h2>
-                <p className="text-gray-500 mt-4">Complaint management features would appear here.</p>
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900">Student Complaints</h2>
+                    <div className="flex space-x-2">
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        Export CSV
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {complaints.length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No complaints submitted yet.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-200">
+                      {complaints.map((complaint) => (
+                        <div key={complaint.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h3 className="font-semibold text-gray-900">{complaint.studentName}</h3>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
+                                  {complaint.status.replace('-', ' ')}
+                                </span>
+                              </div>
+                              
+                              <div className="text-sm text-gray-600 mb-2">
+                                <span>Class {complaint.class}-{complaint.section}</span>
+                                <span className="mx-2">•</span>
+                                <span>Email: {complaint.email}</span>
+                                <span className="mx-2">•</span>
+                                <span>{new Date(complaint.submittedAt).toLocaleDateString()}</span>
+                                {complaint.ipAddress && (
+                                  <>
+                                    <span className="mx-2">•</span>
+                                    <span>IP: {complaint.ipAddress}</span>
+                                  </>
+                                )}
+                              </div>
+
+                              <p className="text-gray-700 mb-3 line-clamp-2">{complaint.complaint}</p>
+
+                              <div className="flex items-center space-x-4">
+                                <button
+                                  onClick={() => setSelectedComplaint(selectedComplaint === complaint.id ? null : complaint.id)}
+                                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                  <span>{selectedComplaint === complaint.id ? 'Hide' : 'View'} Details</span>
+                                </button>
+
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleComplaintAction(complaint.id, 'under-consideration')}
+                                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm hover:bg-blue-200 transition-colors duration-200"
+                                  >
+                                    Under Review
+                                  </button>
+                                  <button
+                                    onClick={() => handleComplaintAction(complaint.id, 'resolved')}
+                                    className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm hover:bg-green-200 transition-colors duration-200"
+                                  >
+                                    Mark Solved
+                                  </button>
+                                  <button
+                                    onClick={() => handleComplaintAction(complaint.id, 'remove')}
+                                    className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm hover:bg-red-200 transition-colors duration-200 flex items-center space-x-1"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    <span>Remove</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              {getStatusIcon(complaint.status)}
+                            </div>
+                          </div>
+
+                          {selectedComplaint === complaint.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mt-4 p-4 bg-gray-50 rounded-lg"
+                            >
+                              <div className="grid md:grid-cols-2 gap-4">
+                                {complaint.fatherName && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">Father's Name:</p>
+                                    <p className="text-sm text-gray-600">{complaint.fatherName}</p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">Email:</p>
+                                  <p className="text-sm text-gray-600">{complaint.email}</p>
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <p className="text-sm font-medium text-gray-700">Full Complaint:</p>
+                                <p className="text-sm text-gray-600 mt-1">{complaint.complaint}</p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1228,6 +1444,43 @@ const NewStaffPortal: React.FC = () => {
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900">Meetings</h2>
                 <p className="text-gray-500 mt-4">Meeting scheduling features would appear here.</p>
+              </div>
+            )}
+
+            {activeSection === 'registrations' && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Login Records</h2>
+                {loginRecords.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">No login records available.</p>
+                ) : (
+                  <div className="divide-y divide-gray-200">
+                    {loginRecords.map((record) => (
+                      <div key={record.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{record.email}</h3>
+                            <div className="text-sm text-gray-600 mt-1">
+                              <span>IP: {record.ipAddress}</span>
+                              <span className="mx-2">•</span>
+                              <span>{new Date(record.loginTime).toLocaleString()}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {record.otpVerified ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                                Verified
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                                Unverified
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

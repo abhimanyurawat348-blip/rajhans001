@@ -5,6 +5,7 @@ import { ComplaintProvider } from './contexts/ComplaintContext';
 import { EventProvider } from './contexts/EventContext';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { StudyResourcesProvider } from './contexts/StudyResourcesContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import NewStaffPortal from './pages/NewStaffPortal';
@@ -34,6 +35,7 @@ const ParentSignup = lazy(() => import('./pages/ParentSignup'));
 const ParentLogin = lazy(() => import('./pages/ParentLogin'));
 const ParentHome = lazy(() => import('./pages/ParentHome'));
 const Homework = lazy(() => import('./pages/Homework'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50">
@@ -47,51 +49,54 @@ const LoadingFallback = () => (
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <ComplaintProvider>
-          <EventProvider>
-            <RegistrationProvider>
-              <StudyResourcesProvider>
-                <Router>
-                  <div className="min-h-screen bg-gray-50">
-                    <Navbar />
-                    <Suspense fallback={<LoadingFallback />}>
-                      <Routes>
-                        <Route path="/" element={<Home />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/student-dashboard" element={<StudentDashboard />} />
-                        <Route path="/student-signup" element={<StudentSignup />} />
-                        <Route path="/student-login" element={<StudentLogin />} />
-                        <Route path="/student-home" element={<StudentHome />} />
-                        <Route path="/rules" element={<Rules />} />
-                        <Route path="/student-council" element={<StudentCouncil />} />
-                        <Route path="/yearly-planner" element={<YearlyPlanner />} />
-                        <Route path="/planners-registrations" element={<PlannersRegistrations />} />
-                        <Route path="/monthly-planner" element={<MonthlyPlanner />} />
-                        <Route path="/registration" element={<Registration />} />
-                        <Route path="/staff-portal" element={<NewStaffPortal />} />
-                        <Route path="/complaints" element={<Complaints />} />
-                        <Route path="/study-resources" element={<StudyResources />} />
-                        <Route path="/parent-portal" element={<ParentPortal />} />
-                        <Route path="/parent-signup" element={<ParentSignup />} />
-                        <Route path="/parent-login" element={<ParentLogin />} />
-                        <Route path="/parent-home" element={<ParentHome />} />
-                        <Route path="/quiz" element={<QuizHome />} />
-                        <Route path="/quiz/start" element={<QuizStart />} />
-                        <Route path="/quiz/select-class" element={<QuizClassSelect />} />
-                        <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
-                        <Route path="/quiz/play" element={<QuizPlay />} />
-                        <Route path="/quiz/results" element={<QuizResults />} />
-                        <Route path="/homework" element={<Homework />} />
-                      </Routes>
-                    </Suspense>
-                  </div>
-                </Router>
-              </StudyResourcesProvider>
-            </RegistrationProvider>
-          </EventProvider>
-        </ComplaintProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <ComplaintProvider>
+            <EventProvider>
+              <RegistrationProvider>
+                <StudyResourcesProvider>
+                  <Router>
+                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                      <Navbar />
+                      <Suspense fallback={<LoadingFallback />}>
+                        <Routes>
+                          <Route path="/" element={<Home />} />
+                          <Route path="/about-us" element={<AboutUs />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/student-dashboard" element={<StudentDashboard />} />
+                          <Route path="/student-signup" element={<StudentSignup />} />
+                          <Route path="/student-login" element={<StudentLogin />} />
+                          <Route path="/student-home" element={<StudentHome />} />
+                          <Route path="/rules" element={<Rules />} />
+                          <Route path="/student-council" element={<StudentCouncil />} />
+                          <Route path="/yearly-planner" element={<YearlyPlanner />} />
+                          <Route path="/planners-registrations" element={<PlannersRegistrations />} />
+                          <Route path="/monthly-planner" element={<MonthlyPlanner />} />
+                          <Route path="/registration" element={<Registration />} />
+                          <Route path="/staff-portal" element={<NewStaffPortal />} />
+                          <Route path="/complaints" element={<Complaints />} />
+                          <Route path="/study-resources" element={<StudyResources />} />
+                          <Route path="/parent-portal" element={<ParentPortal />} />
+                          <Route path="/parent-signup" element={<ParentSignup />} />
+                          <Route path="/parent-login" element={<ParentLogin />} />
+                          <Route path="/parent-home" element={<ParentHome />} />
+                          <Route path="/quiz" element={<QuizHome />} />
+                          <Route path="/quiz/start" element={<QuizStart />} />
+                          <Route path="/quiz/select-class" element={<QuizClassSelect />} />
+                          <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
+                          <Route path="/quiz/play" element={<QuizPlay />} />
+                          <Route path="/quiz/results" element={<QuizResults />} />
+                          <Route path="/homework" element={<Homework />} />
+                        </Routes>
+                      </Suspense>
+                    </div>
+                  </Router>
+                </StudyResourcesProvider>
+              </RegistrationProvider>
+            </EventProvider>
+          </ComplaintProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
