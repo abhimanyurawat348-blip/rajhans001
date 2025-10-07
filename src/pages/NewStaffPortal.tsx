@@ -80,7 +80,6 @@ const NewStaffPortal: React.FC = () => {
   const navigate = useNavigate();
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLogin, setShowLogin] = useState(true); // Add the missing state
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [activeSection, setActiveSection] = useState<'dashboard' | 'students' | 'registrations' | 'complaints' | 'meetings' | 'notices' | 'marksheets' | 'classes'>('dashboard');
@@ -103,119 +102,8 @@ const NewStaffPortal: React.FC = () => {
   const [loginRecords, setLoginRecords] = useState<any[]>([]);
 
   // Function to auto-link unregistered student marks when a matching student registers
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setShowLogin(true);
-    localStorage.removeItem('staffPortalAuth');
-    setLoginData({ username: '', password: '' });
-    navigate('/login');
-  };
 
-  const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
-    if (action === 'remove') {
-      await deleteComplaint(id);
-    } else {
-      await updateComplaintStatus(id, action);
-    }
-  };
 
-  const handleRemoveStudent = async (id: string) => {
-    if (window.confirm('Are you sure you want to remove this student?')) {
-      try {
-        // Remove from users collection
-        await deleteDoc(doc(db, 'users', id));
-        
-        // Reload data
-        loadAllData();
-      } catch (error) {
-        console.error('Error removing student:', error);
-        alert('Failed to remove student');
-      }
-    }
-  };
-
-  const handleRemoveParent = async (id: string) => {
-    if (window.confirm('Are you sure you want to remove this parent?')) {
-      try {
-        // Remove from users collection
-        await deleteDoc(doc(db, 'users', id));
-        
-        // Reload data
-        loadAllData();
-      } catch (error) {
-        console.error('Error removing parent:', error);
-        alert('Failed to remove parent');
-      }
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'under-consideration':
-        return <AlertTriangle className="h-5 w-5 text-blue-500" />;
-      case 'resolved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <FileText className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'under-consideration':
-        return 'bg-blue-100 text-blue-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      case 'removed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const autoLinkUnregisteredMarks = useCallback(async () => {
-    try {
-      // Get all unregistered marks
-      const unregisteredMarksSnap = await getDocs(collection(db, 'unregistered_student_marks'));
-      
-      // For each unregistered mark, check if a matching student now exists
-      for (const docSnapshot of unregisteredMarksSnap.docs) {
-        const unregisteredMark = { id: docSnapshot.id, ...docSnapshot.data() } as UnregisteredStudentMarks & { id: string };
-        
-        // Try to find a matching student by admission number or name
-        const studentQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'student'),
-          where('admissionNumber', '==', unregisteredMark.admissionNumber)
-        );
-        
-        const studentSnapshot = await getDocs(studentQuery);
-        
-        if (!studentSnapshot.empty) {
-          // Found a matching student, move the marks to their record
-          const student = studentSnapshot.docs[0];
-          
-          // Save to student's marks collection
-          await setDoc(doc(db, 'students', student.id, 'marks', unregisteredMark.examType), {
-            [unregisteredMark.examType]: unregisteredMark.marks,
-            uploadedAt: unregisteredMark.uploadedAt,
-            class: unregisteredMark.class,
-            section: unregisteredMark.section,
-            subject: unregisteredMark.subject
-          }, { merge: true });
-          
-          // Delete from unregistered marks collection
-          await deleteDoc(doc(db, 'unregistered_student_marks', unregisteredMark.id));
-        }
-      }
-    } catch (err) {
-      console.error('Error auto-linking unregistered marks:', err);
-    }
-  }, []);
 
   // Enhanced loadAllData that also triggers auto-linking
   const loadAllData = useCallback(async () => {
@@ -238,12 +126,48 @@ const NewStaffPortal: React.FC = () => {
       
       setUnregisteredMarks(unregisteredMarksData);
       
-      // Trigger auto-linking
-      await autoLinkUnregisteredMarks();
+      // Auto-link unregistered marks
+      try {
+        // Get all unregistered marks
+        const unregisteredMarksSnap = await getDocs(collection(db, 'unregistered_student_marks'));
+        
+        // For each unregistered mark, check if a matching student now exists
+        for (const docSnapshot of unregisteredMarksSnap.docs) {
+          const unregisteredMark = { id: docSnapshot.id, ...docSnapshot.data() } as UnregisteredStudentMarks & { id: string };
+          
+          // Try to find a matching student by admission number or name
+          const studentQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('admissionNumber', '==', unregisteredMark.admissionNumber)
+          );
+          
+          const studentSnapshot = await getDocs(studentQuery);
+          
+          if (!studentSnapshot.empty) {
+            // Found a matching student, move the marks to their record
+            const student = studentSnapshot.docs[0];
+            
+            // Save to student's marks collection
+            await setDoc(doc(db, 'students', student.id, 'marks', unregisteredMark.examType), {
+              [unregisteredMark.examType]: unregisteredMark.marks,
+              uploadedAt: unregisteredMark.uploadedAt,
+              class: unregisteredMark.class,
+              section: unregisteredMark.section,
+              subject: unregisteredMark.subject
+            }, { merge: true });
+            
+            // Delete from unregistered marks collection
+            await deleteDoc(doc(db, 'unregistered_student_marks', unregisteredMark.id));
+          }
+        }
+      } catch (err) {
+        console.error('Error auto-linking unregistered marks:', err);
+      }
     } catch (err) {
       console.error('Error loading data:', err);
     }
-  }, [autoLinkUnregisteredMarks]);
+  }, []);
 
   useEffect(() => {
     loadAllData();
@@ -898,7 +822,6 @@ const NewStaffPortal: React.FC = () => {
     const storedAuth = localStorage.getItem('staffPortalAuth');
     if (storedAuth === 'true') {
       setIsAuthenticated(true);
-      setShowLogin(false);
     }
   }, []);
 
@@ -908,7 +831,6 @@ const NewStaffPortal: React.FC = () => {
     // Updated credentials as per requirements
     if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu001') {
       setIsAuthenticated(true);
-      setShowLogin(false);
       localStorage.setItem('staffPortalAuth', 'true');
       setLoginError('');
     } else {
@@ -919,10 +841,37 @@ const NewStaffPortal: React.FC = () => {
   // Handle logout
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setShowLogin(true);
     localStorage.removeItem('staffPortalAuth');
     setLoginData({ username: '', password: '' });
     navigate('/login');
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'under-consideration':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Helper function to get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'resolved':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'under-consideration':
+        return <Clock className="h-5 w-5 text-blue-500" />;
+      case 'pending':
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      default:
+        return <AlertCircle className="h-5 w-5 text-gray-500" />;
+    }
   };
 
   const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
@@ -963,33 +912,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
-      case 'under-consideration':
-        return <AlertTriangle className="h-5 w-5 text-blue-500" />;
-      case 'resolved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      default:
-        return <FileText className="h-5 w-5 text-gray-500" />;
-    }
-  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'under-consideration':
-        return 'bg-blue-100 text-blue-800';
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      case 'removed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   // If not authenticated, show login form
   if (!isAuthenticated) {
@@ -1422,8 +1345,8 @@ const NewStaffPortal: React.FC = () => {
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
                                 <h3 className="font-semibold text-gray-900">{complaint.studentName}</h3>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                                  {complaint.status.replace('-', ' ')}
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status || 'pending')}`}>
+                                  {(complaint.status || 'pending').replace('-', ' ')}
                                 </span>
                               </div>
                               
@@ -1569,6 +1492,6 @@ const NewStaffPortal: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default NewStaffPortal;
