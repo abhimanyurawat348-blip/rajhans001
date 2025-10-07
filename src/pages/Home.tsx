@@ -189,6 +189,16 @@ const Home: React.FC = () => {
        bgGradient: 'from-green-50 to-teal-50',
       onClick: () => setIsTodoModalOpen(true),
       isNew: true,
+    },
+    {
+      id: 'about-us',
+      title: 'About Us',
+      description: 'Learn about the founders and vision behind RHPS Group.',
+      icon: Users,
+      gradient: 'from-blue-500 to-indigo-500',
+      bgGradient: 'from-blue-50 to-indigo-50',
+      link: '/about-us',
+      isNew: true,
     }
   ];
 
@@ -217,7 +227,7 @@ const Home: React.FC = () => {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-5xl md:text-6xl font-bold text-gray-900 mb-6"
           >
-            RHPS Public School
+            R.H.P.S. GROUP
           </motion.h1>
           
           <motion.p 
@@ -226,7 +236,7 @@ const Home: React.FC = () => {
             transition={{ delay: 0.6, duration: 0.6 }}
             className="text-xl text-gray-600 mb-4"
           >
-            Miyanwala, Dehradun
+            Royal Hindustan Private School Society
           </motion.p>
           
           <motion.div
