@@ -203,7 +203,7 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
       {/* Hero Section */}
       <motion.section 
         initial={{ opacity: 0, y: 50 }}
@@ -225,7 +225,7 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-5xl md:text-6xl font-bold text-gray-900 mb-6"
+            className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 dark:text-white"
           >
             R.H.P.S. GROUP
           </motion.h1>
@@ -234,7 +234,7 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            className="text-xl text-gray-600 mb-4"
+            className="text-xl text-gray-600 mb-4 dark:text-gray-300"
           >
             Royal Hindustan Private School Society
           </motion.p>
@@ -282,7 +282,7 @@ const Home: React.FC = () => {
       </motion.section>
 
       {/* New Features & Updates Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-purple-50 to-pink-50">
+      <section className="py-16 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -291,10 +291,10 @@ const Home: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4 dark:text-white">
               New Features & Updates
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-300">
               Discover the latest additions to our school portal
             </p>
           </motion.div>
@@ -339,10 +339,10 @@ const Home: React.FC = () => {
                 <div className={`bg-gradient-to-r ${card.gradient} w-16 h-16 rounded-full flex items-center justify-center text-white mb-4 mx-auto shadow-lg`}>
                   <card.icon className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-center mb-3 text-gray-900">
+                <h3 className="text-xl font-bold text-center mb-3 text-gray-900 dark:text-white">
                   {card.title}
                 </h3>
-                <p className="text-gray-700 text-center text-sm">
+                <p className="text-gray-700 text-center text-sm dark:text-gray-300">
                   {card.description}
                 </p>
                 <div className="text-center mt-4">

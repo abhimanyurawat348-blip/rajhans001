@@ -103,6 +103,80 @@ const NewStaffPortal: React.FC = () => {
   const [loginRecords, setLoginRecords] = useState<any[]>([]);
 
   // Function to auto-link unregistered student marks when a matching student registers
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setShowLogin(true);
+    localStorage.removeItem('staffPortalAuth');
+    setLoginData({ username: '', password: '' });
+    navigate('/login');
+  };
+
+  const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
+    if (action === 'remove') {
+      await deleteComplaint(id);
+    } else {
+      await updateComplaintStatus(id, action);
+    }
+  };
+
+  const handleRemoveStudent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this student?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing student:', error);
+        alert('Failed to remove student');
+      }
+    }
+  };
+
+  const handleRemoveParent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this parent?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing parent:', error);
+        alert('Failed to remove parent');
+      }
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-5 w-5 text-yellow-500" />;
+      case 'under-consideration':
+        return <AlertTriangle className="h-5 w-5 text-blue-500" />;
+      case 'resolved':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'under-consideration':
+        return 'bg-blue-100 text-blue-800';
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'removed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const autoLinkUnregisteredMarks = useCallback(async () => {
     try {
       // Get all unregistered marks

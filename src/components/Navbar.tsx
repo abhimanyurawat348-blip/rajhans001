@@ -29,15 +29,15 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <School className="h-8 w-8 text-blue-600" />
             <div className="flex flex-col">
-              <span className="font-bold text-lg text-gray-900">RHPS Public School</span>
-              <span className="text-xs text-gray-500">Miyanwala, Dehradun</span>
+              <span className="font-bold text-lg text-gray-900 dark:text-white">R.H.P.S. GROUP</span>
+              <span className="text-xs text-gray-500 dark:text-gray-300">Royal Hindustan Private School Society</span>
             </div>
           </Link>
 
@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                     isActive(item.path)
                       ? 'bg-blue-500 text-white'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-700'
                   }`}
                 >
                   {item.label}
@@ -106,7 +106,7 @@ const Navbar: React.FC = () => {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden"
           >
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-50 dark:bg-gray-700">
               {navItems.filter(item => 
                 item.path !== '/login' || !isAuthenticated
               ).map((item) => (
@@ -117,7 +117,7 @@ const Navbar: React.FC = () => {
                   className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                     isActive(item.path)
                       ? 'bg-blue-500 text-white'
-                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:text-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
                   {item.label}
