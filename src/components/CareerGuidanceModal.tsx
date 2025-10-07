@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles } from 'lucide-react';
+import { X, Send, Sparkles, Bot } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
+import { cohereChat } from '../utils/cohereChat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,6 +21,7 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,7 +60,14 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
         aiPrompt += '\n\n(Now provide 2-3 career suggestions based on the conversation.)';
       }
 
-      const response = await dronacharyaChat(aiPrompt, 'career', conversationHistory);
+      // Use the selected AI provider
+      let response = '';
+      if (aiProvider === 'cohere') {
+        response = await cohereChat(aiPrompt, 'career', conversationHistory);
+      } else {
+        response = await dronacharyaChat(aiPrompt, 'career', conversationHistory);
+      }
+
       const aiMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, aiMessage]);
 
@@ -85,6 +94,10 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const toggleAiProvider = () => {
+    setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
   };
 
   if (!isOpen) return null;
@@ -118,12 +131,21 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
                 <p className="text-amber-100 text-sm">Chat with Dronacharya</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleAiProvider}
+                className="flex items-center gap-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded-full text-sm transition-all"
+              >
+                <Bot className="h-4 w-4" />
+                {aiProvider === 'gemini' ? 'Gemini' : 'Cohere'}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -147,6 +169,12 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'assistant' && index === messages.length - 1 && (
+                    <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                      <Bot className="h-3 w-3" />
+                      Powered by {aiProvider === 'gemini' ? 'Google Gemini' : 'Cohere AI'}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, BookOpen } from 'lucide-react';
+import { X, Send, BookOpen, Bot } from 'lucide-react';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
+import { cohereChat } from '../utils/cohereChat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,6 +18,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,9 +49,15 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
         content: msg.content,
       }));
 
-      const homeworkPrompt = `You are Dronacharya, a wise teacher helping a student with their homework. The student asks: "${input}". Provide a clear, educational response that guides them to understand the concept rather than just giving the answer. Support Hindi, English, and Hinglish. Keep it encouraging and educational.`;
+      // Use the selected AI provider
+      let response = '';
+      if (aiProvider === 'cohere') {
+        response = await cohereChat(input, 'homework', conversationHistory);
+      } else {
+        const homeworkPrompt = `You are Dronacharya, a wise teacher helping a student with their homework. The student asks: "${input}". Provide a clear, educational response that guides them to understand the concept rather than just giving the answer. Support Hindi, English, and Hinglish. Keep it encouraging and educational.`;
+        response = await dronacharyaChat(homeworkPrompt, 'stress', conversationHistory);
+      }
 
-      const response = await dronacharyaChat(homeworkPrompt, 'stress', conversationHistory);
       const aiMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
@@ -68,6 +76,10 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const toggleAiProvider = () => {
+    setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
   };
 
   if (!isOpen) return null;
@@ -91,7 +103,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d97706" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
           }}
         >
-          {/* Under Development Banner */}
+          {/* Under Development Banner */}`
           <div className="bg-gradient-to-r from-amber-700 via-orange-700 to-amber-800 text-white text-center py-2 font-bold">
             AI Tutor (Dronacharya) - Under Development
           </div>
@@ -112,12 +124,21 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
                 <p className="text-amber-100 text-sm">Chat with Dronacharya</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all relative z-10"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleAiProvider}
+                className="flex items-center gap-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded-full text-sm transition-all relative z-10"
+              >
+                <Bot className="h-4 w-4" />
+                {aiProvider === 'gemini' ? 'Gemini' : 'Cohere'}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all relative z-10"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -141,6 +162,12 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'assistant' && index === messages.length - 1 && (
+                    <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                      <Bot className="h-3 w-3" />
+                      Powered by {aiProvider === 'gemini' ? 'Google Gemini' : 'Cohere AI'}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}

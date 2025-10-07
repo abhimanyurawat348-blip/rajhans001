@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Heart } from 'lucide-react';
+import { X, Send, Heart, Bot } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
+import { cohereChat } from '../utils/cohereChat';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,6 +20,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,7 +51,14 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
         content: msg.content,
       }));
 
-      const response = await dronacharyaChat(input, 'stress', conversationHistory);
+      // Use the selected AI provider
+      let response = '';
+      if (aiProvider === 'cohere') {
+        response = await cohereChat(input, 'stress', conversationHistory);
+      } else {
+        response = await dronacharyaChat(input, 'stress', conversationHistory);
+      }
+
       const aiMessage: Message = { role: 'assistant', content: response };
       setMessages((prev) => [...prev, aiMessage]);
 
@@ -76,6 +85,10 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const toggleAiProvider = () => {
+    setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
   };
 
   if (!isOpen) return null;
@@ -109,12 +122,21 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
                 <p className="text-pink-100 text-sm">Your supportive guide</p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all"
-            >
-              <X className="h-6 w-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleAiProvider}
+                className="flex items-center gap-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-3 py-1 rounded-full text-sm transition-all"
+              >
+                <Bot className="h-4 w-4" />
+                {aiProvider === 'gemini' ? 'Gemini' : 'Cohere'}
+              </button>
+              <button
+                onClick={onClose}
+                className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-all"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -138,6 +160,12 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
+                  {msg.role === 'assistant' && index === messages.length - 1 && (
+                    <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                      <Bot className="h-3 w-3" />
+                      Powered by {aiProvider === 'gemini' ? 'Google Gemini' : 'Cohere AI'}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
