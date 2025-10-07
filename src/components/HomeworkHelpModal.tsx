@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, BookOpen, Bot } from 'lucide-react';
+import { X, Send, BookOpen, Bot, AlertCircle } from 'lucide-react';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
 import { cohereChat } from '../utils/cohereChat';
 
@@ -19,6 +19,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,6 +29,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
         content: 'Namaste! I am Dronacharya, your homework guide. I am here to help you understand and solve your homework problems. What subject or topic do you need help with today?',
       };
       setMessages([initialMessage]);
+      setError(null);
     }
   }, [isOpen]);
 
@@ -42,6 +44,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
 
     try {
       const conversationHistory = messages.map((msg) => ({
@@ -62,6 +65,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error:', error);
+      setError('Failed to get response from AI. Please try again.');
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
@@ -80,6 +84,19 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
 
   const toggleAiProvider = () => {
     setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
+    setError(null);
+  };
+
+  const checkApiKey = () => {
+    const apiKey = aiProvider === 'cohere' 
+      ? import.meta.env.VITE_COHERE_API_KEY 
+      : import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      setError(`API key not configured for ${aiProvider === 'cohere' ? 'Cohere' : 'Gemini'}. Please contact support.`);
+      return false;
+    }
+    return true;
   };
 
   if (!isOpen) return null;
@@ -103,7 +120,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d97706" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
           }}
         >
-          {/* Under Development Banner */}`
+          {/* Under Development Banner */}
           <div className="bg-gradient-to-r from-amber-700 via-orange-700 to-amber-800 text-white text-center py-2 font-bold">
             AI Tutor (Dronacharya) - Under Development
           </div>
@@ -140,6 +157,14 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
               </button>
             </div>
           </div>
+
+          {/* Error message display */}
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, index) => (
@@ -204,7 +229,11 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
                 disabled={isLoading}
               />
               <button
-                onClick={handleSend}
+                onClick={() => {
+                  if (checkApiKey()) {
+                    handleSend();
+                  }
+                }}
                 disabled={isLoading || !input.trim()}
                 className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >

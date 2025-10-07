@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles, Bot } from 'lucide-react';
+import { X, Send, Sparkles, Bot, AlertCircle } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
@@ -22,6 +22,7 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
   const [isLoading, setIsLoading] = useState(false);
   const [questionCount, setQuestionCount] = useState(0);
   const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,6 +32,7 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
         content: 'Namaste! I am Dronacharya, your career guide. Let me help you discover your path. Tell me, what are your favorite subjects in school?',
       };
       setMessages([initialMessage]);
+      setError(null);
     }
   }, [isOpen]);
 
@@ -45,6 +47,7 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
     setQuestionCount((prev) => prev + 1);
 
     try {
@@ -80,6 +83,7 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
       }
     } catch (error) {
       console.error('Error:', error);
+      setError('Failed to get response from AI. Please try again.');
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
@@ -98,6 +102,19 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
 
   const toggleAiProvider = () => {
     setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
+    setError(null);
+  };
+
+  const checkApiKey = () => {
+    const apiKey = aiProvider === 'cohere' 
+      ? import.meta.env.VITE_COHERE_API_KEY 
+      : import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      setError(`API key not configured for ${aiProvider === 'cohere' ? 'Cohere' : 'Gemini'}. Please contact support.`);
+      return false;
+    }
+    return true;
   };
 
   if (!isOpen) return null;
@@ -147,6 +164,14 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
               </button>
             </div>
           </div>
+
+          {/* Error message display */}
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, index) => (
@@ -211,7 +236,11 @@ const CareerGuidanceModal: React.FC<CareerGuidanceModalProps> = ({ isOpen, onClo
                 disabled={isLoading}
               />
               <button
-                onClick={handleSend}
+                onClick={() => {
+                  if (checkApiKey()) {
+                    handleSend();
+                  }
+                }}
                 disabled={isLoading || !input.trim()}
                 className="bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-3 rounded-xl hover:from-amber-700 hover:to-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >

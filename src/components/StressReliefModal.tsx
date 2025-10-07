@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Heart, Bot } from 'lucide-react';
+import { X, Send, Heart, Bot, AlertCircle } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { dronacharyaChat } from '../utils/dronacharyaChat';
@@ -21,6 +21,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +31,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
         content: "Hi, I'm Dronacharya 👋 What's on your mind? Feel free to share what's bothering you.",
       };
       setMessages([initialMessage]);
+      setError(null);
     }
   }, [isOpen]);
 
@@ -44,6 +46,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
 
     try {
       const conversationHistory = messages.map((msg) => ({
@@ -71,6 +74,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
       }
     } catch (error) {
       console.error('Error:', error);
+      setError('Failed to get response from AI. Please try again.');
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' },
@@ -89,6 +93,19 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
 
   const toggleAiProvider = () => {
     setAiProvider(prev => prev === 'gemini' ? 'cohere' : 'gemini');
+    setError(null);
+  };
+
+  const checkApiKey = () => {
+    const apiKey = aiProvider === 'cohere' 
+      ? import.meta.env.VITE_COHERE_API_KEY 
+      : import.meta.env.VITE_GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      setError(`API key not configured for ${aiProvider === 'cohere' ? 'Cohere' : 'Gemini'}. Please contact support.`);
+      return false;
+    }
+    return true;
   };
 
   if (!isOpen) return null;
@@ -138,6 +155,14 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
               </button>
             </div>
           </div>
+
+          {/* Error message display */}
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, index) => (
@@ -202,7 +227,11 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
                 disabled={isLoading}
               />
               <button
-                onClick={handleSend}
+                onClick={() => {
+                  if (checkApiKey()) {
+                    handleSend();
+                  }
+                }}
                 disabled={isLoading || !input.trim()}
                 className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >

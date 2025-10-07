@@ -3,10 +3,18 @@ import { CohereClient } from 'cohere-ai';
 // Get the API key from environment variables
 const COHERE_API_KEY = import.meta.env.VITE_COHERE_API_KEY || '';
 
-// Initialize Cohere client
-const cohere = new CohereClient({
-  token: COHERE_API_KEY,
-});
+let cohere: CohereClient | null = null;
+
+// Initialize Cohere client only if API key is present
+if (COHERE_API_KEY) {
+  try {
+    cohere = new CohereClient({
+      token: COHERE_API_KEY,
+    });
+  } catch (error) {
+    console.error('Failed to initialize Cohere client:', error);
+  }
+}
 
 export async function cohereChat(
   userMessage: string,
@@ -18,6 +26,10 @@ export async function cohereChat(
     
     if (!COHERE_API_KEY) {
       throw new Error('API key not configured');
+    }
+
+    if (!cohere) {
+      throw new Error('Cohere client not initialized');
     }
 
     // Create system prompt based on mode
@@ -38,14 +50,13 @@ export async function cohereChat(
 
     // Format conversation history for Cohere
     const chatHistory = conversationHistory.map(msg => ({
-      role: msg.role === 'assistant' ? 'CHATBOT' : 'USER',
+      role: msg.role === 'assistant' ? 'CHATBOT' as const : 'USER' as const,
       message: msg.content,
     }));
 
-    // Add the latest user message
-    chatHistory.push({ role: 'USER', message: userMessage });
-
     console.log('Making request to Cohere API with message:', userMessage);
+    console.log('System prompt:', systemPrompt);
+    console.log('Chat history length:', chatHistory.length);
 
     // Make the API call to Cohere
     const response = await cohere.chat({
@@ -62,7 +73,7 @@ export async function cohereChat(
     console.log('Full API response:', aiResponse);
 
     if (!aiResponse) {
-      throw new Error('Invalid response format from API');
+      throw new Error('Empty response from Cohere API');
     }
 
     return aiResponse;
@@ -80,12 +91,18 @@ export async function cohereChat(
     
     console.error('Stack trace:', err.stack);
 
-    if (err.message && err.message.includes('invalid_api_key')) {
-      return "Dronacharya AI needs to be configured. Please contact support.";
+    // More specific error handling
+    if (err.message && (err.message.includes('invalid_api_key') || err.message.includes('API key'))) {
+      return "Dronacharya AI needs a valid API key. Please contact support.";
     }
 
-    if (err.message === 'API key not configured') {
-      return "Dronacharya AI is not yet configured. Please try again later.";
+    if (err.message === 'API key not configured' || err.message === 'Cohere client not initialized') {
+      return "Dronacharya AI is not yet configured. Please check the API key configuration.";
+    }
+
+    // Handle network errors
+    if (err.message && (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('connection'))) {
+      return "Having trouble connecting to the AI service. Please check your internet connection and try again.";
     }
 
     // Return fallback responses based on mode
