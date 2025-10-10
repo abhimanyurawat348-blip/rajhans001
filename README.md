@@ -34,6 +34,18 @@ A comprehensive school management system for RHPS Public School with portals for
 - Real-time data synchronization across all portals
 - Input validation to prevent unauthorized access
 
+## Mobile App (PWA)
+The platform now supports Progressive Web App (PWA) functionality, allowing users to:
+- Install the platform on mobile devices like a native app
+- Access all features offline
+- Receive push notifications
+- Experience app-like performance
+
+To install as an app:
+1. Open the website in a modern browser (Chrome, Safari, Edge)
+2. Look for the install prompt or "Add to Home Screen" option
+3. Click to install and use like any mobile app
+
 ## Technical Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Framer Motion
 - **Backend**: Firebase (Authentication, Firestore, Storage)

@@ -369,7 +369,115 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* RHPS E Educational Mall Section */}
+      {/* Features Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              School Portal Features
+            </h2>
+            <p className="text-xl text-gray-600">
+              Everything you need for a connected school experience
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2, duration: 0.6 }}
+                whileHover={{ y: -10, scale: feature.special ? 1.05 : 1 }}
+                onClick={feature.onClick}
+                className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 ${
+                  feature.special ? 'border-4 border-purple-300 relative overflow-hidden' : ''
+                } ${feature.onClick ? 'cursor-pointer' : ''}`}
+              >
+                {feature.isNew && (
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
+                    NEW
+                  </div>
+                )}
+                <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 mx-auto shadow-lg`}>
+                  {feature.icon}
+                </div>
+                <h3 className={`text-2xl font-bold mb-4 text-center ${
+                  feature.special ? 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent' : 'text-gray-900'
+                }`}>
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 text-center mb-6">
+                  {feature.description}
+                </p>
+                <div className="text-center">
+                  {feature.link ? (
+                    <Link
+                      to={feature.link}
+                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                        feature.special
+                          ? 'text-purple-600 hover:text-purple-700'
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                    >
+                      {feature.title === 'Quiz Zone' ? 'Start Quiz Now' : 'Learn More'}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <button
+                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                        feature.special
+                          ? 'text-purple-600 hover:text-purple-700'
+                          : 'text-blue-600 hover:text-blue-700'
+                      }`}
+                    >
+                      Open Now
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-green-600">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl font-bold mb-8">Our School Community</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                <div className="text-4xl font-bold mb-2">1000+</div>
+                <div className="text-xl">Students</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                <div className="text-4xl font-bold mb-2">50+</div>
+                <div className="text-xl">Teachers</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+                <div className="text-4xl font-bold mb-2">25+</div>
+                <div className="text-xl">Years of Excellence</div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* RHPS E Educational Mall Section - Moved to bottom */}
       <section className="py-16 px-4 bg-gradient-to-r from-gray-900 to-black">
         <div className="max-w-6xl mx-auto">
           {/* Warning Message */}
@@ -610,114 +718,6 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              School Portal Features
-            </h2>
-            <p className="text-xl text-gray-600">
-              Everything you need for a connected school experience
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-                whileHover={{ y: -10, scale: feature.special ? 1.05 : 1 }}
-                onClick={feature.onClick}
-                className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 ${
-                  feature.special ? 'border-4 border-purple-300 relative overflow-hidden' : ''
-                } ${feature.onClick ? 'cursor-pointer' : ''}`}
-              >
-                {feature.isNew && (
-                  <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
-                    NEW
-                  </div>
-                )}
-                <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 mx-auto shadow-lg`}>
-                  {feature.icon}
-                </div>
-                <h3 className={`text-2xl font-bold mb-4 text-center ${
-                  feature.special ? 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent' : 'text-gray-900'
-                }`}>
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-center mb-6">
-                  {feature.description}
-                </p>
-                <div className="text-center">
-                  {feature.link ? (
-                    <Link
-                      to={feature.link}
-                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
-                        feature.special
-                          ? 'text-purple-600 hover:text-purple-700'
-                          : 'text-blue-600 hover:text-blue-700'
-                      }`}
-                    >
-                      {feature.title === 'Quiz Zone' ? 'Start Quiz Now' : 'Learn More'}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <button
-                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
-                        feature.special
-                          ? 'text-purple-600 hover:text-purple-700'
-                          : 'text-blue-600 hover:text-blue-700'
-                      }`}
-                    >
-                      Open Now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-green-600">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-4xl font-bold mb-8">Our School Community</h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-                <div className="text-4xl font-bold mb-2">1000+</div>
-                <div className="text-xl">Students</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-                <div className="text-4xl font-bold mb-2">50+</div>
-                <div className="text-xl">Teachers</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
-                <div className="text-4xl font-bold mb-2">25+</div>
-                <div className="text-xl">Years of Excellence</div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 

@@ -2,12 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/app-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RHPS School Portal</title>
 
-    <!-- ✅ Clean head section: No external n8n CSS -->
+    <!-- PWA meta tags -->
     <meta name="description" content="RHPS School Portal - Smart Learning Platform with Dronacharya AI" />
+    <meta name="theme-color" content="#2563eb" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/app-icon-192.png" />
   </head>
 
   <body>
@@ -17,8 +20,15 @@
     <!-- Load React/Vite app -->
     <script type="module" src="/src/main.tsx"></script>
 
-    <!-- Optional: Floating AI button or modal (you’ll handle via React) -->
-    <!-- Example placeholder div for Dronacharya -->
-    <div id="dronacharya-ai"></div>
+    <!-- Register service worker for PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered: ', registration))
+            .catch(registrationError => console.log('SW registration failed: ', registrationError));
+        });
+      }
+    </script>
   </body>
 </html>
