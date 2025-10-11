@@ -9,7 +9,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { EventGalleryProvider } from './contexts/EventGalleryContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
-import StaffPortal from './pages/StaffPortal';
+import NewStaffPortal from './pages/NewStaffPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -80,7 +80,7 @@ function App() {
                             <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                             <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                             <Route path="/registration" element={<Registration />} />
-                            <Route path="/staff-portal" element={<StaffPortal />} />
+                            <Route path="/staff-portal" element={<NewStaffPortal />} />
                             <Route path="/complaints" element={<Complaints />} />
                             <Route path="/study-resources" element={<StudyResources />} />
                             <Route path="/parent-portal" element={<ParentPortal />} />

@@ -744,25 +744,46 @@ const NewStaffPortal: React.FC = () => {
   // Function to generate mock data for testing
   const generateMockData = async () => {
     try {
-      // Create mock students for Class 8, Section A
-      const mockStudents = [
-        { username: 'Rahul Sharma', admissionNumber: 'RHPS001', class: '8', section: 'A' },
-        { username: 'Priya Patel', admissionNumber: 'RHPS002', class: '8', section: 'A' },
-        { username: 'Amit Kumar', admissionNumber: 'RHPS003', class: '8', section: 'A' },
-        { username: 'Sneha Gupta', admissionNumber: 'RHPS004', class: '8', section: 'A' },
-        { username: 'Vikash Singh', admissionNumber: 'RHPS005', class: '8', section: 'A' }
-      ];
+      // Create mock students for all classes (6-12) and sections (A, B, C)
+      const mockStudents = [];
+      
+      // Generate 25 students for each class and section
+      for (let classNum = 6; classNum <= 12; classNum++) {
+        for (const section of ['A', 'B', 'C']) {
+          for (let i = 1; i <= 25; i++) {
+            const admissionNumber = `RHPS${classNum}${section}${String(i).padStart(2, '0')}`;
+            const firstNames = ['Rahul', 'Priya', 'Amit', 'Sneha', 'Vikash', 'Anjali', 'Rohan', 'Neha', 'Deepak', 'Pooja', 
+                               'Suresh', 'Kavita', 'Manoj', 'Sunita', 'Rajesh', 'Meena', 'Vijay', 'Shalini', 'Ashok', 'Rekha',
+                               'Sanjay', 'Rita', 'Mohan', 'Sangeeta', 'Prakash'];
+            const lastNames = ['Sharma', 'Patel', 'Kumar', 'Gupta', 'Singh', 'Yadav', 'Verma', 'Jain', 'Mehta', 'Reddy',
+                              'Nair', 'Iyer', 'Pillai', 'Desai', 'Chopra', 'Malhotra', 'Bose', 'Mukherjee', 'Das', 'Banerjee',
+                              'Chatterjee', 'Sen', 'Roy', 'Mishra', 'Pandey'];
+          
+            const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const username = `${randomFirstName} ${randomLastName}`;
+          
+            mockStudents.push({ 
+              username, 
+              admissionNumber, 
+              class: classNum.toString(), 
+              section 
+            });
+          }
+        }
+      }
 
       // Add mock students to database
+      let addedCount = 0;
       for (const student of mockStudents) {
         // Check if student already exists
         const studentQuery = query(
           collection(db, 'users'),
           where('admissionNumber', '==', student.admissionNumber)
         );
-        
+      
         const studentSnapshot = await getDocs(studentQuery);
-        
+      
         if (studentSnapshot.empty) {
           // Create new student
           const studentData = {
@@ -771,46 +792,62 @@ const NewStaffPortal: React.FC = () => {
             email: `${student.username.replace(' ', '.').toLowerCase()}@gmail.com`,
             createdAt: new Date()
           };
-          
+        
           await addDoc(collection(db, 'users'), studentData);
+          addedCount++;
         }
       }
 
-      // Generate mock marks data
+      // Generate mock marks data for a few students as examples
       const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
+      const subjects = ['English', 'Hindi', 'SST', 'Maths', 'Science', 'Computer', 'Sanskrit'];
+    
+      // Generate marks for first 5 students of Class 6 as examples
+      for (let i = 0; i < Math.min(5, mockStudents.length); i++) {
+        const student = mockStudents[i];
       
-      for (const student of mockStudents) {
         // Get student ID
         const studentQuery = query(
           collection(db, 'users'),
           where('admissionNumber', '==', student.admissionNumber)
         );
-        
+      
         const studentSnapshot = await getDocs(studentQuery);
-        
+      
         if (!studentSnapshot.empty) {
           const studentDoc = studentSnapshot.docs[0];
           const studentId = studentDoc.id;
-          
-          // Generate marks for each exam type
+        
+          // Generate marks for each exam type and subject
           for (const examType of examTypes) {
-            const mockMarks = Math.floor(Math.random() * 40) + 60; // Random marks between 60-100
+            for (const subject of subjects) {
+              // Different max marks for different exam types
+              let maxMarks = 100;
+              if (examType.includes('unit_test')) {
+                maxMarks = 20;
+              }
             
-            await setDoc(doc(db, 'students', studentId, 'marks', examType), {
-              [examType]: mockMarks,
-              uploadedAt: new Date(),
-              class: student.class,
-              section: student.section,
-              subject: 'Mathematics'
-            }, { merge: true });
+              const mockMarks = Math.floor(Math.random() * (maxMarks - 40)) + 40; // Random marks between 40-maxMarks
+            
+              await setDoc(doc(db, 'students', studentId, 'marks', `${examType}_${subject}`), {
+                [examType]: mockMarks,
+                marks: mockMarks,
+                maxMarks: maxMarks,
+                subject: subject,
+                uploadedAt: new Date(),
+                class: student.class,
+                section: student.section,
+                examType: examType
+              }, { merge: true });
+            }
           }
         }
       }
 
       // Reload data to show mock data
       loadAllData();
-      
-      alert('Mock data generated successfully for Class 8, Section A!');
+    
+      alert(`Mock data generated successfully! Added ${addedCount} students across all classes and sections.`);
     } catch (err) {
       console.error('Error generating mock data:', err);
       alert('Error generating mock data. Check console for details.');
@@ -829,7 +866,7 @@ const NewStaffPortal: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Updated credentials as per requirements
-    if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu001') {
+    if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu03*9') {
       setIsAuthenticated(true);
       localStorage.setItem('staffPortalAuth', 'true');
       setLoginError('');
@@ -925,6 +962,15 @@ const NewStaffPortal: React.FC = () => {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Portal</h1>
             <p className="text-gray-600">Enter your credentials to access the portal</p>
+            
+            {/* Test Credentials Section */}
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Test Credentials:</strong><br />
+                Username: rajhans_001@gmail.com<br />
+                Password: abhimanyu03*9
+              </p>
+            </div>
           </div>
 
           {loginError && (
