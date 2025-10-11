@@ -13,8 +13,16 @@ interface NoticeFlashcardProps {
 }
 
 const NoticeFlashcard: React.FC<NoticeFlashcardProps> = ({ notice }) => {
+  // Defensive check for notice data
+  if (!notice) {
+    return null;
+  }
+
   const getPriorityStyles = () => {
-    switch (notice.priority) {
+    // Default to 'normal' if priority is not set
+    const priority = notice.priority || 'normal';
+    
+    switch (priority) {
       case 'urgent':
         return {
           container: 'bg-red-50 border-red-200',
@@ -59,14 +67,14 @@ const NoticeFlashcard: React.FC<NoticeFlashcardProps> = ({ notice }) => {
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
               <h3 className={`font-semibold ${styles.title}`}>
-                {notice.title}
+                {notice.title || 'Untitled Notice'}
               </h3>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${styles.badge}`}>
-                {notice.priority.charAt(0).toUpperCase() + notice.priority.slice(1)}
+                {(notice.priority || 'normal').charAt(0).toUpperCase() + (notice.priority || 'normal').slice(1)}
               </span>
             </div>
             <p className={`text-sm ${styles.content}`}>
-              {notice.content}
+              {notice.content || 'No content available'}
             </p>
           </div>
         </div>

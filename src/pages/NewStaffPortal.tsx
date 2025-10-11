@@ -98,14 +98,6 @@ interface ResultRecord {
   studentCount: number;
 }
 
-// Add new state variables for enhanced marksheet functionality
-const [marksheetStep, setMarksheetStep] = useState<number>(1);
-const [numberOfStudents, setNumberOfStudents] = useState<number>(0);
-const [studentMarks, setStudentMarks] = useState<StudentMarks[]>([]);
-const [resultRecords, setResultRecords] = useState<ResultRecord[]>([]);
-const [selectedResultRecord, setSelectedResultRecord] = useState<string | null>(null);
-const [showAllMarksheetView, setShowAllMarksheetView] = useState(false);
-
 const NewStaffPortal: React.FC = () => {
   const navigate = useNavigate();
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
@@ -333,6 +325,12 @@ const NewStaffPortal: React.FC = () => {
   };
 
   useEffect(() => {
+    // Check if user is already authenticated
+    const storedAuth = localStorage.getItem('staffPortalAuth');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+    
     loadAllData();
     loadComplaints();
     loadNotices();
@@ -1832,14 +1830,6 @@ const NewStaffPortal: React.FC = () => {
       </main>
     </div>
   );
-  // Check if user is already authenticated
-  useEffect(() => {
-    const storedAuth = localStorage.getItem('staffPortalAuth');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
   // Handle login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

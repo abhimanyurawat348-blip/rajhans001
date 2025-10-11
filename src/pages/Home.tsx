@@ -428,7 +428,7 @@ const Home: React.FC = () => {
             </motion.div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {notices.map((notice, index) => (
+              {notices.filter(notice => notice && notice.id).map((notice, index) => (
                 <NoticeFlashcard key={notice.id} notice={notice} />
               ))}
             </div>

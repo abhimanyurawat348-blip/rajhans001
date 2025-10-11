@@ -197,7 +197,7 @@ const StudentCouncil: React.FC = () => {
             </motion.div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {meetings.map((meeting) => (
+              {meetings.filter(meeting => meeting && meeting.id).map((meeting) => (
                 <MeetingFlashcard key={meeting.id} meeting={meeting} />
               ))}
             </div>

@@ -15,6 +15,11 @@ interface MeetingFlashcardProps {
 }
 
 const MeetingFlashcard: React.FC<MeetingFlashcardProps> = ({ meeting }) => {
+  // Defensive check for meeting data
+  if (!meeting) {
+    return null;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -29,7 +34,7 @@ const MeetingFlashcard: React.FC<MeetingFlashcardProps> = ({ meeting }) => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-purple-800 mb-1">
-              {meeting.topic}
+              {meeting.topic || 'Untitled Meeting'}
             </h3>
             <div className="flex flex-wrap items-center gap-3 text-sm text-purple-700 mb-2">
               <span>{meeting.date ? new Date(meeting.date).toLocaleDateString() : 'Unknown date'}</span>
