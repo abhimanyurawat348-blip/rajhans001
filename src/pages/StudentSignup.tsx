@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { UserPlus, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, ArrowLeft, CheckCircle, Calendar, Hash, Users } from 'lucide-react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { syncStudentData } from '../utils/studentDataUtils';
 
 const StudentSignup: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -69,9 +70,10 @@ const StudentSignup: React.FC = () => {
       // Get the user's IP address
       const ipAddress = await getClientIP();
 
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
+      // Prepare student data
+      const studentData = {
         uid: userCredential.user.uid,
-        username: formData.username,
+        fullName: formData.fullName,
         email: formData.email,
         role: 'student',
         admissionNumber: formData.admissionNumber,
@@ -83,23 +85,10 @@ const StudentSignup: React.FC = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         ipAddress
-      });
+      };
 
-      await setDoc(doc(db, 'students', formData.admissionNumber), {
-        uid: userCredential.user.uid,
-        username: formData.username,
-        email: formData.email,
-        admissionNumber: formData.admissionNumber,
-        class: formData.class,
-        section: formData.section,
-        dateOfBirth: formData.dateOfBirth,
-        fatherName: formData.fatherName,
-        motherName: formData.motherName,
-        password: formData.password,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        ipAddress
-      });
+      // Use utility function to ensure data consistency
+      await syncStudentData(studentData);
 
       // Log signup record
       await setDoc(doc(db, 'signupRecords', userCredential.user.uid), {
@@ -107,7 +96,7 @@ const StudentSignup: React.FC = () => {
         email: formData.email,
         ipAddress,
         signupTime: new Date(),
-        username: formData.username
+        fullName: formData.fullName
       });
 
       setSuccess(true);
@@ -143,7 +132,7 @@ const StudentSignup: React.FC = () => {
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Created Successfully!</h2>
           <p className="text-gray-600 mb-6">
-            Your student account has been created. Redirecting to login...
+            Your student account has been created. Redirecting to dashboard...
           </p>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         </motion.div>
@@ -156,7 +145,7 @@ const StudentSignup: React.FC = () => {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md"
+        className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl"
       >
         <button
           onClick={() => navigate('/student-dashboard')}
@@ -170,23 +159,23 @@ const StudentSignup: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <UserPlus className="h-8 w-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Student Sign Up</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Student Registration</h1>
           <p className="text-gray-600">Create your student account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your full name"
@@ -199,20 +188,23 @@ const StudentSignup: React.FC = () => {
               <label htmlFor="admissionNumber" className="block text-sm font-medium text-gray-700 mb-2">
                 Admission Number
               </label>
-              <input
-                type="text"
-                id="admissionNumber"
-                name="admissionNumber"
-                value={formData.admissionNumber}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="e.g., RHPS2025001"
-                required
-              />
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  id="admissionNumber"
+                  name="admissionNumber"
+                  value={formData.admissionNumber}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., RHPS2025001"
+                  required
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="class" className="block text-sm font-medium text-gray-700 mb-2">
                 Class
@@ -226,7 +218,7 @@ const StudentSignup: React.FC = () => {
                 required
               >
                 <option value="">Select Class</option>
-                {[3, 4, 5, 6, 7, 8, 9, 10].map(cls => (
+                {[3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(cls => (
                   <option key={cls} value={cls}>{cls}</option>
                 ))}
               </select>
@@ -248,6 +240,7 @@ const StudentSignup: React.FC = () => {
                 <option value="A">A</option>
                 <option value="B">B</option>
                 <option value="C">C</option>
+                <option value="D">D</option>
               </select>
             </div>
 
@@ -255,112 +248,127 @@ const StudentSignup: React.FC = () => {
               <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
                 Date of Birth
               </label>
-              <input
-                type="date"
-                id="dateOfBirth"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-2">
-                Father's Name
-              </label>
-              <input
-                type="text"
-                id="fatherName"
-                name="fatherName"
-                value={formData.fatherName}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter father's name"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="motherName" className="block text-sm font-medium text-gray-700 mb-2">
-                Mother's Name
-              </label>
-              <input
-                type="text"
-                id="motherName"
-                name="motherName"
-                value={formData.motherName}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter mother's name"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-          </div>
-
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  type="date"
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Confirm your password"
                   required
                 />
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">Password must be at least 6 characters</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="fatherName" className="block text-sm font-medium text-gray-700 mb-2">
+                Father's Name
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  id="fatherName"
+                  name="fatherName"
+                  value={formData.fatherName}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter father's name"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="motherName" className="block text-sm font-medium text-gray-700 mb-2">
+                Mother's Name
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  id="motherName"
+                  name="motherName"
+                  value={formData.motherName}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter mother's name"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Credentials</h3>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div></div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Confirm your password"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-2">Password must be at least 6 characters</p>
+          </div>
 
           {error && (
             <motion.div

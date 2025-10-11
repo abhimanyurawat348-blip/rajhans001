@@ -1,11 +1,28 @@
 export interface User {
   id: string;
-  name: string;
+  fullName?: string;
+  username?: string;
   email: string;
   role: 'student' | 'teacher';
   admissionNumber?: string;
   class?: string;
   section?: string;
+  dateOfBirth?: string;
+  fatherName?: string;
+  motherName?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  ipAddress?: string;
+}
+
+export interface Student extends User {
+  admissionNumber: string;
+  class: string;
+  section: string;
+  dateOfBirth: string;
+  fatherName: string;
+  motherName: string;
+  fullName: string;
 }
 
 export interface Complaint {
@@ -71,4 +88,17 @@ export interface StudyResource {
   type: 'previous-year' | 'sample-paper';
   downloadUrl: string;
   year?: string;
+}
+
+export interface Marksheet {
+  id: string;
+  unit_test_1?: number;
+  unit_test_2?: number;
+  unit_test_3?: number;
+  half_yearly?: number;
+  final_exam?: number;
+  subject?: string;
+  maxMarks?: number;
+  marks?: number;
+  [key: string]: any;
 }

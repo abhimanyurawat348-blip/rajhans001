@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { fetchStudentData, fetchStudentMarks } from '../utils/studentDataUtils';
 import { 
   BookOpen, 
   Calendar, 
@@ -13,11 +12,13 @@ import {
   Award,
   TrendingUp,
   BarChart3,
-  AlertCircle
+  AlertCircle,
+  Edit3
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 import ChantingFlashcard from '../components/ChantingFlashcard';
+import StudentProfileEditModal from '../components/StudentProfileEditModal';
 
 interface Marksheet {
   id: string;
@@ -28,8 +29,8 @@ interface Marksheet {
   final_exam?: number;
   subject?: string;
   maxMarks?: number;
-  marks?: number; // Added to handle the marks field
-  [key: string]: any; // Allow dynamic keys
+  marks?: number;
+  [key: string]: any;
 }
 
 const StudentHome: React.FC = () => {
@@ -38,43 +39,30 @@ const StudentHome: React.FC = () => {
   const [marksheets, setMarksheets] = useState<Marksheet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    const fetchStudentData = async () => {
+    const fetchStudentDataAsync = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
       
       try {
-        // Fetch student data
-        const userDoc = await getDoc(doc(db, 'users', user.id));
-        if (userDoc.exists()) {
-          setStudentData(userDoc.data());
+        // Fetch student data using utility function
+        const studentResult = await fetchStudentData(user.id, user.email);
+        if (studentResult.success && studentResult.data) {
+          setStudentData(studentResult.data);
+          
+          // Fetch marks data using utility function
+          const marksData = await fetchStudentMarks(
+            user.id, 
+            studentResult.data.admissionNumber
+          );
+          setMarksheets(marksData);
         } else {
-          setError('User data not found. Please contact support.');
+          setError(studentResult.error || 'Failed to load student data');
         }
-        
-        // Fetch marks data for all exam types
-        const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
-        const marksData: Marksheet[] = [];
-        
-        for (const examType of examTypes) {
-          try {
-            const marksDoc = await getDoc(doc(db, 'students', user.id, 'marks', examType));
-            if (marksDoc.exists()) {
-              marksData.push({
-                id: examType,
-                ...marksDoc.data()
-              } as Marksheet);
-            }
-          } catch (examError) {
-            console.warn(`Failed to fetch marks for ${examType}:`, examError);
-            // Continue with other exam types
-          }
-        }
-        
-        setMarksheets(marksData);
       } catch (err) {
         console.error('Error fetching student data:', err);
         setError('Failed to load dashboard data. Please try again later.');
@@ -83,7 +71,7 @@ const StudentHome: React.FC = () => {
       }
     };
 
-    fetchStudentData();
+    fetchStudentDataAsync();
   }, [user]);
 
   const handleLogout = async () => {
@@ -147,6 +135,10 @@ const StudentHome: React.FC = () => {
     return examData?.maxMarks || 100;
   };
 
+  const handleProfileUpdate = (updatedData: any) => {
+    setStudentData(updatedData);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
@@ -192,7 +184,7 @@ const StudentHome: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
-            <p className="text-gray-600">Welcome, {studentData?.username || 'Student'}</p>
+            <p className="text-gray-600">Welcome, {studentData?.fullName || studentData?.username || 'Student'}</p>
           </div>
           <button
             onClick={handleLogout}
@@ -209,14 +201,22 @@ const StudentHome: React.FC = () => {
           {/* Student Info Card */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Student Information</h2>
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <Edit3 className="h-5 w-5" />
+                </button>
+              </div>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <div className="bg-gradient-to-r from-blue-500 to-cyan-500 w-16 h-16 rounded-full flex items-center justify-center">
                     <User className="h-8 w-8 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900">{studentData?.username || 'Student'}</h3>
+                    <h3 className="font-bold text-lg text-gray-900">{studentData?.fullName || studentData?.username || 'Student'}</h3>
                     <p className="text-gray-600">{user?.email}</p>
                   </div>
                 </div>
@@ -232,6 +232,22 @@ const StudentHome: React.FC = () => {
                   <div className="bg-purple-50 rounded-lg p-3">
                     <p className="text-sm text-gray-600">Admission No</p>
                     <p className="font-semibold text-gray-900">{studentData?.admissionNumber || 'N/A'}</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Date of Birth</p>
+                    <p className="font-semibold text-gray-900">
+                      {studentData?.dateOfBirth ? new Date(studentData.dateOfBirth).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-cyan-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Father's Name</p>
+                    <p className="font-semibold text-gray-900">{studentData?.fatherName || 'N/A'}</p>
+                  </div>
+                  <div className="bg-pink-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-600">Mother's Name</p>
+                    <p className="font-semibold text-gray-900">{studentData?.motherName || 'N/A'}</p>
                   </div>
                 </div>
               </div>
@@ -379,6 +395,13 @@ const StudentHome: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <StudentProfileEditModal
+        isOpen={isEditing}
+        onClose={() => setIsEditing(false)}
+        studentData={studentData}
+        onUpdate={handleProfileUpdate}
+      />
 
       <FloatingDronacharyaButton />
     </div>

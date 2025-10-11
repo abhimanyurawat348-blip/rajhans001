@@ -18,7 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   otpSent: boolean;
   pendingAuth: { email: string; role: 'student' | 'teacher' } | null;
-  updateUserName: (name: string) => Promise<void>; // Add this new function
+  updateUserName: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,9 +53,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Create user document if it doesn't exist
             const mockUser: User = {
               id: firebaseUser.uid,
-              name: 'Student User',
+              fullName: 'Student User',
               email: firebaseUser.email || '',
-              role: 'student'
+              role: 'student',
+              admissionNumber: 'RHPS2025001',
+              class: '12',
+              section: 'A',
+              dateOfBirth: '2007-01-01',
+              fatherName: 'Father Name',
+              motherName: 'Mother Name'
             };
             await setDoc(doc(db, 'users', firebaseUser.uid), mockUser);
             setUser(mockUser);
@@ -151,9 +157,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           const mockUser: User = {
             id: result.user.uid,
-            name: 'Student User',
+            fullName: 'Student User',
             email: email,
-            role: 'student'
+            role: 'student',
+            admissionNumber: 'RHPS2025001',
+            class: '12',
+            section: 'A',
+            dateOfBirth: '2007-01-01',
+            fatherName: 'Father Name',
+            motherName: 'Mother Name'
           };
           
           // Store user in Firestore
@@ -172,13 +184,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (otp === '123456') {
           const mockUser: User = {
             id: '1',
-            name: pendingAuth.role === 'student' ? 'Student User' : 'Teacher User',
+            fullName: pendingAuth.role === 'student' ? 'Student User' : 'Teacher User',
             email: pendingAuth.email,
             role: pendingAuth.role,
             ...(pendingAuth.role === 'student' && {
               admissionNumber: 'RHPS2025001',
               class: '12',
-              section: 'A'
+              section: 'A',
+              dateOfBirth: '2007-01-01',
+              fatherName: 'Father Name',
+              motherName: 'Mother Name'
             })
           };
           
@@ -216,10 +231,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     try {
       // Update user in Firestore
-      await setDoc(doc(db, 'users', user.id), { ...user, name }, { merge: true });
+      await setDoc(doc(db, 'users', user.id), { ...user, fullName: name }, { merge: true });
       
       // Update local user state
-      setUser({ ...user, name });
+      setUser({ ...user, fullName: name });
     } catch (error) {
       console.error('Error updating user name:', error);
       throw error;
@@ -234,7 +249,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isAuthenticated: !!user,
     otpSent,
     pendingAuth,
-    updateUserName // Add this to the context value
+    updateUserName
   };
 
   // Show loading state while checking auth
