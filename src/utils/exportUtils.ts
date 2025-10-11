@@ -85,3 +85,51 @@ export const exportRegistrationsToCSV = (registrations: Registration[]) => {
   
   exportToCSV(data, 'registrations_report');
 };
+
+export const exportLoginRecordsToCSV = (loginRecords: Array<{id: string, email: string, ipAddress: string, loginTime: Date, otpVerified: boolean}>) => {
+  const data = loginRecords.map(record => ({
+    'Email': record.email,
+    'IP Address': record.ipAddress,
+    'Login Time': new Date(record.loginTime).toLocaleString(),
+    'OTP Verified': record.otpVerified ? 'Yes' : 'No'
+  }));
+  
+  exportToCSV(data, 'login_records_report');
+};
+
+export const exportLoginRecordsToPDF = (loginRecords: Array<{id: string, email: string, ipAddress: string, loginTime: Date, otpVerified: boolean}>, filename: string, title: string) => {
+  const doc = new jsPDF();
+  
+  // Add title
+  doc.setFontSize(20);
+  doc.text(title, 20, 20);
+  
+  // Add date
+  doc.setFontSize(12);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+  
+  let yPosition = 50;
+  
+  loginRecords.forEach((record, index) => {
+    if (yPosition > 270) {
+      doc.addPage();
+      yPosition = 20;
+    }
+    
+    doc.setFontSize(14);
+    doc.text(`${index + 1}. ${record.email}`, 20, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(10);
+    doc.text(`IP Address: ${record.ipAddress}`, 25, yPosition);
+    yPosition += 7;
+    
+    doc.text(`Login Time: ${new Date(record.loginTime).toLocaleString()}`, 25, yPosition);
+    yPosition += 7;
+    
+    doc.text(`OTP Verified: ${record.otpVerified ? 'Yes' : 'No'}`, 25, yPosition);
+    yPosition += 12;
+  });
+  
+  doc.save(`${filename}.pdf`);
+};

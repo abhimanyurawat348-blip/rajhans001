@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useComplaints } from '../contexts/ComplaintContext';
 import { useRegistrations } from '../contexts/RegistrationContext';
-import { Shield, Eye, Clock, CheckCircle, AlertTriangle, FileText, Download, Trash2, UserCheck } from 'lucide-react';
-import { exportComplaintsToCSV, exportRegistrationsToCSV, exportToPDF } from '../utils/exportUtils';
+import { Shield, Eye, Clock, CheckCircle, AlertTriangle, FileText, Download, Trash2, UserCheck, Camera } from 'lucide-react';
+import { exportComplaintsToCSV, exportRegistrationsToCSV, exportLoginRecordsToCSV, exportLoginRecordsToPDF } from '../utils/exportUtils';
+import EventGallery from '../components/EventGallery';
 
 const StaffPortal: React.FC = () => {
   const { complaints, updateComplaintStatus, deleteComplaint, loadComplaints } = useComplaints();
@@ -13,7 +14,7 @@ const StaffPortal: React.FC = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [selectedComplaint, setSelectedComplaint] = useState<string | null>(null);
   const [selectedRegistration, setSelectedRegistration] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'complaints' | 'registrations' | 'logins'>('complaints');
+  const [activeTab, setActiveTab] = useState<'complaints' | 'registrations' | 'logins' | 'gallery'>('complaints');
   const [loginRecords] = useState([
     {
       id: '1',
@@ -165,11 +166,12 @@ const StaffPortal: React.FC = () => {
             {[
               { id: 'complaints', label: 'Complaints', icon: FileText },
               { id: 'registrations', label: 'Registrations', icon: UserCheck },
-              { id: 'logins', label: 'Login Records', icon: Shield }
+              { id: 'logins', label: 'Login Records', icon: Shield },
+              { id: 'gallery', label: 'Event Gallery', icon: Camera }
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as 'complaints' | 'registrations' | 'logins')}
+                onClick={() => setActiveTab(id as 'complaints' | 'registrations' | 'logins' | 'gallery')}
                 className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-md transition-colors duration-200 ${
                   activeTab === id
                     ? 'bg-white text-blue-600 shadow-sm'
@@ -285,7 +287,7 @@ const StaffPortal: React.FC = () => {
                   <span>Export CSV</span>
                 </button>
                 <button
-                  onClick={() => exportToPDF(complaints, 'complaints_report', 'Student Complaints Report')}
+                  onClick={() => exportComplaintsToCSV(complaints)}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
                   <Download className="h-4 w-4" />
@@ -416,7 +418,7 @@ const StaffPortal: React.FC = () => {
                   <span>Export CSV</span>
                 </button>
                 <button
-                  onClick={() => exportToPDF(registrations, 'registrations_report', 'Activity Registrations Report')}
+                  onClick={() => exportRegistrationsToCSV(registrations)}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
                   <Download className="h-4 w-4" />
@@ -532,14 +534,14 @@ const StaffPortal: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900">Student Login Records</h2>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => exportToCSV(loginRecords, 'login_records')}
+                  onClick={() => exportLoginRecordsToCSV(loginRecords)}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                 >
                   <Download className="h-4 w-4" />
                   <span>Export CSV</span>
                 </button>
                 <button
-                  onClick={() => exportToPDF(loginRecords, 'login_records_report', 'Student Login Records Report')}
+                  onClick={() => exportLoginRecordsToPDF(loginRecords, 'login_records_report', 'Student Login Records Report')}
                   className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
                   <Download className="h-4 w-4" />
@@ -584,6 +586,22 @@ const StaffPortal: React.FC = () => {
             )}
           </motion.div>
         )}
+
+        {/* Event Gallery Tab */}
+        {activeTab === 'gallery' && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-lg overflow-hidden"
+          >
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Event Gallery</h2>
+              <p className="text-gray-600 mt-1">Manage event photos and create memories for the school community</p>
+            </div>
+            <EventGallery />
+          </motion.div>
+        )}
+
       </div>
     </div>
   );

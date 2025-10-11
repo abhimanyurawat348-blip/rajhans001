@@ -6,9 +6,10 @@ import { EventProvider } from './contexts/EventContext';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { StudyResourcesProvider } from './contexts/StudyResourcesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { EventGalleryProvider } from './contexts/EventGalleryContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
-import NewStaffPortal from './pages/NewStaffPortal';
+import StaffPortal from './pages/StaffPortal';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -60,46 +61,48 @@ function App() {
             <EventProvider>
               <RegistrationProvider>
                 <StudyResourcesProvider>
-                  <Router>
-                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-                      <Navbar />
-                      <Suspense fallback={<LoadingFallback />}>
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/about-us" element={<AboutUs />} />
-                          <Route path="/login" element={<Login />} />
-                          <Route path="/student-dashboard" element={<StudentDashboard />} />
-                          <Route path="/student-signup" element={<StudentSignup />} />
-                          <Route path="/student-login" element={<StudentLogin />} />
-                          <Route path="/student-home" element={<ProtectedRoute requiredRole="student"><StudentHome /></ProtectedRoute>} />
-                          <Route path="/rules" element={<Rules />} />
-                          <Route path="/student-council" element={<StudentCouncil />} />
-                          <Route path="/yearly-planner" element={<YearlyPlanner />} />
-                          <Route path="/planners-registrations" element={<PlannersRegistrations />} />
-                          <Route path="/monthly-planner" element={<MonthlyPlanner />} />
-                          <Route path="/registration" element={<Registration />} />
-                          <Route path="/staff-portal" element={<NewStaffPortal />} />
-                          <Route path="/complaints" element={<Complaints />} />
-                          <Route path="/study-resources" element={<StudyResources />} />
-                          <Route path="/parent-portal" element={<ParentPortal />} />
-                          <Route path="/parent-signup" element={<ParentSignup />} />
-                          <Route path="/parent-login" element={<ParentLogin />} />
-                          <Route path="/parent-home" element={<ParentHome />} />
-                          <Route path="/quiz" element={<QuizHome />} />
-                          <Route path="/quiz/start" element={<QuizStart />} />
-                          <Route path="/quiz/select-class" element={<QuizClassSelect />} />
-                          <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
-                          <Route path="/quiz/play" element={<QuizPlay />} />
-                          <Route path="/quiz/results" element={<QuizResults />} />
-                          <Route path="/homework" element={<Homework />} />
-                          <Route path="/chanting" element={<ChantingPage />} />
-                          <Route path="/chanting/:religionId" element={<DeitySelectionPage />} />
-                          <Route path="/chanting/:religionId/:deityId" element={<ChantingCounterPage />} />
-                          <Route path="/chanting-leaderboard" element={<ChantingLeaderboardPage />} />
-                        </Routes>
-                      </Suspense>
-                    </div>
-                  </Router>
+                  <EventGalleryProvider>
+                    <Router>
+                      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+                        <Navbar />
+                        <Suspense fallback={<LoadingFallback />}>
+                          <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/about-us" element={<AboutUs />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/student-dashboard" element={<StudentDashboard />} />
+                            <Route path="/student-signup" element={<StudentSignup />} />
+                            <Route path="/student-login" element={<StudentLogin />} />
+                            <Route path="/student-home" element={<ProtectedRoute requiredRole="student"><StudentHome /></ProtectedRoute>} />
+                            <Route path="/rules" element={<Rules />} />
+                            <Route path="/student-council" element={<StudentCouncil />} />
+                            <Route path="/yearly-planner" element={<YearlyPlanner />} />
+                            <Route path="/planners-registrations" element={<PlannersRegistrations />} />
+                            <Route path="/monthly-planner" element={<MonthlyPlanner />} />
+                            <Route path="/registration" element={<Registration />} />
+                            <Route path="/staff-portal" element={<StaffPortal />} />
+                            <Route path="/complaints" element={<Complaints />} />
+                            <Route path="/study-resources" element={<StudyResources />} />
+                            <Route path="/parent-portal" element={<ParentPortal />} />
+                            <Route path="/parent-signup" element={<ParentSignup />} />
+                            <Route path="/parent-login" element={<ParentLogin />} />
+                            <Route path="/parent-home" element={<ParentHome />} />
+                            <Route path="/quiz" element={<QuizHome />} />
+                            <Route path="/quiz/start" element={<QuizStart />} />
+                            <Route path="/quiz/select-class" element={<QuizClassSelect />} />
+                            <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
+                            <Route path="/quiz/play" element={<QuizPlay />} />
+                            <Route path="/quiz/results" element={<QuizResults />} />
+                            <Route path="/homework" element={<Homework />} />
+                            <Route path="/chanting" element={<ChantingPage />} />
+                            <Route path="/chanting/:religionId" element={<DeitySelectionPage />} />
+                            <Route path="/chanting/:religionId/:deityId" element={<ChantingCounterPage />} />
+                            <Route path="/chanting-leaderboard" element={<ChantingLeaderboardPage />} />
+                          </Routes>
+                        </Suspense>
+                      </div>
+                    </Router>
+                  </EventGalleryProvider>
                 </StudyResourcesProvider>
               </RegistrationProvider>
             </EventProvider>
