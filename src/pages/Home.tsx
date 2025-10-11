@@ -24,18 +24,26 @@ const Home: React.FC = () => {
   useEffect(() => {
     const loadNotices = async () => {
       try {
-        const noticesQuery = query(
-          collection(db, 'notices'),
-          orderBy('createdAt', 'desc'),
-          limit(5) // Load only the 5 most recent notices
-        );
-        const noticesSnapshot = await getDocs(noticesQuery);
-        const noticesData = noticesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
-        }));
-        setNotices(noticesData);
+        // Check if we're in a browser environment
+        if (typeof window !== 'undefined') {
+          const noticesQuery = query(
+            collection(db, 'notices'),
+            orderBy('createdAt', 'desc'),
+            limit(5) // Load only the 5 most recent notices
+          );
+          const noticesSnapshot = await getDocs(noticesQuery);
+          const noticesData = noticesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt && typeof data.createdAt.toDate === 'function' 
+                ? data.createdAt.toDate() 
+                : data.createdAt || new Date()
+            };
+          });
+          setNotices(noticesData);
+        }
       } catch (err) {
         console.error('Error loading notices:', err);
       }

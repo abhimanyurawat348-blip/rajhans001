@@ -72,7 +72,7 @@ const NoticeFlashcard: React.FC<NoticeFlashcardProps> = ({ notice }) => {
         </div>
       </div>
       <div className="mt-2 text-xs text-gray-500">
-        {notice.createdAt.toLocaleDateString()}
+        {notice.createdAt ? new Date(notice.createdAt).toLocaleDateString() : 'Unknown date'}
       </div>
     </motion.div>
   );

@@ -13,18 +13,26 @@ const StudentCouncil: React.FC = () => {
   useEffect(() => {
     const loadMeetings = async () => {
       try {
-        const meetingsQuery = query(
-          collection(db, 'meetings'),
-          orderBy('date', 'desc'),
-          limit(5) // Load only the 5 most recent meetings
-        );
-        const meetingsSnapshot = await getDocs(meetingsQuery);
-        const meetingsData = meetingsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
-        }));
-        setMeetings(meetingsData);
+        // Check if we're in a browser environment
+        if (typeof window !== 'undefined') {
+          const meetingsQuery = query(
+            collection(db, 'meetings'),
+            orderBy('date', 'desc'),
+            limit(5) // Load only the 5 most recent meetings
+          );
+          const meetingsSnapshot = await getDocs(meetingsQuery);
+          const meetingsData = meetingsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt && typeof data.createdAt.toDate === 'function' 
+                ? data.createdAt.toDate() 
+                : data.createdAt || new Date()
+            };
+          });
+          setMeetings(meetingsData);
+        }
       } catch (err) {
         console.error('Error loading meetings:', err);
       }

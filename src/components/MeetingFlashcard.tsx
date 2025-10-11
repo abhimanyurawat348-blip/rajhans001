@@ -32,9 +32,9 @@ const MeetingFlashcard: React.FC<MeetingFlashcardProps> = ({ meeting }) => {
               {meeting.topic}
             </h3>
             <div className="flex flex-wrap items-center gap-3 text-sm text-purple-700 mb-2">
-              <span>{new Date(meeting.date).toLocaleDateString()}</span>
+              <span>{meeting.date ? new Date(meeting.date).toLocaleDateString() : 'Unknown date'}</span>
               <span>•</span>
-              <span>{meeting.time}</span>
+              <span>{meeting.time || 'Unknown time'}</span>
             </div>
             {meeting.description && (
               <p className="text-sm text-purple-700 mb-2">
@@ -56,7 +56,7 @@ const MeetingFlashcard: React.FC<MeetingFlashcardProps> = ({ meeting }) => {
         </div>
       </div>
       <div className="mt-2 text-xs text-gray-500">
-        Scheduled on {meeting.createdAt.toLocaleDateString()}
+        Scheduled on {meeting.createdAt ? new Date(meeting.createdAt).toLocaleDateString() : 'Unknown date'}
       </div>
     </motion.div>
   );
