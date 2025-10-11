@@ -23,7 +23,8 @@ const Navbar: React.FC = () => {
     { path: '/study-resources', label: 'Study Resources' },
     { path: '/rules', label: 'Rule Book' },
     { path: '/student-council', label: 'Student Council' },
-    { path: '/staff-portal', label: 'Staff Portal' }
+    { path: '/staff-portal', label: 'Staff Portal' },
+    { path: '/staff-portal-new', label: 'New Staff Portal' }
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -74,7 +75,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Welcome, {user?.name}
+                  Welcome, {user?.fullName || user?.username}
                 </span>
                 <button
                   onClick={logout}
@@ -130,15 +131,20 @@ const Navbar: React.FC = () => {
                 {darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               </button>
               {isAuthenticated && (
-                <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900/50 transition-colors duration-200"
-                >
-                  Logout
-                </button>
+                <>
+                  <div className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+                    Welcome, {user?.fullName || user?.username}
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 dark:text-gray-300 dark:hover:bg-red-900/50 transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </>
               )}
             </div>
           </motion.div>
