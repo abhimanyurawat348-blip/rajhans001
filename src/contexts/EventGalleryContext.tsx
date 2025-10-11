@@ -22,7 +22,7 @@ interface EventGalleryContextType {
   loading: boolean;
   error: string | null;
   createFolder: (folderName: string, userId: string) => Promise<void>;
-  uploadImages: (folderId: string, files: FileList) => Promise<void>;
+  uploadImages: (folderId: string, files: FileList, onProgress?: (progress: number) => void) => Promise<void>;
   deleteFolder: (folderId: string) => Promise<void>;
   deleteImage: (folderId: string, imageUrl: string) => Promise<void>;
   loadFolders: () => Promise<void>;
@@ -98,7 +98,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Upload images to a folder
-  const uploadImages = async (folderId: string, files: FileList) => {
+  const uploadImages = async (folderId: string, files: FileList, onProgress?: (progress: number) => void) => {
     try {
       const folder = folders.find(f => f.id === folderId);
       if (!folder) throw new Error('Folder not found');
@@ -113,11 +113,17 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         // Upload file
         const uploadTask = uploadBytesResumable(storageRef, file);
         
-        // Wait for upload to complete
+        // Wait for upload to complete with progress tracking
         await new Promise<void>((resolve, reject) => {
           uploadTask.on(
             'state_changed',
-            null,
+            (snapshot) => {
+              // Progress tracking
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              if (onProgress) {
+                onProgress(progress);
+              }
+            },
             (error) => reject(error),
             async () => {
               try {

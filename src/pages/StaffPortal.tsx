@@ -41,7 +41,8 @@ const StaffPortal: React.FC = () => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'rajhans2019' && password === 'rajhans01') {
+    // Specific username and password as requested
+    if (username === 'rajhans_001@gmail.com' && password === 'abhimanyu03*9') {
       setAuthenticated(true);
     } else {
       alert('Invalid username or password');
@@ -76,13 +77,6 @@ const StaffPortal: React.FC = () => {
             <Shield className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900">Staff Portal Access</h1>
             <p className="text-gray-600 mt-2">Enter your credentials to continue</p>
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Demo Credentials:</strong><br />
-                Username: rajhans2019<br />
-                Password: rajhans01
-              </p>
-            </div>
           </div>
 
           <form onSubmit={handleLoginSubmit} className="space-y-6">

@@ -35,8 +35,16 @@ const EventGallery: React.FC = () => {
     if (!e.target.files || !selectedFolder) return;
     
     try {
+      // Create a progress callback function
+      const onProgress = (progress: number) => {
+        setUploadProgress(prev => ({ ...prev, [selectedFolder]: progress }));
+      };
+      
+      // Set initial progress to 0
       setUploadProgress(prev => ({ ...prev, [selectedFolder]: 0 }));
-      await uploadImages(selectedFolder, e.target.files);
+      
+      // Upload images with progress tracking
+      await uploadImages(selectedFolder, e.target.files, onProgress);
     } catch (err) {
       console.error('Failed to upload images:', err);
     } finally {
