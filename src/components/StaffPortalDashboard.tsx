@@ -111,6 +111,15 @@ interface SubjectMarks {
   [subject: string]: MarksheetEntry[];
 }
 
+// Add new interfaces for the enhanced results system
+interface StudentMarksEntry {
+  id: string;
+  name: string;
+  rollNumber: string;
+  admissionNumber: string;
+  subjects: { [subject: string]: { marks: number; maxMarks: number } };
+}
+
 const StaffPortalDashboard: React.FC = () => {
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
   const { registrations, loadRegistrations, updateRegistrationStatus, deleteRegistration } = useRegistrations();
@@ -136,6 +145,18 @@ const StaffPortalDashboard: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [marksData, setMarksData] = useState<SubjectMarks>({});
   const [showMarksEntry, setShowMarksEntry] = useState(false);
+  
+  // Enhanced results management states
+  const [enhancedResultsMode, setEnhancedResultsMode] = useState(false);
+  const [studentEntries, setStudentEntries] = useState<StudentMarksEntry[]>([]);
+  const [currentStudent, setCurrentStudent] = useState({
+    name: '',
+    rollNumber: '',
+    admissionNumber: ''
+  });
+  const [classForMarks, setClassForMarks] = useState('');
+  const [sectionForMarks, setSectionForMarks] = useState('');
+  const [examTypeForMarks, setExamTypeForMarks] = useState('');
   
   // Notices states
   const [notices, setNotices] = useState<Notice[]>([]);
@@ -443,6 +464,133 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
+  // Function to add a new student entry
+  const addStudentEntry = () => {
+    if (currentStudent.name && currentStudent.rollNumber) {
+      const newStudent: StudentMarksEntry = {
+        id: Date.now().toString(),
+        name: currentStudent.name,
+        rollNumber: currentStudent.rollNumber,
+        admissionNumber: currentStudent.admissionNumber,
+        subjects: {}
+      };
+      
+      setStudentEntries([...studentEntries, newStudent]);
+      setCurrentStudent({ name: '', rollNumber: '', admissionNumber: '' });
+    }
+  };
+
+  // Function to add subject marks for a student
+  const addSubjectMarks = (studentId: string, subject: string, marks: number, maxMarks: number) => {
+    setStudentEntries(prev => prev.map(student => {
+      if (student.id === studentId) {
+        return {
+          ...student,
+          subjects: {
+            ...student.subjects,
+            [subject]: { marks, maxMarks }
+          }
+        };
+      }
+      return student;
+    }));
+  };
+
+  // Function to remove a student entry
+  const removeStudentEntry = (studentId: string) => {
+    setStudentEntries(prev => prev.filter(student => student.id !== studentId));
+  };
+
+  // Function to save all marks to Firestore
+  const saveAllMarks = async () => {
+    try {
+      setLoading(true);
+      
+      // Save marks for each student and subject
+      for (const student of studentEntries) {
+        for (const [subject, marksData] of Object.entries(student.subjects)) {
+          // Find student in the database
+          const studentQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'student'),
+            where('fullName', '==', student.name),
+            where('class', '==', classForMarks),
+            where('section', '==', sectionForMarks)
+          );
+          
+          const studentSnapshot = await getDocs(studentQuery);
+          
+          if (!studentSnapshot.empty) {
+            const studentDoc = studentSnapshot.docs[0];
+            
+            await addDoc(collection(db, 'students', studentDoc.id, 'marks'), {
+              examType: examTypeForMarks,
+              subject,
+              marks: marksData.marks,
+              maxMarks: marksData.maxMarks,
+              class: classForMarks,
+              section: sectionForMarks,
+              uploadedAt: new Date(),
+              uploadedBy: 'staff'
+            });
+          }
+        }
+      }
+      
+      alert('All marks saved successfully!');
+      setEnhancedResultsMode(false);
+      setStudentEntries([]);
+      setClassForMarks('');
+      setSectionForMarks('');
+      setExamTypeForMarks('');
+    } catch (error) {
+      console.error('Error saving marks:', error);
+      alert('Error saving marks. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to export marks to Excel
+  const exportMarksToExcel = () => {
+    if (studentEntries.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Get all unique subjects
+    const allSubjects = Array.from(
+      new Set(studentEntries.flatMap(student => Object.keys(student.subjects)))
+    );
+
+    // Create data for export
+    const exportData = studentEntries.map(student => {
+      const rowData: any = {
+        'Student Name': student.name,
+        'Roll Number': student.rollNumber,
+        'Admission Number': student.admissionNumber
+      };
+
+      // Add marks for each subject
+      allSubjects.forEach(subject => {
+        const subjectMarks = student.subjects[subject];
+        if (subjectMarks) {
+          rowData[`${subject} (${subjectMarks.maxMarks})`] = `${subjectMarks.marks}/${subjectMarks.maxMarks}`;
+        } else {
+          rowData[`${subject} (100)`] = '';
+        }
+      });
+
+      return rowData;
+    });
+
+    // Create worksheet and workbook
+    const ws = utils.json_to_sheet(exportData);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Marks');
+    writeFile(wb, `marks_${classForMarks}_${sectionForMarks}_${examTypeForMarks}.xlsx`);
+  };
+
   // Add new meeting
   const addMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -510,9 +658,9 @@ const StaffPortalDashboard: React.FC = () => {
       'Class': complaint.class,
       'Section': complaint.section,
       'IP Address': complaint.ipAddress || '',
-      'Device Name': complaint.deviceInfo || '',
-      'Complaint Title': complaint.title,
-      'Complaint Description': complaint.description,
+      'Device Name': complaint.ipAddress || '',
+      'Complaint Title': complaint.studentName,
+      'Complaint Description': complaint.complaint,
       'Submitted At': complaint.submittedAt.toLocaleString(),
       'Status': complaint.status
     }));
@@ -529,10 +677,10 @@ const StaffPortalDashboard: React.FC = () => {
       'Student Name': reg.studentName,
       'Class': reg.class,
       'Section': reg.section,
-      'Activity/Sport/Event': reg.activity,
-      'Registration Date': reg.registrationDate.toLocaleString(),
+      'Activity/Sport/Event': reg.activityType,
+      'Registration Date': reg.registeredAt.toLocaleString(),
       'Status': reg.status,
-      'Contact Details': reg.contactDetails
+      'Contact Details': `${reg.fatherName}, ${reg.motherName}`
     }));
     
     const ws = utils.json_to_sheet(data);
@@ -674,7 +822,7 @@ const StaffPortalDashboard: React.FC = () => {
                         <MessageSquare className="h-5 w-5 text-red-500" />
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm font-medium text-gray-900">{complaint.title}</p>
+                        <p className="text-sm font-medium text-gray-900">{complaint.studentName}</p>
                         <p className="text-sm text-gray-500">
                           {complaint.studentName} • {complaint.submittedAt.toLocaleDateString()}
                         </p>
@@ -866,9 +1014,9 @@ const StaffPortalDashboard: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{complaint.class}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{complaint.section}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{complaint.ipAddress || 'N/A'}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{complaint.deviceInfo || 'N/A'}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{complaint.title}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{complaint.description}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{complaint.ipAddress || 'N/A'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{complaint.studentName}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{complaint.complaint}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {complaint.submittedAt.toLocaleDateString()}
                           </td>
@@ -890,7 +1038,7 @@ const StaffPortalDashboard: React.FC = () => {
                                 <CheckCircle className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => updateComplaintStatus(complaint.id, 'in-progress')}
+                                onClick={() => updateComplaintStatus(complaint.id, 'under-consideration')}
                                 className="text-blue-600 hover:text-blue-900"
                               >
                                 <Clock className="h-4 w-4" />
@@ -1015,175 +1163,450 @@ const StaffPortalDashboard: React.FC = () => {
             >
               <h2 className="text-2xl font-bold text-gray-900">Results Management</h2>
               
-              {!showMarksEntry ? (
+              {!enhancedResultsMode ? (
                 <div className="bg-white rounded-xl shadow p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
-                      <select
-                        value={selectedClass}
-                        onChange={(e) => setSelectedClass(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Choose a class</option>
-                        {[...Array(12)].map((_, i) => (
-                          <option key={i + 1} value={i + 1}>{i + 1}</option>
-                        ))}
-                      </select>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">Select Mode</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Original Mode */}
+                    <div 
+                      className="border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
+                      onClick={() => {
+                        setEnhancedResultsMode(false);
+                        setShowMarksEntry(false);
+                      }}
+                    >
+                      <h4 className="text-md font-semibold text-gray-900 mb-2">Subject-wise Entry</h4>
+                      <p className="text-gray-600 text-sm mb-4">Enter marks for one subject at a time</p>
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Use Subject-wise Entry
+                      </button>
                     </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Select Section</label>
-                      <select
-                        value={selectedSection}
-                        onChange={(e) => setSelectedSection(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Choose a section</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
-                      <select
-                        value={examType}
-                        onChange={(e) => setExamType(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select exam type</option>
-                        <option value="unit_test_1">Unit Test 1</option>
-                        <option value="unit_test_2">Unit Test 2</option>
-                        <option value="unit_test_3">Unit Test 3</option>
-                        <option value="half_yearly">Half Yearly</option>
-                        <option value="final_exam">Final Exam</option>
-                      </select>
+                    {/* Enhanced Mode */}
+                    <div 
+                      className="border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-colors"
+                      onClick={() => {
+                        setEnhancedResultsMode(true);
+                        setShowMarksEntry(false);
+                      }}
+                    >
+                      <h4 className="text-md font-semibold text-gray-900 mb-2">Student-wise Entry</h4>
+                      <p className="text-gray-600 text-sm mb-4">Enter marks for all subjects per student</p>
+                      <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Use Student-wise Entry
+                      </button>
                     </div>
                   </div>
                   
-                  <button
-                    onClick={handleClassSectionSelect}
-                    disabled={!selectedClass || !selectedSection || !examType}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Proceed to Marks Entry
-                  </button>
+                  {/* Original subject-wise entry form (only shown when not in enhanced mode and showMarksEntry is true) */}
+                  {!enhancedResultsMode && showMarksEntry && (
+                    <div className="mt-6">
+                      {/* Keep the existing subject-wise entry implementation */}
+                      <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Enter Marks for Class {selectedClass} - Section {selectedSection}
+                        </h3>
+                        <button
+                          onClick={() => setShowMarksEntry(false)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
+                        <div className="flex space-x-2">
+                          <select
+                            value={selectedSubject}
+                            onChange={(e) => {
+                              setSelectedSubject(e.target.value);
+                              if (e.target.value && !marksData[e.target.value]) {
+                                initializeMarksData(e.target.value);
+                              }
+                            }}
+                            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="">Choose a subject</option>
+                            {subjects.map(subject => (
+                              <option key={subject} value={subject}>{subject}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => {
+                              if (selectedSubject && !marksData[selectedSubject]) {
+                                initializeMarksData(selectedSubject);
+                              }
+                            }}
+                            disabled={!selectedSubject || !!marksData[selectedSubject]}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {selectedSubject && marksData[selectedSubject] && (
+                        <div className="mb-6">
+                          <h4 className="text-md font-medium text-gray-900 mb-4">{selectedSubject} Marks</h4>
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
+                                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marks</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {marksData[selectedSubject].map((student, index) => (
+                                  <tr key={student.studentId}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.studentName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={student.maxMarks}
+                                        value={student.marks}
+                                        onChange={(e) => updateStudentMarks(selectedSubject, index, parseInt(e.target.value) || 0)}
+                                        className="w-24 rounded-lg border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      />
+                                      <span className="text-gray-500 ml-2">/ {student.maxMarks}</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-end space-x-3">
+                        <button
+                          onClick={() => {
+                            setShowMarksEntry(false);
+                            setMarksData({});
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={saveMarks}
+                          disabled={loading}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
+                        >
+                          {loading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Save Marks
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Initial form for subject-wise entry */}
+                  {!showMarksEntry && !enhancedResultsMode && (
+                    <div className="mt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
+                          <select
+                            value={selectedClass}
+                            onChange={(e) => setSelectedClass(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="">Choose a class</option>
+                            {[...Array(12)].map((_, i) => (
+                              <option key={i + 1} value={i + 1}>{i + 1}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Select Section</label>
+                          <select
+                            value={selectedSection}
+                            onChange={(e) => setSelectedSection(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="">Choose a section</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                          <select
+                            value={examType}
+                            onChange={(e) => setExamType(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="">Select exam type</option>
+                            <option value="unit_test_1">Unit Test 1</option>
+                            <option value="unit_test_2">Unit Test 2</option>
+                            <option value="unit_test_3">Unit Test 3</option>
+                            <option value="half_yearly">Half Yearly</option>
+                            <option value="final_exam">Final Exam</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={handleClassSectionSelect}
+                        disabled={!selectedClass || !selectedSection || !examType}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        Proceed to Marks Entry
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
+                /* Enhanced Student-wise Entry Mode */
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Enter Marks for Class {selectedClass} - Section {selectedSection}
-                    </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Student-wise Marks Entry</h3>
                     <button
-                      onClick={() => setShowMarksEntry(false)}
+                      onClick={() => setEnhancedResultsMode(false)}
                       className="text-gray-500 hover:text-gray-700"
                     >
                       <X className="h-5 w-5" />
                     </button>
                   </div>
                   
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
-                    <div className="flex space-x-2">
-                      <select
-                        value={selectedSubject}
-                        onChange={(e) => {
-                          setSelectedSubject(e.target.value);
-                          if (e.target.value && !marksData[e.target.value]) {
-                            initializeMarksData(e.target.value);
-                          }
-                        }}
-                        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Choose a subject</option>
-                        {subjects.map(subject => (
-                          <option key={subject} value={subject}>{subject}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => {
-                          if (selectedSubject && !marksData[selectedSubject]) {
-                            initializeMarksData(selectedSubject);
-                          }
-                        }}
-                        disabled={!selectedSubject || !!marksData[selectedSubject]}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {selectedSubject && marksData[selectedSubject] && (
-                    <div className="mb-6">
-                      <h4 className="text-md font-medium text-gray-900 mb-4">{selectedSubject} Marks</h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marks</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {marksData[selectedSubject].map((student, index) => (
-                              <tr key={student.studentId}>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.studentName}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={student.maxMarks}
-                                    value={student.marks}
-                                    onChange={(e) => updateStudentMarks(selectedSubject, index, parseInt(e.target.value) || 0)}
-                                    className="w-24 rounded-lg border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  />
-                                  <span className="text-gray-500 ml-2">/ {student.maxMarks}</span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                  {/* Class, Section, Exam Type Selection */}
+                  {!classForMarks || !sectionForMarks || !examTypeForMarks ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
+                        <select
+                          value={classForMarks}
+                          onChange={(e) => setClassForMarks(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Choose a class</option>
+                          {[...Array(12)].map((_, i) => (
+                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Section</label>
+                        <select
+                          value={sectionForMarks}
+                          onChange={(e) => setSectionForMarks(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Choose a section</option>
+                          <option value="A">A</option>
+                          <option value="B">B</option>
+                          <option value="C">C</option>
+                          <option value="D">D</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                        <select
+                          value={examTypeForMarks}
+                          onChange={(e) => setExamTypeForMarks(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select exam type</option>
+                          <option value="unit_test_1">Unit Test 1</option>
+                          <option value="unit_test_2">Unit Test 2</option>
+                          <option value="unit_test_3">Unit Test 3</option>
+                          <option value="half_yearly">Half Yearly</option>
+                          <option value="final_exam">Final Exam</option>
+                        </select>
                       </div>
                     </div>
-                  )}
-                  
-                  <div className="flex justify-end space-x-3">
-                    <button
-                      onClick={() => {
-                        setShowMarksEntry(false);
-                        setMarksData({});
-                      }}
-                      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={saveMarks}
-                      disabled={loading}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
-                    >
-                      {loading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Save Marks
-                        </>
+                  ) : (
+                    <>
+                      {/* Add Student Form */}
+                      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-3">Add Student</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Student Name</label>
+                            <input
+                              type="text"
+                              value={currentStudent.name}
+                              onChange={(e) => setCurrentStudent({...currentStudent, name: e.target.value})}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter student name"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Roll Number</label>
+                            <input
+                              type="text"
+                              value={currentStudent.rollNumber}
+                              onChange={(e) => setCurrentStudent({...currentStudent, rollNumber: e.target.value})}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter roll number"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Admission Number</label>
+                            <input
+                              type="text"
+                              value={currentStudent.admissionNumber}
+                              onChange={(e) => setCurrentStudent({...currentStudent, admissionNumber: e.target.value})}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Enter admission number"
+                            />
+                          </div>
+                          
+                          <div className="flex items-end">
+                            <button
+                              onClick={addStudentEntry}
+                              disabled={!currentStudent.name || !currentStudent.rollNumber}
+                              className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
+                            >
+                              Add Student
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Subject Marks Entry for Each Student */}
+                      {studentEntries.length > 0 && (
+                        <div className="mb-6">
+                          <h4 className="text-md font-medium text-gray-900 mb-4">Enter Subject Marks</h4>
+                          
+                          {studentEntries.map((student) => (
+                            <div key={student.id} className="border border-gray-200 rounded-lg mb-4">
+                              <div className="bg-gray-50 px-4 py-3 flex justify-between items-center">
+                                <div>
+                                  <span className="font-medium">{student.name}</span>
+                                  <span className="text-gray-600 text-sm ml-2">(Roll: {student.rollNumber})</span>
+                                </div>
+                                <button
+                                  onClick={() => removeStudentEntry(student.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                              
+                              <div className="p-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                  {/* Get subjects based on class */}
+                                  {(() => {
+                                    const classNum = parseInt(classForMarks);
+                                    let classSubjects: string[] = [];
+                                    
+                                    if (classNum >= 1 && classNum <= 2) {
+                                      classSubjects = ['English', 'Hindi', 'Mathematics', 'EVS', 'Art/Craft', 'PE'];
+                                    } else if (classNum >= 3 && classNum <= 5) {
+                                      classSubjects = ['English', 'Hindi', 'Mathematics', 'EVS', 'Science', 'Social Science', 'Art', 'PE'];
+                                    } else if (classNum >= 6 && classNum <= 8) {
+                                      classSubjects = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Computer/IT', 'Art/Music', 'PE', 'Third Language'];
+                                    } else if (classNum >= 9 && classNum <= 10) {
+                                      classSubjects = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Computer/IT', 'PE', 'Work Education'];
+                                    } else if (classNum >= 11 && classNum <= 12) {
+                                      classSubjects = ['English', 'Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Physical Education'];
+                                    }
+                                    
+                                    return classSubjects.map(subject => {
+                                      const subjectMarks = student.subjects[subject] || { marks: 0, maxMarks: 100 };
+                                      return (
+                                        <div key={subject} className="flex items-center space-x-2">
+                                          <span className="text-sm font-medium text-gray-700 w-24 truncate">{subject}:</span>
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            max={subjectMarks.maxMarks}
+                                            value={subjectMarks.marks}
+                                            onChange={(e) => addSubjectMarks(student.id, subject, parseInt(e.target.value) || 0, subjectMarks.maxMarks)}
+                                            className="w-16 rounded-lg border border-gray-300 px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                          />
+                                          <span className="text-gray-500 text-sm">/</span>
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={subjectMarks.maxMarks}
+                                            onChange={(e) => addSubjectMarks(student.id, subject, subjectMarks.marks, parseInt(e.target.value) || 100)}
+                                            className="w-16 rounded-lg border border-gray-300 px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                          />
+                                        </div>
+                                      );
+                                    });
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       )}
-                    </button>
-                  </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex justify-between">
+                        <button
+                          onClick={() => {
+                            setEnhancedResultsMode(false);
+                            setStudentEntries([]);
+                            setClassForMarks('');
+                            setSectionForMarks('');
+                            setExamTypeForMarks('');
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                        >
+                          Cancel
+                        </button>
+                        
+                        <div className="space-x-3">
+                          <button
+                            onClick={exportMarksToExcel}
+                            disabled={studentEntries.length === 0}
+                            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                          >
+                            <Download className="h-4 w-4 inline mr-1" />
+                            Export to Excel
+                          </button>
+                          
+                          <button
+                            onClick={saveAllMarks}
+                            disabled={studentEntries.length === 0 || loading}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
+                          >
+                            {loading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4 mr-2" />
+                                Save All Marks
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -1527,9 +1950,9 @@ const StaffPortalDashboard: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{reg.studentName}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.class}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.section}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.activity}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.activityType}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {reg.registrationDate.toLocaleDateString()}
+                            {reg.registeredAt.toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -1537,10 +1960,10 @@ const StaffPortalDashboard: React.FC = () => {
                               reg.status === 'approved' ? 'bg-green-100 text-green-800' :
                               'bg-red-100 text-red-800'
                             }`}>
-                              {reg.status.charAt(0).toUpperCase() + reg.status.slice(1)}
+                              {reg.status ? reg.status.charAt(0).toUpperCase() + reg.status.slice(1) : 'Pending'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.contactDetails}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{`${reg.fatherName}, ${reg.motherName}`}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
                               <button
@@ -1550,7 +1973,7 @@ const StaffPortalDashboard: React.FC = () => {
                                 <CheckCircle className="h-4 w-4" />
                               </button>
                               <button
-                                onClick={() => updateRegistrationStatus(reg.id, 'rejected')}
+                                onClick={() => updateRegistrationStatus(reg.id, 'removed')}
                                 className="text-red-600 hover:text-red-900"
                               >
                                 <X className="h-4 w-4" />

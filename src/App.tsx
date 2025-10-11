@@ -14,6 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SettingsDialog from './components/SettingsDialog';
 import DashboardHome from './components/DashboardHome';
 import CalendarView from './components/CalendarView';
+import StaffApp from './StaffApp';
 
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
@@ -330,8 +331,7 @@ function App() {
                             <Route path="/planners-registrations" element={<PlannersRegistrations />} />
                             <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                             <Route path="/registration" element={<Registration />} />
-                            <Route path="/staff-portal" element={<NewStaffPortal />} />
-                            <Route path="/staff-portal-new" element={<StaffApp />} />
+                            <Route path="/staff-portal" element={<StaffApp />} />
                             <Route path="/complaints" element={<Complaints />} />
                             <Route path="/study-resources" element={<StudyResources />} />
                             <Route path="/parent-portal" element={<ParentPortal />} />

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Eye, Lock } from 'lucide-react';
+import { Shield, Eye, Lock, LogOut } from 'lucide-react';
 import StaffPortalDashboard from './components/StaffPortalDashboard';
 
 const StaffApp: React.FC = () => {
@@ -9,14 +9,22 @@ const StaffApp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('staffPortalAuth');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real application, you would validate credentials against a backend
-    // For now, we'll use the same credentials as the existing staff portal
+    // Using the same credentials as NewStaffPortal
     if (username === 'rajhans_001@gmail.com' && password === 'abhimanyu03*9') {
       setIsAuthenticated(true);
       localStorage.setItem('staffPortalAuth', 'true');
+      setError('');
     } else {
       setError('Invalid username or password');
     }
@@ -109,7 +117,7 @@ const StaffApp: React.FC = () => {
               onClick={handleLogout}
               className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
             >
-              <Lock className="h-4 w-4" />
+              <LogOut className="h-4 w-4" />
               <span>Logout</span>
             </button>
           </div>
