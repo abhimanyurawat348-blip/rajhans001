@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { LogOut, BookOpen, CheckCircle, XCircle, Calendar, DollarSign, Users, Award, TrendingUp, AlertCircle } from 'lucide-react';
+import { LogOut, BookOpen, CheckCircle, XCircle, Calendar, DollarSign, Users, Award, TrendingUp, AlertCircle, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../config/firebase';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 interface StudentData {
   id: string;
@@ -281,7 +282,7 @@ const ParentHome: React.FC = () => {
         >
           <div className="flex items-center space-x-3 mb-6">
             <Award className="h-8 w-8 text-green-600" />
-            <h2 className="text-2xl font-bold text-gray-900">Child Performance</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Child Performance (Read-Only)</h2>
           </div>
 
           {childrenPerformance.length === 0 ? (
@@ -362,6 +363,45 @@ const ParentHome: React.FC = () => {
               ))}
             </div>
           )}
+          
+          {/* Performance Chart for Child */}
+          {childrenPerformance.length > 0 && (
+            <div className="mt-8 bg-white rounded-xl p-6 shadow-lg">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
+                Child Performance Chart
+              </h3>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={childrenPerformance[0].marks ? [
+                      { name: 'UT1', percentage: childrenPerformance[0].marks.unit_test_1 ? Math.round((childrenPerformance[0].marks.unit_test_1 / childrenPerformance[0].maxMarks) * 100) : 0 },
+                      { name: 'UT2', percentage: childrenPerformance[0].marks.unit_test_2 ? Math.round((childrenPerformance[0].marks.unit_test_2 / childrenPerformance[0].maxMarks) * 100) : 0 },
+                      { name: 'UT3', percentage: childrenPerformance[0].marks.unit_test_3 ? Math.round((childrenPerformance[0].marks.unit_test_3 / childrenPerformance[0].maxMarks) * 100) : 0 },
+                      { name: 'Half-Yearly', percentage: childrenPerformance[0].marks.half_yearly ? Math.round((childrenPerformance[0].marks.half_yearly / childrenPerformance[0].maxMarks) * 100) : 0 },
+                      { name: 'Final', percentage: childrenPerformance[0].marks.final_exam ? Math.round((childrenPerformance[0].marks.final_exam / childrenPerformance[0].maxMarks) * 100) : 0 }
+                    ] : []}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 100]} />
+                    <Tooltip 
+                      formatter={(value) => [`${value}%`, 'Percentage']}
+                      labelFormatter={(value) => `Exam: ${value}`}
+                    />
+                    <Legend />
+                    <Bar dataKey="percentage" name="Performance" fill="#3b82f6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -437,7 +477,7 @@ const ParentHome: React.FC = () => {
           >
             <div className="flex items-center space-x-3 mb-6">
               <Award className="h-8 w-8 text-teal-600" />
-              <h2 className="text-2xl font-bold text-gray-900">Academic Performance</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Academic Performance (Read-Only)</h2>
             </div>
 
             {marks.length === 0 ? (
@@ -448,7 +488,7 @@ const ParentHome: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 {marks.map((mark, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div key={`mark-${index}`} className="border border-gray-200 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-900 mb-3">{mark.subject || 'Subject'}</h3>
                     <div className="grid grid-cols-3 gap-3 text-sm">
                       <div>

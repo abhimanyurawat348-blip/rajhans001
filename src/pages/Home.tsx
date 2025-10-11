@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain, Heart, Briefcase, ListTodo, MessageCircle, UserCheck, ShoppingCart, Book, Shirt, Zap, Footprints, X } from 'lucide-react';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain, Heart, Briefcase, ListTodo, MessageCircle, UserCheck, ShoppingCart, Book, Shirt, Zap, Footprints, X, Bell } from 'lucide-react';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
 import ChantingFlashcard from '../components/ChantingFlashcard';
 import MemoriesFlashcard from '../components/MemoriesFlashcard';
+import NoticeFlashcard from '../components/NoticeFlashcard';
 
 const Home: React.FC = () => {
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false);
@@ -15,6 +18,31 @@ const Home: React.FC = () => {
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [isHomeworkModalOpen, setIsHomeworkModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [notices, setNotices] = useState<any[]>([]);
+
+  // Load notices
+  useEffect(() => {
+    const loadNotices = async () => {
+      try {
+        const noticesQuery = query(
+          collection(db, 'notices'),
+          orderBy('createdAt', 'desc'),
+          limit(5) // Load only the 5 most recent notices
+        );
+        const noticesSnapshot = await getDocs(noticesQuery);
+        const noticesData = noticesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
+        }));
+        setNotices(noticesData);
+      } catch (err) {
+        console.error('Error loading notices:', err);
+      }
+    };
+
+    loadNotices();
+  }, []);
 
   // Product data for each category
   const products = {
@@ -371,6 +399,45 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Important Notices Section */}
+      {notices.length > 0 && (
+        <section className="py-16 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-4xl font-bold text-gray-900 mb-4 dark:text-white flex items-center justify-center">
+                <Bell className="h-8 w-8 mr-3 text-blue-600" />
+                Important Notices
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300">
+                Stay updated with the latest announcements
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {notices.map((notice, index) => (
+                <NoticeFlashcard key={notice.id} notice={notice} />
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <Link
+                to="/staff-portal"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
+              >
+                View All Notices
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
@@ -392,7 +459,7 @@ const Home: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <motion.div
-                key={index}
+                key={`feature-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

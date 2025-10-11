@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { BookOpen, Calendar, CheckCircle, Clock, FileText, LogOut } from 'lucide-react';
 
@@ -53,7 +53,16 @@ const Homework: React.FC = () => {
 
   const markAsSubmitted = async (homeworkId: string) => {
     try {
-      await updateDoc(doc(db, 'homework', homeworkId), {
+      // Validate that the document exists before updating
+      const homeworkRef = doc(db, 'homework', homeworkId);
+      const homeworkSnap = await getDoc(homeworkRef);
+      
+      if (!homeworkSnap.exists()) {
+        console.error('Homework document not found');
+        return;
+      }
+      
+      await updateDoc(homeworkRef, {
         status: 'submitted',
         submittedDate: new Date()
       });

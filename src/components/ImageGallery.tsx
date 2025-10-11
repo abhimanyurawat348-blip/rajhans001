@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface Image {
   url: string;
@@ -107,23 +108,29 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, folderName, onClose
       <div className="p-4 bg-black bg-opacity-50">
         <div className="flex space-x-2 overflow-x-auto pb-2">
           {images.map((image, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setCurrentIndex(index);
-                setIsLoading(true);
-              }}
-              className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 ${
-                index === currentIndex ? 'border-white' : 'border-transparent'
-              }`}
-              aria-label={`View image ${index + 1}`}
+            <motion.div
+              key={`image-${index}`}
+              className="relative group overflow-hidden rounded-xl shadow-lg"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
             >
-              <img
-                src={image.url}
-                alt={`Thumbnail ${index + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </button>
+              <button
+                onClick={() => {
+                  setCurrentIndex(index);
+                  setIsLoading(true);
+                }}
+                className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 ${
+                  index === currentIndex ? 'border-white' : 'border-transparent'
+                }`}
+                aria-label={`View image ${index + 1}`}
+              >
+                <img
+                  src={image.url}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            </motion.div>
           ))}
         </div>
       </div>

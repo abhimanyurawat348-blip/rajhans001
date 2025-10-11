@@ -169,7 +169,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, index) => (
               <motion.div
-                key={index}
+                key={`message-${index}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-start gap-3`}

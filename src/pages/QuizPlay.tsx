@@ -178,7 +178,7 @@ const QuizPlay: React.FC = () => {
             <div className="space-y-4">
               {currentQuestion.options.map((option, index) => (
                 <motion.div
-                  key={index}
+                  key={`option-${index}`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleAnswerSelect(index)}

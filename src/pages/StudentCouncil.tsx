@@ -1,9 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { studentCouncilMembers } from '../data/studentCouncil';
-import { Crown, Shield, Trophy, Users, Music, Zap, Star } from 'lucide-react';
+import { Crown, Shield, Trophy, Users, Music, Zap, Star, Calendar } from 'lucide-react';
+import MeetingFlashcard from '../components/MeetingFlashcard';
 
 const StudentCouncil: React.FC = () => {
+  const [meetings, setMeetings] = useState<any[]>([]);
+
+  // Load meetings
+  useEffect(() => {
+    const loadMeetings = async () => {
+      try {
+        const meetingsQuery = query(
+          collection(db, 'meetings'),
+          orderBy('date', 'desc'),
+          limit(5) // Load only the 5 most recent meetings
+        );
+        const meetingsSnapshot = await getDocs(meetingsQuery);
+        const meetingsData = meetingsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate() : new Date()
+        }));
+        setMeetings(meetingsData);
+      } catch (err) {
+        console.error('Error loading meetings:', err);
+      }
+    };
+
+    loadMeetings();
+  }, []);
+
   const getHouseColor = (house?: string) => {
     switch (house) {
       case 'Red': return 'from-red-400 to-red-600';
@@ -142,6 +171,32 @@ const StudentCouncil: React.FC = () => {
         </div>
       </section>
 
+      {/* Upcoming Meetings Section */}
+      {meetings.length > 0 && (
+        <section className="py-12 px-4 bg-gradient-to-r from-purple-50 to-pink-50">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 w-16 h-16 rounded-full flex items-center justify-center text-white mx-auto mb-4">
+                <Calendar className="h-8 w-8" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Upcoming Meetings</h2>
+              <p className="text-lg text-gray-600">Important meetings scheduled by the school administration</p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {meetings.map((meeting) => (
+                <MeetingFlashcard key={meeting.id} meeting={meeting} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 pb-20">
         {/* Leadership Section */}
         <section className="mb-20">
@@ -153,7 +208,7 @@ const StudentCouncil: React.FC = () => {
           />
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {leadership.map((member, index) => (
-              <MemberCard key={index} member={member} index={index} />
+              <MemberCard key={`leadership-${index}`} member={member} index={index} />
             ))}
           </div>
         </section>
@@ -168,7 +223,7 @@ const StudentCouncil: React.FC = () => {
           />
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {discipline.map((member, index) => (
-              <MemberCard key={index} member={member} index={index} />
+              <MemberCard key={`discipline-${index}`} member={member} index={index} />
             ))}
           </div>
         </section>
@@ -183,7 +238,7 @@ const StudentCouncil: React.FC = () => {
           />
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {sports.map((member, index) => (
-              <MemberCard key={index} member={member} index={index} />
+              <MemberCard key={`sports-${index}`} member={member} index={index} />
             ))}
           </div>
         </section>
@@ -206,7 +261,7 @@ const StudentCouncil: React.FC = () => {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
               {yellowHouse.map((member, index) => (
-                <MemberCard key={index} member={member} index={index} />
+                <MemberCard key={`yellowHouse-${index}`} member={member} index={index} />
               ))}
             </div>
             {yellowHouse.length === 0 && (
@@ -225,7 +280,7 @@ const StudentCouncil: React.FC = () => {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
               {greenHouse.map((member, index) => (
-                <MemberCard key={index} member={member} index={index} />
+                <MemberCard key={`greenHouse-${index}`} member={member} index={index} />
               ))}
             </div>
           </div>
@@ -239,7 +294,7 @@ const StudentCouncil: React.FC = () => {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
               {redHouse.map((member, index) => (
-                <MemberCard key={index} member={member} index={index} />
+                <MemberCard key={`redHouse-${index}`} member={member} index={index} />
               ))}
             </div>
           </div>
@@ -253,7 +308,7 @@ const StudentCouncil: React.FC = () => {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
               {blueHouse.map((member, index) => (
-                <MemberCard key={index} member={member} index={index} />
+                <MemberCard key={`blueHouse-${index}`} member={member} index={index} />
               ))}
             </div>
           </div>
@@ -269,7 +324,7 @@ const StudentCouncil: React.FC = () => {
           />
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {activities.map((member, index) => (
-              <MemberCard key={index} member={member} index={index} />
+              <MemberCard key={`activities-${index}`} member={member} index={index} />
             ))}
           </div>
         </section>

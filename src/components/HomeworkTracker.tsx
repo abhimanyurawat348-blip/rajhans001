@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-react';
 import { auth, db } from '../config/firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 
 interface HomeworkItem {
@@ -84,7 +84,16 @@ const HomeworkTracker: React.FC = () => {
 
     try {
       const newStatus = currentStatus === 'done' ? 'not-done' : 'done';
-      await updateDoc(doc(db, 'homework', homeworkId), {
+      // Validate that the document exists before updating
+      const homeworkRef = doc(db, 'homework', homeworkId);
+      const homeworkSnap = await getDoc(homeworkRef);
+      
+      if (!homeworkSnap.exists()) {
+        console.error('Homework document not found');
+        return;
+      }
+      
+      await updateDoc(homeworkRef, {
         status: newStatus
       });
       await loadHomework(userUid);

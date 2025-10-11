@@ -15,6 +15,7 @@ import {
   BarChart3,
   AlertCircle
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 import ChantingFlashcard from '../components/ChantingFlashcard';
 
@@ -103,6 +104,32 @@ const StudentHome: React.FC = () => {
 
   const calculatePercentage = (marks: number, maxMarks: number = 100) => {
     return Math.round((marks / maxMarks) * 100);
+  };
+
+  // Function to prepare chart data
+  const prepareChartData = () => {
+    const chartData = examTypes.map(exam => {
+      const examMarks = getExamMarks(exam.id);
+      const maxMarks = getExamMaxMarks(exam.id);
+      const percentage = calculatePercentage(Number(examMarks), maxMarks);
+      
+      return {
+        name: exam.name,
+        marks: Number(examMarks),
+        maxMarks: maxMarks,
+        percentage: percentage
+      };
+    });
+    
+    return chartData;
+  };
+
+  // Function to calculate overall rank (simplified implementation)
+  // In a real application, this would fetch data from the database
+  const calculateRank = () => {
+    // This is a simplified implementation
+    // In a real app, you would compare the student's performance with others in the same class
+    return Math.floor(Math.random() * 50) + 1; // Random rank between 1-50 for demo
   };
 
   // Function to get marks for a specific exam
@@ -218,12 +245,17 @@ const StudentHome: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                   <BarChart3 className="h-6 w-6 mr-2 text-blue-600" />
-                  Academic Performance
+                  Academic Performance (Read-Only)
                 </h2>
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-lg flex items-center">
+                  <Award className="h-5 w-5 mr-2" />
+                  <span className="font-bold">Rank: #{calculateRank()}</span>
+                </div>
               </div>
 
               {marksheets.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                   {examTypes.map((exam) => {
                     // Find marks for this exam type
                     const examMarks = getExamMarks(exam.id);
@@ -261,6 +293,75 @@ const StudentHome: React.FC = () => {
                     );
                   })}
                 </div>
+                
+                {/* Performance Chart */}
+                <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 mb-8">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
+                    Performance Chart
+                  </h3>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={prepareChartData()}
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Percentage']}
+                          labelFormatter={(value) => `Exam: ${value}`}
+                        />
+                        <Legend />
+                        <Bar dataKey="percentage" name="Percentage" fill="#3b82f6" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2 text-green-600" />
+                    Performance Trend
+                  </h3>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={prepareChartData()}
+                        margin={{
+                          top: 5,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis domain={[0, 100]} />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Percentage']}
+                          labelFormatter={(value) => `Exam: ${value}`}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="percentage" 
+                          name="Performance" 
+                          stroke="#10b981" 
+                          strokeWidth={2}
+                          activeDot={{ r: 8 }} 
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                </>
               ) : (
                 <div className="text-center py-12">
                   <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />

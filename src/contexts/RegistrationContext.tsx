@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { generateMotivationalMessage } from '../config/gemini';
 import { Registration } from '../types';
@@ -108,7 +108,16 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const updateRegistrationStatus = async (id: string, status: Registration['status']) => {
     try {
-      await updateDoc(doc(db, 'registrations', id), { status });
+      // Validate that the document exists before updating
+      const registrationRef = doc(db, 'registrations', id);
+      const registrationSnap = await getDoc(registrationRef);
+      
+      if (!registrationSnap.exists()) {
+        console.error('Registration document not found');
+        return;
+      }
+      
+      await updateDoc(registrationRef, { status });
       setRegistrations(prev =>
         prev.map(reg =>
           reg.id === id ? { ...reg, status } : reg

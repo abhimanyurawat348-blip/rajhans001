@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, addDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useComplaints } from '../contexts/ComplaintContext';
 import { read, utils } from 'xlsx';
@@ -26,7 +26,8 @@ import {
   Lock,
   Eye,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 
 interface StudentDoc {
@@ -76,6 +77,35 @@ interface UnregisteredStudentMarks {
   teacherId: string;
 }
 
+// Add new interfaces for our enhanced marksheet system
+interface StudentMarks {
+  id: string;
+  studentId: string;
+  studentName: string;
+  admissionNumber: string;
+  marks: number;
+  maxMarks: number;
+}
+
+interface ResultRecord {
+  id: string;
+  class: string;
+  section: string;
+  examType: string;
+  subject: string;
+  uploadedAt: Date;
+  uploadedBy: string;
+  studentCount: number;
+}
+
+// Add new state variables for enhanced marksheet functionality
+const [marksheetStep, setMarksheetStep] = useState<number>(1);
+const [numberOfStudents, setNumberOfStudents] = useState<number>(0);
+const [studentMarks, setStudentMarks] = useState<StudentMarks[]>([]);
+const [resultRecords, setResultRecords] = useState<ResultRecord[]>([]);
+const [selectedResultRecord, setSelectedResultRecord] = useState<string | null>(null);
+const [showAllMarksheetView, setShowAllMarksheetView] = useState(false);
+
 const NewStaffPortal: React.FC = () => {
   const navigate = useNavigate();
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
@@ -100,12 +130,34 @@ const NewStaffPortal: React.FC = () => {
   const [unregisteredMarks, setUnregisteredMarks] = useState<UnregisteredStudentMarks[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<string | null>(null);
   const [loginRecords, setLoginRecords] = useState<any[]>([]);
+  const [notices, setNotices] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [newNotice, setNewNotice] = useState({
+    title: '',
+    content: '',
+    priority: 'normal' as 'normal' | 'important' | 'urgent'
+  });
+  const [newMeeting, setNewMeeting] = useState({
+    topic: '',
+    date: '',
+    time: '',
+    url: '',
+    description: ''
+  });
+
+  // Add new state variables for enhanced marksheet functionality
+  const [marksheetStep, setMarksheetStep] = useState<number>(1);
+  const [numberOfStudents, setNumberOfStudents] = useState<number>(0);
+  const [studentMarks, setStudentMarks] = useState<StudentMarks[]>([]);
+  const [resultRecords, setResultRecords] = useState<ResultRecord[]>([]);
+  const [selectedResultRecord, setSelectedResultRecord] = useState<string | null>(null);
+  const [showAllMarksheetView, setShowAllMarksheetView] = useState(false);
 
   // Function to auto-link unregistered student marks when a matching student registers
 
 
 
-  // Enhanced loadAllData that also triggers auto-linking
+  // Enhanced loadAllData to include result records
   const loadAllData = useCallback(async () => {
     try {
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -125,6 +177,15 @@ const NewStaffPortal: React.FC = () => {
       })) as UnregisteredStudentMarks[];
       
       setUnregisteredMarks(unregisteredMarksData);
+      
+      // Load result records
+      const resultRecordsSnap = await getDocs(collection(db, 'result_records'));
+      const resultRecordsData = resultRecordsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ResultRecord[];
+      
+      setResultRecords(resultRecordsData);
       
       // Auto-link unregistered marks
       try {
@@ -169,9 +230,113 @@ const NewStaffPortal: React.FC = () => {
     }
   }, []);
 
+  // Function to load notices
+  const loadNotices = useCallback(async () => {
+    try {
+      const noticesQuery = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
+      const noticesSnapshot = await getDocs(noticesQuery);
+      const noticesData = noticesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setNotices(noticesData);
+    } catch (err) {
+      console.error('Error loading notices:', err);
+    }
+  }, []);
+
+  // Function to load meetings
+  const loadMeetings = useCallback(async () => {
+    try {
+      const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
+      const meetingsSnapshot = await getDocs(meetingsQuery);
+      const meetingsData = meetingsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMeetings(meetingsData);
+    } catch (err) {
+      console.error('Error loading meetings:', err);
+    }
+  }, []);
+
+  // Function to add a new notice
+  const addNotice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'notices'), {
+        title: newNotice.title,
+        content: newNotice.content,
+        priority: newNotice.priority,
+        createdAt: new Date(),
+        createdBy: 'staff'
+      });
+      
+      setNewNotice({
+        title: '',
+        content: '',
+        priority: 'normal'
+      });
+      
+      loadNotices();
+    } catch (err) {
+      console.error('Error adding notice:', err);
+    }
+  };
+
+  // Function to delete a notice
+  const deleteNotice = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'notices', id));
+      loadNotices();
+    } catch (err) {
+      console.error('Error deleting notice:', err);
+    }
+  };
+
+  // Function to add a new meeting
+  const addMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db, 'meetings'), {
+        topic: newMeeting.topic,
+        date: newMeeting.date,
+        time: newMeeting.time,
+        url: newMeeting.url,
+        description: newMeeting.description,
+        createdAt: new Date(),
+        createdBy: 'staff'
+      });
+      
+      setNewMeeting({
+        topic: '',
+        date: '',
+        time: '',
+        url: '',
+        description: ''
+      });
+      
+      loadMeetings();
+    } catch (err) {
+      console.error('Error adding meeting:', err);
+    }
+  };
+
+  // Function to delete a meeting
+  const deleteMeeting = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'meetings', id));
+      loadMeetings();
+    } catch (err) {
+      console.error('Error deleting meeting:', err);
+    }
+  };
+
   useEffect(() => {
     loadAllData();
     loadComplaints();
+    loadNotices();
+    loadMeetings();
     
     // Load login records
     const loadLoginRecords = async () => {
@@ -195,7 +360,7 @@ const NewStaffPortal: React.FC = () => {
     };
     
     loadLoginRecords();
-  }, [loadAllData, loadComplaints]);
+  }, [loadAllData, loadComplaints, loadNotices, loadMeetings]);
 
   const loadStudentsByClass = async (classValue: string, sectionValue: string) => {
     try {
@@ -456,6 +621,162 @@ const NewStaffPortal: React.FC = () => {
     { id: 'meetings', label: 'Meetings', icon: Calendar },
     { id: 'notices', label: 'Notices', icon: Bell }
   ];
+
+  // Function to get subjects based on class
+  const getSubjectsByClass = (classValue: string) => {
+    const classNum = parseInt(classValue);
+    
+    if (classNum >= 6 && classNum <= 8) {
+      return ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Sanskrit', 'Computer'];
+    } else if (classNum >= 9 && classNum <= 10) {
+      return ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Information Technology', 'Sanskrit (Optional)'];
+    } else if (classNum >= 11 && classNum <= 12) {
+      // For 11th and 12th, we would need to know the stream
+      // For now, we'll return a generic set
+      return ['English Core', 'Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Physical Education'];
+    }
+    
+    return [];
+  };
+
+  // Function to get max marks based on exam type
+  const getMaxMarksByExamType = (examType: string) => {
+    if (examType.includes('unit_test')) {
+      return 20;
+    }
+    return 100;
+  };
+
+  // Function to reset marksheet workflow
+  const resetMarksheetWorkflow = () => {
+    setMarksheetStep(1);
+    setMarksheetData({
+      class: '',
+      section: '',
+      subject: '',
+      examType: '',
+      marksData: []
+    });
+    setNumberOfStudents(0);
+    setStudentMarks([]);
+    setShowMarksheetForm(false);
+  };
+
+  // Function to handle class and section selection (Step 1)
+  const handleClassSectionSelect = () => {
+    if (marksheetData.class && marksheetData.section) {
+      setMarksheetStep(2);
+    }
+  };
+
+  // Function to handle exam type selection (Step 2)
+  const handleExamTypeSelect = () => {
+    if (marksheetData.examType) {
+      setMarksheetStep(3);
+    }
+  };
+
+  // Function to handle student count input (Step 3)
+  const handleStudentCountSubmit = () => {
+    if (numberOfStudents > 0 && numberOfStudents <= 50) {
+      // Initialize student marks array
+      const initialStudentMarks: StudentMarks[] = [];
+      for (let i = 1; i <= numberOfStudents; i++) {
+        initialStudentMarks.push({
+          id: `student-${i}`,
+          studentId: '',
+          studentName: '',
+          admissionNumber: '',
+          marks: 0,
+          maxMarks: getMaxMarksByExamType(marksheetData.examType)
+        });
+      }
+      setStudentMarks(initialStudentMarks);
+      setMarksheetStep(4);
+    }
+  };
+
+  // Function to handle marks entry (Step 4)
+  const handleMarksEntry = (index: number, field: keyof StudentMarks, value: string | number) => {
+    const updatedStudentMarks = [...studentMarks];
+    updatedStudentMarks[index] = {
+      ...updatedStudentMarks[index],
+      [field]: value
+    };
+    setStudentMarks(updatedStudentMarks);
+  };
+
+  // Function to save marks
+  const saveMarks = async () => {
+    try {
+      // Save each student's marks
+      for (const studentMark of studentMarks) {
+        if (studentMark.studentId) {
+          // Save to student's marks collection
+          await setDoc(doc(db, 'students', studentMark.studentId, 'marks', `${marksheetData.examType}_${marksheetData.subject}`), {
+            examType: marksheetData.examType,
+            subject: marksheetData.subject,
+            marks: studentMark.marks,
+            maxMarks: studentMark.maxMarks,
+            class: marksheetData.class,
+            section: marksheetData.section,
+            uploadedAt: new Date(),
+            uploadedBy: 'staff'
+          }, { merge: true });
+        } else {
+          // Save to unregistered marks collection
+          await setDoc(doc(collection(db, 'unregistered_student_marks')), {
+            studentName: studentMark.studentName,
+            admissionNumber: studentMark.admissionNumber,
+            class: marksheetData.class,
+            section: marksheetData.section,
+            examType: marksheetData.examType,
+            subject: marksheetData.subject,
+            marks: studentMark.marks,
+            maxMarks: studentMark.maxMarks,
+            uploadedAt: new Date(),
+            teacherId: 'current_teacher_id'
+          });
+        }
+      }
+      
+      // Save result record
+      const resultRecord: ResultRecord = {
+        id: Date.now().toString(),
+        class: marksheetData.class,
+        section: marksheetData.section,
+        examType: marksheetData.examType,
+        subject: marksheetData.subject,
+        uploadedAt: new Date(),
+        uploadedBy: 'staff',
+        studentCount: numberOfStudents
+      };
+      
+      await addDoc(collection(db, 'result_records'), resultRecord);
+      
+      // Reload data
+      loadAllData();
+      
+      // Reset workflow
+      resetMarksheetWorkflow();
+      
+      alert('Marks saved successfully!');
+    } catch (err) {
+      console.error('Error saving marks:', err);
+      alert('Error saving marks. Please try again.');
+    }
+  };
+
+  // Function to export marksheet
+  const exportMarksheet = () => {
+    // Implementation for exporting marksheet
+    alert('Export functionality would be implemented here');
+  };
+
+  // Function to view all students marksheet
+  const viewAllStudentsMarksheet = () => {
+    setShowAllMarksheetView(true);
+  };
 
   // Enhanced Class Dashboard Component with better UI/UX
   const ClassDashboard = () => {
@@ -741,6 +1062,871 @@ const NewStaffPortal: React.FC = () => {
     );
   };
 
+
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-blue-600 p-4">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-white">Staff Portal</h1>
+          <div className="space-x-4">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id as any)}
+                className={`text-white px-4 py-2 rounded-lg ${
+                  activeSection === section.id ? 'bg-blue-700' : 'hover:bg-blue-700'
+                }`}
+              >
+                <section.icon className="h-5 w-5 mr-2" />
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </nav>
+      <main className="container mx-auto p-6">
+        {activeSection === 'dashboard' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
+            <p className="text-gray-600 mb-6">Welcome to the Staff Portal. Here you can manage students, complaints, meetings, notices, and more.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Students</h3>
+                <p className="text-gray-600">Manage student records and attendance.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'students' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Students</h2>
+            <p className="text-gray-600 mb-6">Manage student records and attendance.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'marksheets' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Marksheet Management</h2>
+                <button
+                  onClick={() => {
+                    setShowMarksheetForm(!showMarksheetForm);
+                    if (!showMarksheetForm) {
+                      resetMarksheetWorkflow();
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Create New Marksheet
+                </button>
+              </div>
+
+              {showMarksheetForm && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300"
+                >
+                  {/* Multi-step Marksheet Workflow */}
+                  <div className="mb-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-gray-900">Create Marksheet</h3>
+                      <button
+                        onClick={resetMarksheetWorkflow}
+                        className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    {/* Progress Indicator */}
+                    <div className="flex items-center justify-between mb-8">
+                      {[1, 2, 3, 4].map((step) => (
+                        <div key={step} className="flex items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            marksheetStep === step 
+                              ? 'bg-blue-600 text-white' 
+                              : marksheetStep > step 
+                                ? 'bg-green-600 text-white' 
+                                : 'bg-gray-200 text-gray-500'
+                          }`}>
+                            {marksheetStep > step ? <Check className="h-4 w-4" /> : step}
+                          </div>
+                          {step < 4 && (
+                            <div className={`w-16 h-1 mx-2 ${
+                              marksheetStep > step ? 'bg-green-600' : 'bg-gray-200'
+                            }`}></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Step 1: Class and Section Selection */}
+                    {marksheetStep === 1 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-6"
+                      >
+                        <h4 className="text-lg font-semibold text-gray-900">Step 1: Select Class and Section</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                            <select
+                              value={marksheetData.class}
+                              onChange={(e) => setMarksheetData({ ...marksheetData, class: e.target.value })}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select Class</option>
+                              {[...Array(12)].map((_, i) => (
+                                <option key={i + 1} value={i + 1}>{i + 1}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                            <select
+                              value={marksheetData.section}
+                              onChange={(e) => setMarksheetData({ ...marksheetData, section: e.target.value })}
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="">Select Section</option>
+                              <option value="A">A</option>
+                              <option value="B">B</option>
+                              <option value="C">C</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={handleClassSectionSelect}
+                            disabled={!marksheetData.class || !marksheetData.section}
+                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    {/* Step 2: Exam Type Selection */}
+                    {marksheetStep === 2 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-6"
+                      >
+                        <h4 className="text-lg font-semibold text-gray-900">Step 2: Select Exam Type</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {[
+                            { id: 'unit_test_1', name: 'Unit Test 1', maxMarks: 20 },
+                            { id: 'unit_test_2', name: 'Unit Test 2', maxMarks: 20 },
+                            { id: 'unit_test_3', name: 'Unit Test 3', maxMarks: 20 },
+                            { id: 'half_yearly', name: 'Half Yearly', maxMarks: 100 },
+                            { id: 'final_exam', name: 'Final Exam', maxMarks: 100 }
+                          ].map((exam) => (
+                            <div
+                              key={exam.id}
+                              onClick={() => setMarksheetData({ ...marksheetData, examType: exam.id })}
+                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                marksheetData.examType === exam.id
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                            >
+                              <h5 className="font-medium text-gray-900">{exam.name}</h5>
+                              <p className="text-sm text-gray-500">Max Marks: {exam.maxMarks}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between">
+                          <button
+                            onClick={() => setMarksheetStep(1)}
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          >
+                            Back
+                          </button>
+                          <button
+                            onClick={handleExamTypeSelect}
+                            disabled={!marksheetData.examType}
+                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    {/* Step 3: Number of Students */}
+                    {marksheetStep === 3 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-6"
+                      >
+                        <h4 className="text-lg font-semibold text-gray-900">Step 3: Enter Number of Students</h4>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Number of Students (Max 50)
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={numberOfStudents || ''}
+                            onChange={(e) => setNumberOfStudents(parseInt(e.target.value) || 0)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter number of students"
+                          />
+                        </div>
+                        <div className="flex justify-between">
+                          <button
+                            onClick={() => setMarksheetStep(2)}
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          >
+                            Back
+                          </button>
+                          <button
+                            onClick={handleStudentCountSubmit}
+                            disabled={!numberOfStudents || numberOfStudents > 50 || numberOfStudents < 1}
+                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                    
+                    {/* Step 4: Subject Selection and Marks Entry */}
+                    {marksheetStep === 4 && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-6"
+                      >
+                        <h4 className="text-lg font-semibold text-gray-900">Step 4: Enter Marks</h4>
+                        
+                        {/* Subject Selection */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                          <select
+                            value={marksheetData.subject}
+                            onChange={(e) => setMarksheetData({ ...marksheetData, subject: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="">Select Subject</option>
+                            {getSubjectsByClass(marksheetData.class).map((subject) => (
+                              <option key={subject} value={subject}>{subject}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        {/* Class and Section Display */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                            <input
+                              type="text"
+                              value={marksheetData.class}
+                              readOnly
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                            <input
+                              type="text"
+                              value={marksheetData.section}
+                              readOnly
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Exam Type Display */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                          <input
+                            type="text"
+                            value={
+                              marksheetData.examType === 'unit_test_1' ? 'Unit Test 1' :
+                              marksheetData.examType === 'unit_test_2' ? 'Unit Test 2' :
+                              marksheetData.examType === 'unit_test_3' ? 'Unit Test 3' :
+                              marksheetData.examType === 'half_yearly' ? 'Half Yearly' :
+                              'Final Exam'
+                            }
+                            readOnly
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                          />
+                        </div>
+                        
+                        {/* Marks Entry Table */}
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr. No.</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Marks (Max: {getMaxMarksByExamType(marksheetData.examType)})
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {studentMarks.map((student, index) => (
+                                <tr key={student.id}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <input
+                                      type="text"
+                                      value={student.studentName}
+                                      onChange={(e) => handleMarksEntry(index, 'studentName', e.target.value)}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded"
+                                      placeholder="Enter student name"
+                                    />
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <input
+                                      type="text"
+                                      value={student.admissionNumber}
+                                      onChange={(e) => handleMarksEntry(index, 'admissionNumber', e.target.value)}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded"
+                                      placeholder="Enter admission number"
+                                    />
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max={getMaxMarksByExamType(marksheetData.examType)}
+                                      value={student.marks}
+                                      onChange={(e) => handleMarksEntry(index, 'marks', parseInt(e.target.value) || 0)}
+                                      className="w-24 px-2 py-1 border border-gray-300 rounded"
+                                    />
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <button
+                            onClick={() => setMarksheetStep(3)}
+                            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          >
+                            Back
+                          </button>
+                          <div className="space-x-2">
+                            <button
+                              onClick={saveMarks}
+                              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Save Marks
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Result Records Dashboard */}
+              <div className="mt-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Result Records</h3>
+                {resultRecords.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No result records found</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Type</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {resultRecords.map((record) => (
+                          <tr key={record.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.class}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.section}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.examType === 'unit_test_1' ? 'Unit Test 1' :
+                               record.examType === 'unit_test_2' ? 'Unit Test 2' :
+                               record.examType === 'unit_test_3' ? 'Unit Test 3' :
+                               record.examType === 'half_yearly' ? 'Half Yearly' :
+                               'Final Exam'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.subject}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.studentCount}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.uploadedAt.toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <button
+                                onClick={() => {
+                                  setSelectedResultRecord(selectedResultRecord === record.id ? null : record.id);
+                                }}
+                                className="text-blue-600 hover:text-blue-900 mr-3"
+                              >
+                                {selectedResultRecord === record.id ? 'Hide' : 'View'}
+                              </button>
+                              <button
+                                onClick={exportMarksheet}
+                                className="text-green-600 hover:text-green-900 mr-3"
+                              >
+                                Export
+                              </button>
+                              <button
+                                onClick={viewAllStudentsMarksheet}
+                                className="text-purple-600 hover:text-purple-900"
+                              >
+                                View All
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'registrations' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Registrations</h2>
+            <p className="text-gray-600 mb-6">Handle new student registrations.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'complaints' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Complaints</h2>
+            <p className="text-gray-600 mb-6">View and resolve student complaints.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'meetings' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Meetings</h2>
+            <p className="text-gray-600 mb-6">Schedule and manage parent-teacher meetings.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'notices' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Notices</h2>
+            <p className="text-gray-600 mb-6">Publish important notices to students and parents.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'marksheets' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Marksheets</h2>
+            <p className="text-gray-600 mb-6">Upload and manage student marksheets.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeSection === 'classes' && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Classes</h2>
+            <p className="text-gray-600 mb-6">View and manage class schedules and attendance.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Users className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Total Students</h3>
+                <p className="text-gray-600">{students.length}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <ClipboardList className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Registrations</h3>
+                <p className="text-gray-600">Handle new student registrations.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <MessageSquare className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Complaints</h3>
+                <p className="text-gray-600">View and resolve student complaints.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Calendar className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Meetings</h3>
+                <p className="text-gray-600">Schedule and manage parent-teacher meetings.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <Bell className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Notices</h3>
+                <p className="text-gray-600">Publish important notices to students and parents.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <FileText className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Marksheets</h3>
+                <p className="text-gray-600">Upload and manage student marksheets.</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-6 text-center">
+                <BookOpen className="h-12 w-12 mb-4 text-blue-600" />
+                <h3 className="text-xl font-bold text-gray-900">Classes</h3>
+                <p className="text-gray-600">View and manage class schedules and attendance.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+  // Check if user is already authenticated
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('staffPortalAuth');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Handle login
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Updated credentials as per requirements
+    if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu03*9') {
+      setIsAuthenticated(true);
+      localStorage.setItem('staffPortalAuth', 'true');
+      setLoginError('');
+    } else {
+      setLoginError('Invalid username or password. Please try again.');
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('staffPortalAuth');
+    setLoginData({ username: '', password: '' });
+    navigate('/login');
+  };
+
+  // Helper function to get status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'under-consideration':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Helper function to get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'resolved':
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'under-consideration':
+        return <Clock className="h-5 w-5 text-blue-500" />;
+      case 'pending':
+        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+      default:
+        return <AlertCircle className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
+    if (action === 'remove') {
+      await deleteComplaint(id);
+    } else {
+      await updateComplaintStatus(id, action);
+    }
+  };
+
+  const handleRemoveStudent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this student?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing student:', error);
+        alert('Failed to remove student');
+      }
+    }
+  };
+
+  const handleRemoveParent = async (id: string) => {
+    if (window.confirm('Are you sure you want to remove this parent?')) {
+      try {
+        // Remove from users collection
+        await deleteDoc(doc(db, 'users', id));
+        
+        // Reload data
+        loadAllData();
+      } catch (error) {
+        console.error('Error removing parent:', error);
+        alert('Failed to remove parent');
+      }
+    }
+  };
+
   // Function to generate mock data for testing
   const generateMockData = async () => {
     try {
@@ -853,103 +2039,6 @@ const NewStaffPortal: React.FC = () => {
       alert('Error generating mock data. Check console for details.');
     }
   };
-
-  // Check if user is already authenticated
-  useEffect(() => {
-    const storedAuth = localStorage.getItem('staffPortalAuth');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  // Handle login
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Updated credentials as per requirements
-    if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu03*9') {
-      setIsAuthenticated(true);
-      localStorage.setItem('staffPortalAuth', 'true');
-      setLoginError('');
-    } else {
-      setLoginError('Invalid username or password. Please try again.');
-    }
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('staffPortalAuth');
-    setLoginData({ username: '', password: '' });
-    navigate('/login');
-  };
-
-  // Helper function to get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'resolved':
-        return 'bg-green-100 text-green-800';
-      case 'under-consideration':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Helper function to get status icon
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'resolved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'under-consideration':
-        return <Clock className="h-5 w-5 text-blue-500" />;
-      case 'pending':
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      default:
-        return <AlertCircle className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const handleComplaintAction = async (id: string, action: 'remove' | 'under-consideration' | 'resolved') => {
-    if (action === 'remove') {
-      await deleteComplaint(id);
-    } else {
-      await updateComplaintStatus(id, action);
-    }
-  };
-
-  const handleRemoveStudent = async (id: string) => {
-    if (window.confirm('Are you sure you want to remove this student?')) {
-      try {
-        // Remove from users collection
-        await deleteDoc(doc(db, 'users', id));
-        
-        // Reload data
-        loadAllData();
-      } catch (error) {
-        console.error('Error removing student:', error);
-        alert('Failed to remove student');
-      }
-    }
-  };
-
-  const handleRemoveParent = async (id: string) => {
-    if (window.confirm('Are you sure you want to remove this parent?')) {
-      try {
-        // Remove from users collection
-        await deleteDoc(doc(db, 'users', id));
-        
-        // Reload data
-        loadAllData();
-      } catch (error) {
-        console.error('Error removing parent:', error);
-        alert('Failed to remove parent');
-      }
-    }
-  };
-
-
 
   // If not authenticated, show login form
   if (!isAuthenticated) {
@@ -1220,142 +2309,397 @@ const NewStaffPortal: React.FC = () => {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-gray-900">Upload Marksheets</h2>
+                    <h2 className="text-xl font-bold text-gray-900">Marksheet Management</h2>
                     <button
-                      onClick={() => setShowMarksheetForm(!showMarksheetForm)}
+                      onClick={() => {
+                        setShowMarksheetForm(!showMarksheetForm);
+                        if (!showMarksheetForm) {
+                          resetMarksheetWorkflow();
+                        }
+                      }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Marksheet
+                      Create New Marksheet
                     </button>
                   </div>
 
                   {showMarksheetForm && (
-                    <form onSubmit={handleCreateMarksheet} className="mb-6 p-4 bg-gray-50 rounded-lg">
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
-                            <input
-                              type="text"
-                              value={marksheetData.class}
-                              onChange={(e) => {
-                                setMarksheetData({ ...marksheetData, class: e.target.value });
-                                if (marksheetData.section) {
-                                  loadStudentsByClass(e.target.value, marksheetData.section);
-                                }
-                              }}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                              placeholder="Enter class (e.g., 10)"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
-                            <input
-                              type="text"
-                              value={marksheetData.section}
-                              onChange={(e) => {
-                                setMarksheetData({ ...marksheetData, section: e.target.value });
-                                if (marksheetData.class) {
-                                  loadStudentsByClass(marksheetData.class, e.target.value);
-                                }
-                              }}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                              placeholder="Enter section (e.g., A)"
-                              required
-                            />
-                          </div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300"
+                    >
+                      {/* Multi-step Marksheet Workflow */}
+                      <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-xl font-bold text-gray-900">Create Marksheet</h3>
+                          <button
+                            onClick={resetMarksheetWorkflow}
+                            className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                          >
+                            ✕
+                          </button>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-                            <input
-                              type="text"
-                              value={marksheetData.subject}
-                              onChange={(e) => setMarksheetData({ ...marksheetData, subject: e.target.value })}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                              placeholder="Enter subject name"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
-                            <input
-                              type="text"
-                              value={marksheetData.examType}
-                              onChange={(e) => setMarksheetData({ ...marksheetData, examType: e.target.value })}
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                              placeholder="Enter exam type (e.g., Midterm)"
-                              required
-                            />
-                          </div>
+                        {/* Progress Indicator */}
+                        <div className="flex items-center justify-between mb-8">
+                          {[1, 2, 3, 4].map((step) => (
+                            <div key={step} className="flex items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                marksheetStep === step 
+                                  ? 'bg-blue-600 text-white' 
+                                  : marksheetStep > step 
+                                    ? 'bg-green-600 text-white' 
+                                    : 'bg-gray-200 text-gray-500'
+                              }`}>
+                                {marksheetStep > step ? <Check className="h-4 w-4" /> : step}
+                              </div>
+                              {step < 4 && (
+                                <div className={`w-16 h-1 mx-2 ${
+                                  marksheetStep > step ? 'bg-green-600' : 'bg-gray-200'
+                                }`}></div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                         
-                        {selectedClassStudents.length > 0 && (
-                          <div className="border-t border-gray-200 pt-4">
-                            <h3 className="text-lg font-medium text-gray-900 mb-4">Enter Marks for Students</h3>
-                            <div className="space-y-3">
-                              {selectedClassStudents.map((student, index) => (
-                                <div key={student.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                                  <div>
-                                    <p className="font-medium text-gray-900">{student.username}</p>
-                                    <p className="text-sm text-gray-500">{student.email}</p>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      max={marksheetData.marksData[index]?.maxMarks || 100}
-                                      value={marksheetData.marksData[index]?.marks || 0}
-                                      onChange={(e) => {
-                                        const newMarksData = [...marksheetData.marksData];
-                                        newMarksData[index] = {
-                                          ...newMarksData[index],
-                                          marks: parseInt(e.target.value) || 0
-                                        };
-                                        setMarksheetData({ ...marksheetData, marksData: newMarksData });
-                                      }}
-                                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                                    />
-                                    <span className="text-gray-500">/</span>
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={marksheetData.marksData[index]?.maxMarks || 100}
-                                      onChange={(e) => {
-                                        const newMarksData = [...marksheetData.marksData];
-                                        newMarksData[index] = {
-                                          ...newMarksData[index],
-                                          maxMarks: parseInt(e.target.value) || 100
-                                        };
-                                        setMarksheetData({ ...marksheetData, marksData: newMarksData });
-                                      }}
-                                      className="w-20 px-2 py-1 border border-gray-300 rounded text-center"
-                                    />
-                                  </div>
+                        {/* Step 1: Class and Section Selection */}
+                        {marksheetStep === 1 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 1: Select Class and Section</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                                <select
+                                  value={marksheetData.class}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, class: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Class</option>
+                                  {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                                <select
+                                  value={marksheetData.section}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, section: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Section</option>
+                                  <option value="A">A</option>
+                                  <option value="B">B</option>
+                                  <option value="C">C</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-end">
+                              <button
+                                onClick={handleClassSectionSelect}
+                                disabled={!marksheetData.class || !marksheetData.section}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                        
+                        {/* Step 2: Exam Type Selection */}
+                        {marksheetStep === 2 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 2: Select Exam Type</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {[
+                                { id: 'unit_test_1', name: 'Unit Test 1', maxMarks: 20 },
+                                { id: 'unit_test_2', name: 'Unit Test 2', maxMarks: 20 },
+                                { id: 'unit_test_3', name: 'Unit Test 3', maxMarks: 20 },
+                                { id: 'half_yearly', name: 'Half Yearly', maxMarks: 100 },
+                                { id: 'final_exam', name: 'Final Exam', maxMarks: 100 }
+                              ].map((exam) => (
+                                <div
+                                  key={exam.id}
+                                  onClick={() => setMarksheetData({ ...marksheetData, examType: exam.id })}
+                                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                                    marksheetData.examType === exam.id
+                                      ? 'border-blue-500 bg-blue-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <h5 className="font-medium text-gray-900">{exam.name}</h5>
+                                  <p className="text-sm text-gray-500">Max Marks: {exam.maxMarks}</p>
                                 </div>
                               ))}
                             </div>
-                          </div>
+                            <div className="flex justify-between">
+                              <button
+                                onClick={() => setMarksheetStep(1)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                              >
+                                Back
+                              </button>
+                              <button
+                                onClick={handleExamTypeSelect}
+                                disabled={!marksheetData.examType}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </motion.div>
                         )}
                         
-                        <button
-                          type="submit"
-                          className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload Marks
-                        </button>
+                        {/* Step 3: Number of Students */}
+                        {marksheetStep === 3 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 3: Enter Number of Students</h4>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Number of Students (Max 50)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="50"
+                                value={numberOfStudents || ''}
+                                onChange={(e) => setNumberOfStudents(parseInt(e.target.value) || 0)}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Enter number of students"
+                              />
+                            </div>
+                            <div className="flex justify-between">
+                              <button
+                                onClick={() => setMarksheetStep(2)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                              >
+                                Back
+                              </button>
+                              <button
+                                onClick={handleStudentCountSubmit}
+                                disabled={!numberOfStudents || numberOfStudents > 50 || numberOfStudents < 1}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                        
+                        {/* Step 4: Subject Selection and Marks Entry */}
+                        {marksheetStep === 4 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 4: Enter Marks</h4>
+                            
+                            {/* Subject Selection */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                              <select
+                                value={marksheetData.subject}
+                                onChange={(e) => setMarksheetData({ ...marksheetData, subject: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="">Select Subject</option>
+                                {getSubjectsByClass(marksheetData.class).map((subject) => (
+                                  <option key={subject} value={subject}>{subject}</option>
+                                ))}
+                              </select>
+                            </div>
+                            
+                            {/* Class and Section Display */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                                <input
+                                  type="text"
+                                  value={marksheetData.class}
+                                  readOnly
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                                <input
+                                  type="text"
+                                  value={marksheetData.section}
+                                  readOnly
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Exam Type Display */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                              <input
+                                type="text"
+                                value={
+                                  marksheetData.examType === 'unit_test_1' ? 'Unit Test 1' :
+                                  marksheetData.examType === 'unit_test_2' ? 'Unit Test 2' :
+                                  marksheetData.examType === 'unit_test_3' ? 'Unit Test 3' :
+                                  marksheetData.examType === 'half_yearly' ? 'Half Yearly' :
+                                  'Final Exam'
+                                }
+                                readOnly
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100"
+                              />
+                            </div>
+                            
+                            {/* Marks Entry Table */}
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sr. No.</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Marks (Max: {getMaxMarksByExamType(marksheetData.examType)})
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {studentMarks.map((student, index) => (
+                                    <tr key={student.id}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <input
+                                          type="text"
+                                          value={student.studentName}
+                                          onChange={(e) => handleMarksEntry(index, 'studentName', e.target.value)}
+                                          className="w-full px-2 py-1 border border-gray-300 rounded"
+                                          placeholder="Enter student name"
+                                        />
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <input
+                                          type="text"
+                                          value={student.admissionNumber}
+                                          onChange={(e) => handleMarksEntry(index, 'admissionNumber', e.target.value)}
+                                          className="w-full px-2 py-1 border border-gray-300 rounded"
+                                          placeholder="Enter admission number"
+                                        />
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max={getMaxMarksByExamType(marksheetData.examType)}
+                                          value={student.marks}
+                                          onChange={(e) => handleMarksEntry(index, 'marks', parseInt(e.target.value) || 0)}
+                                          className="w-24 px-2 py-1 border border-gray-300 rounded"
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <button
+                                onClick={() => setMarksheetStep(3)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                              >
+                                Back
+                              </button>
+                              <div className="space-x-2">
+                                <button
+                                  onClick={saveMarks}
+                                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                                >
+                                  Save Marks
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
                       </div>
-                    </form>
+                    </motion.div>
                   )}
 
-                  {/* Display existing marksheets */}
+                  {/* Result Records Dashboard */}
                   <div className="mt-8">
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Marksheets</h3>
-                    <p className="text-gray-500 text-center py-4">No marksheets uploaded yet</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Result Records</h3>
+                    {resultRecords.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No result records found</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Type</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {resultRecords.map((record) => (
+                              <tr key={record.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.class}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.section}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {record.examType === 'unit_test_1' ? 'Unit Test 1' :
+                                   record.examType === 'unit_test_2' ? 'Unit Test 2' :
+                                   record.examType === 'unit_test_3' ? 'Unit Test 3' :
+                                   record.examType === 'half_yearly' ? 'Half Yearly' :
+                                   'Final Exam'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.subject}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.studentCount}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {record.uploadedAt.toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedResultRecord(selectedResultRecord === record.id ? null : record.id);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                  >
+                                    {selectedResultRecord === record.id ? 'Hide' : 'View'}
+                                  </button>
+                                  <button
+                                    onClick={exportMarksheet}
+                                    className="text-green-600 hover:text-green-900 mr-3"
+                                  >
+                                    Export
+                                  </button>
+                                  <button
+                                    onClick={viewAllStudentsMarksheet}
+                                    className="text-purple-600 hover:text-purple-900"
+                                  >
+                                    View All
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1527,10 +2871,249 @@ const NewStaffPortal: React.FC = () => {
               </div>
             )}
 
+            {activeSection === 'meetings' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Meeting Management</h2>
+                  <p className="text-gray-600 mb-6">Schedule and manage meetings that will be displayed on the student council dashboard.</p>
+                  
+                  {/* Add New Meeting Form */}
+                  <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Schedule New Meeting</h3>
+                    <form onSubmit={addMeeting} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Meeting Topic</label>
+                        <input
+                          type="text"
+                          value={newMeeting.topic}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, topic: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter meeting topic"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                          <input
+                            type="date"
+                            value={newMeeting.date}
+                            onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                          <input
+                            type="time"
+                            value={newMeeting.time}
+                            onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Meeting URL</label>
+                        <input
+                          type="url"
+                          value={newMeeting.url}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, url: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea
+                          value={newMeeting.description}
+                          onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter meeting description"
+                          rows={3}
+                        />
+                      </div>
+                      
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule Meeting
+                      </button>
+                    </form>
+                  </div>
+                  
+                  {/* Existing Meetings */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Scheduled Meetings</h3>
+                    {meetings.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No meetings scheduled yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {meetings.map((meeting) => (
+                          <div key={meeting.id} className="p-4 rounded-lg border bg-white border-gray-200">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-bold text-gray-900 mb-2">{meeting.topic}</h4>
+                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-3">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    <span>{meeting.date} at {meeting.time}</span>
+                                  </div>
+                                  {meeting.url && (
+                                    <a 
+                                      href={meeting.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 flex items-center"
+                                    >
+                                      <span className="mr-1">🔗</span>
+                                      Join Meeting
+                                    </a>
+                                  )}
+                                </div>
+                                {meeting.description && (
+                                  <p className="text-gray-700 mb-3">{meeting.description}</p>
+                                )}
+                                <p className="text-xs text-gray-500">
+                                  Scheduled on {meeting.createdAt?.toDate ? meeting.createdAt.toDate().toLocaleString() : 'N/A'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => deleteMeeting(meeting.id)}
+                                className="p-2 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors duration-200"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeSection === 'notices' && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900">Notices</h2>
-                <p className="text-gray-500 mt-4">Notice board features would appear here.</p>
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Notices Management</h2>
+                  <p className="text-gray-600 mb-6">Create and manage school notices that will be displayed on the home dashboard.</p>
+                  
+                  {/* Add New Notice Form */}
+                  <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Create New Notice</h3>
+                    <form onSubmit={addNotice} className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                        <input
+                          type="text"
+                          value={newNotice.title}
+                          onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter notice title"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea
+                          value={newNotice.content}
+                          onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Enter notice content"
+                          rows={4}
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        <select
+                          value={newNotice.priority}
+                          onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value as any })}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="normal">Normal</option>
+                          <option value="important">Important</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </div>
+                      
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Publish Notice
+                      </button>
+                    </form>
+                  </div>
+                  
+                  {/* Existing Notices */}
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Published Notices</h3>
+                    {notices.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No notices published yet</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {notices.map((notice) => (
+                          <div 
+                            key={notice.id} 
+                            className={`p-4 rounded-lg border ${
+                              notice.priority === 'urgent' 
+                                ? 'bg-red-50 border-red-200' 
+                                : notice.priority === 'important' 
+                                  ? 'bg-yellow-50 border-yellow-200' 
+                                  : 'bg-white border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <h4 className="font-bold text-gray-900">{notice.title}</h4>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    notice.priority === 'urgent' 
+                                      ? 'bg-red-100 text-red-800' 
+                                      : notice.priority === 'important' 
+                                        ? 'bg-yellow-100 text-yellow-800' 
+                                        : 'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {notice.priority.charAt(0).toUpperCase() + notice.priority.slice(1)}
+                                  </span>
+                                </div>
+                                <p className="text-gray-700 mb-2">{notice.content}</p>
+                                <p className="text-sm text-gray-500">
+                                  Published on {notice.createdAt?.toDate ? notice.createdAt.toDate().toLocaleString() : 'N/A'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => deleteNotice(notice.id)}
+                                className="p-2 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors duration-200"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

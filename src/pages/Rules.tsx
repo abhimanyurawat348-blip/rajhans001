@@ -109,7 +109,7 @@ const Rules: React.FC = () => {
         <div className="grid lg:grid-cols-2 gap-8">
           {ruleCategories.map((category, index) => (
             <motion.div
-              key={index}
+              key={`category-${index}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
@@ -127,7 +127,7 @@ const Rules: React.FC = () => {
                 <ul className="space-y-4">
                   {category.rules.map((rule, ruleIndex) => (
                     <motion.li
-                      key={ruleIndex}
+                      key={`rule-${ruleIndex}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 * ruleIndex }}

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Complaint } from '../types';
 
@@ -44,7 +44,7 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
         loadedComplaints.push({
           id: doc.id,
           ...data,
-          submittedAt: data.submittedAt.toDate()
+          submittedAt: data.submittedAt?.toDate ? data.submittedAt.toDate() : new Date()
         } as Complaint);
       });
       
@@ -92,7 +92,22 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const updateComplaintStatus = async (id: string, status: Complaint['status']) => {
     try {
-      await updateDoc(doc(db, 'complaints', id), { status });
+      // Validate the document ID
+      if (!id) {
+        console.error('Invalid complaint ID');
+        return;
+      }
+      
+      // Validate that the document exists before updating
+      const complaintRef = doc(db, 'complaints', id);
+      const complaintSnap = await getDoc(complaintRef);
+      
+      if (!complaintSnap.exists()) {
+        console.error('Complaint document not found');
+        return;
+      }
+      
+      await updateDoc(complaintRef, { status });
       setComplaints(prev =>
         prev.map(complaint =>
           complaint.id === id ? { ...complaint, status } : complaint

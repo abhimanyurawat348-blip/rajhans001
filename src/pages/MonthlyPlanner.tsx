@@ -144,7 +144,7 @@ const MonthlyPlanner: React.FC = () => {
           <div className="grid grid-cols-7">
             {days.map((date, index) => (
               <motion.div
-                key={index}
+                key={`day-${index}`}
                 whileHover={date ? { scale: 1.05 } : {}}
                 onClick={() => handleDateClick(date)}
                 className={`
