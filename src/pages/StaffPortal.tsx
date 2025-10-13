@@ -41,7 +41,7 @@ const StaffPortal: React.FC = () => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Specific username and password as requested
+    
     if (username === 'rajhans_001@gmail.com' && password === 'abhimanyu03*9') {
       setAuthenticated(true);
     } else {
@@ -154,7 +154,7 @@ const StaffPortal: React.FC = () => {
           <p className="text-gray-600">Manage student data and activities</p>
         </motion.div>
 
-        {/* Tab Navigation */}
+        {}
         <div className="mb-8">
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
             {[
@@ -179,7 +179,7 @@ const StaffPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {}
         <div className="grid md:grid-cols-5 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -263,7 +263,7 @@ const StaffPortal: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Complaints Tab */}
+        {}
         {activeTab === 'complaints' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -394,7 +394,7 @@ const StaffPortal: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Registrations Tab */}
+        {}
         {activeTab === 'registrations' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -517,7 +517,7 @@ const StaffPortal: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Login Records Tab */}
+        {}
         {activeTab === 'logins' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -581,7 +581,7 @@ const StaffPortal: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Event Gallery Tab */}
+        {}
         {activeTab === 'gallery' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}

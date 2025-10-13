@@ -47,7 +47,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, folderName, onClose
       onKeyDown={handleKeyDown}
       tabIndex={-1}
     >
-      {/* Header */}
+      {}
       <div className="flex justify-between items-center p-4 bg-black bg-opacity-50">
         <h2 className="text-white text-xl font-bold truncate max-w-md md:max-w-2xl">
           {folderName}
@@ -66,7 +66,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, folderName, onClose
         </div>
       </div>
 
-      {/* Main Content */}
+      {}
       <div className="flex-1 flex items-center justify-center relative">
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -104,7 +104,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, folderName, onClose
         )}
       </div>
 
-      {/* Thumbnails */}
+      {}
       <div className="p-4 bg-black bg-opacity-50">
         <div className="flex space-x-2 overflow-x-auto pb-2">
           {images.map((image, index) => (

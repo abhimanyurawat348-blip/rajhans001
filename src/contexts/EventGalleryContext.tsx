@@ -43,7 +43,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load folders from Firestore
+  
   const loadFolders = async () => {
     try {
       setLoading(true);
@@ -73,7 +73,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Create a new folder
+  
   const createFolder = async (folderName: string, userId: string) => {
     try {
       const newFolder: Omit<EventFolder, 'id'> = {
@@ -97,7 +97,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Upload images to a folder
+  
   const uploadImages = async (folderId: string, files: FileList, onProgress?: (progress: number) => void) => {
     try {
       const folder = folders.find(f => f.id === folderId);
@@ -110,15 +110,15 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         const fileName = `${Date.now()}_${file.name}`;
         const storageRef = ref(storage, `eventGallery/${folderId}/${fileName}`);
         
-        // Upload file
+        
         const uploadTask = uploadBytesResumable(storageRef, file);
         
-        // Wait for upload to complete with progress tracking
+        
         await new Promise<void>((resolve, reject) => {
           uploadTask.on(
             'state_changed',
             (snapshot) => {
-              // Progress tracking
+              
               const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
               if (onProgress) {
                 onProgress(progress);
@@ -141,11 +141,11 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         });
       }
       
-      // Update folder in Firestore
+      
       const folderRef = doc(db, 'eventGallery', folderId);
       const updatedImages = [...folder.images, ...uploadedImages];
       
-      // Set first image as cover if none exists
+      
       const coverImage = folder.coverImage || uploadedImages[0]?.url;
       
       await updateDoc(folderRef, {
@@ -153,7 +153,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         coverImage
       });
       
-      // Update local state
+      
       setFolders(prev => prev.map(f => 
         f.id === folderId 
           ? { ...f, images: updatedImages, coverImage } 
@@ -168,10 +168,10 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Delete a folder and all its images
+  
   const deleteFolder = async (folderId: string) => {
     try {
-      // Delete all images from storage
+      
       const folder = folders.find(f => f.id === folderId);
       if (folder) {
         for (const image of folder.images) {
@@ -184,10 +184,10 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Delete folder from Firestore
+      
       await deleteDoc(doc(db, 'eventGallery', folderId));
       
-      // Update local state
+      
       setFolders(prev => prev.filter(f => f.id !== folderId));
       
       setError(null);
@@ -198,13 +198,13 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Delete a single image
+  
   const deleteImage = async (folderId: string, imageUrl: string) => {
     try {
       const folder = folders.find(f => f.id === folderId);
       if (!folder) throw new Error('Folder not found');
       
-      // Delete image from storage
+      
       try {
         const imageRef = ref(storage, imageUrl);
         await deleteObject(imageRef);
@@ -212,11 +212,11 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         console.warn('Failed to delete image from storage:', err);
       }
       
-      // Update folder in Firestore
+      
       const folderRef = doc(db, 'eventGallery', folderId);
       const updatedImages = folder.images.filter(img => img.url !== imageUrl);
       
-      // Update cover image if it was deleted
+      
       let coverImage = folder.coverImage;
       if (coverImage === imageUrl) {
         coverImage = updatedImages[0]?.url || '';
@@ -227,7 +227,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
         coverImage
       });
       
-      // Update local state
+      
       setFolders(prev => prev.map(f => 
         f.id === folderId 
           ? { ...f, images: updatedImages, coverImage } 
@@ -242,7 +242,7 @@ export const EventGalleryProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load folders on initial mount
+  
   useEffect(() => {
     loadFolders();
   }, []);

@@ -5,7 +5,6 @@ import AttendanceCard from './AttendanceCard.tsx';
 import HomeworkCard from './HomeworkCard.tsx';
 import ShopLinksCard from './ShopLinksCard.tsx';
 
-// Define the interfaces directly in this file since they're specific to the dashboard
 interface StudentProfile {
   name: string;
   studentId: string;
@@ -57,13 +56,11 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column - Profile and Schedule */}
       <div className="lg:col-span-2 space-y-6">
         <ProfileCard studentData={studentData} />
         <ClassScheduleCard classes={todaysClasses} />
       </div>
       
-      {/* Right Column - Attendance, Homework, Shop */}
       <div className="space-y-6">
         <AttendanceCard attendanceData={attendanceData} />
         <HomeworkCard homeworkList={homeworkList} />

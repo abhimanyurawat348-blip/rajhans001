@@ -15,7 +15,7 @@ const ChantingCounterPage: React.FC = () => {
   const [isSaved, setIsSaved] = useState(false);
 
 
-  // Define deities for each religion with their chanting phrases
+  
   const deities: Record<string, Record<string, { name: string; subtitle: string; icon: string; phrase: string }>> = {
     hindu: {
       ram: { name: 'Ram', subtitle: 'Jai Shree Ram', icon: '🔴', phrase: 'Jai Shree Ram' },
@@ -78,7 +78,7 @@ const ChantingCounterPage: React.FC = () => {
     }
   };
 
-  // Check if the deity exists for the given religion
+  
   const getDeityInfo = () => {
     if (!religionId || !deityId || !deities[religionId] || !deities[religionId][deityId]) {
       return null;
@@ -90,17 +90,17 @@ const ChantingCounterPage: React.FC = () => {
   const religionIcon = religionId ? religionIcons[religionId] : null;
   const religionColor = religionId ? getReligionColor(religionId) : '';
 
-  // Handle incrementing the count
+  
   const incrementCount = () => {
     setCount(prevCount => prevCount + 1);
   };
 
-  // Reset the counter
+  
   const resetCount = () => {
     setCount(0);
   };
 
-  // Save chanting data to Firestore and navigate to leaderboard
+  
   const saveAndShowLeaderboard = async () => {
     if (!user || count === 0) {
       navigate('/chanting-leaderboard');
@@ -109,10 +109,10 @@ const ChantingCounterPage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      // Create a unique ID for this chanting session
+      
       const sessionId = `${user.id}_${Date.now()}`;
       
-      // Save to Firestore
+      
       await setDoc(doc(db, 'chantingSessions', sessionId), {
         id: sessionId,
         userId: user.id,
@@ -125,25 +125,25 @@ const ChantingCounterPage: React.FC = () => {
       });
       
       setIsSaved(true);
-      // Navigate to leaderboard after a short delay
+      
       setTimeout(() => {
         navigate('/chanting-leaderboard');
       }, 1000);
     } catch (error) {
       console.error('Error saving chanting data:', error);
-      // Still navigate to leaderboard even if save fails
+      
       navigate('/chanting-leaderboard');
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Handle back navigation
+  
   const handleBack = () => {
     navigate(-1);
   };
 
-  // If deity info is not found, show error
+  
   if (!deityInfo) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-pink-50 flex items-center justify-center">
@@ -183,7 +183,7 @@ const ChantingCounterPage: React.FC = () => {
             Back
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Spiritual Chanting</h1>
-          <div></div> {/* Spacer for alignment */}
+          <div></div> {}
         </div>
       </div>
 

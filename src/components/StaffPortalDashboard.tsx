@@ -34,7 +34,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-// Define interfaces
+
 interface Student {
   id: string;
   fullName: string;
@@ -111,7 +111,7 @@ interface SubjectMarks {
   [subject: string]: MarksheetEntry[];
 }
 
-// Add new interfaces for the enhanced results system
+
 interface StudentMarksEntry {
   id: string;
   name: string;
@@ -127,26 +127,26 @@ const StaffPortalDashboard: React.FC = () => {
     'dashboard' | 'students' | 'complaints' | 'classes' | 'results' | 'notices' | 'meetings' | 'registrations'
   >('dashboard');
   
-  // Student management states
+  
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [sectionFilter, setSectionFilter] = useState('');
   
-  // Class management states
+  
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSection, setSelectedSection] = useState('');
   const [classStudents, setClassStudents] = useState<Student[]>([]);
   
-  // Results/marks management states
+  
   const [examType, setExamType] = useState('');
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [marksData, setMarksData] = useState<SubjectMarks>({});
   const [showMarksEntry, setShowMarksEntry] = useState(false);
   
-  // Enhanced results management states
+  
   const [enhancedResultsMode, setEnhancedResultsMode] = useState(false);
   const [studentEntries, setStudentEntries] = useState<StudentMarksEntry[]>([]);
   const [currentStudent, setCurrentStudent] = useState({
@@ -158,7 +158,7 @@ const StaffPortalDashboard: React.FC = () => {
   const [sectionForMarks, setSectionForMarks] = useState('');
   const [examTypeForMarks, setExamTypeForMarks] = useState('');
   
-  // Notices states
+  
   const [notices, setNotices] = useState<Notice[]>([]);
   const [newNotice, setNewNotice] = useState({
     title: '',
@@ -169,7 +169,7 @@ const StaffPortalDashboard: React.FC = () => {
     priority: 'normal' as 'normal' | 'important' | 'urgent'
   });
   
-  // Meetings states
+  
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [newMeeting, setNewMeeting] = useState({
     title: '',
@@ -181,20 +181,20 @@ const StaffPortalDashboard: React.FC = () => {
     participants: 'all'
   });
   
-  // Loading states
+  
   const [loading, setLoading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState({ loading: false, message: '', error: false });
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [excelData, setExcelData] = useState<any[]>([]);
 
-  // Load all data on component mount
+  
   useEffect(() => {
     loadAllData();
   }, []);
 
   const loadAllData = useCallback(async () => {
     try {
-      // Load students
+      
       const usersQuery = query(collection(db, 'users'), where('role', '==', 'student'));
       const usersSnapshot = await getDocs(usersQuery);
       const studentsData = usersSnapshot.docs.map(doc => ({
@@ -204,7 +204,7 @@ const StaffPortalDashboard: React.FC = () => {
       setStudents(studentsData);
       setFilteredStudents(studentsData);
       
-      // Load notices
+      
       const noticesQuery = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
       const noticesSnapshot = await getDocs(noticesQuery);
       const noticesData = noticesSnapshot.docs.map(doc => ({
@@ -213,7 +213,7 @@ const StaffPortalDashboard: React.FC = () => {
       } as Notice));
       setNotices(noticesData);
       
-      // Load meetings
+      
       const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
       const meetingsSnapshot = await getDocs(meetingsQuery);
       const meetingsData = meetingsSnapshot.docs.map(doc => ({
@@ -222,7 +222,7 @@ const StaffPortalDashboard: React.FC = () => {
       } as Meeting));
       setMeetings(meetingsData);
       
-      // Load complaints and registrations
+      
       loadComplaints();
       loadRegistrations();
     } catch (error) {
@@ -230,7 +230,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   }, [loadComplaints, loadRegistrations]);
 
-  // Filter students based on search and filters
+  
   useEffect(() => {
     let filtered = students;
     
@@ -253,7 +253,7 @@ const StaffPortalDashboard: React.FC = () => {
     setFilteredStudents(filtered);
   }, [students, searchTerm, classFilter, sectionFilter]);
 
-  // Load students by class and section
+  
   const loadStudentsByClassSection = async (classValue: string, sectionValue: string) => {
     try {
       const studentsQuery = query(
@@ -275,12 +275,12 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Handle class/section selection for results
+  
   const handleClassSectionSelect = () => {
     if (selectedClass && selectedSection) {
       loadStudentsByClassSection(selectedClass, selectedSection);
       
-      // Set subjects based on class
+      
       const classNum = parseInt(selectedClass);
       let classSubjects: string[] = [];
       
@@ -293,7 +293,7 @@ const StaffPortalDashboard: React.FC = () => {
       } else if (classNum >= 9 && classNum <= 10) {
         classSubjects = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Computer/IT', 'PE', 'Work Education'];
       } else if (classNum >= 11 && classNum <= 12) {
-        // For 11-12, we'll assume a general set for now
+        
         classSubjects = ['English', 'Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Physical Education'];
       }
       
@@ -302,7 +302,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Initialize marks data for a subject
+  
   const initializeMarksData = (subject: string) => {
     const initialMarksData: MarksheetEntry[] = classStudents.map(student => ({
       studentId: student.id,
@@ -319,7 +319,7 @@ const StaffPortalDashboard: React.FC = () => {
     }));
   };
 
-  // Update marks for a student
+  
   const updateStudentMarks = (subject: string, studentIndex: number, marks: number) => {
     setMarksData(prev => {
       const updatedSubjectData = [...(prev[subject] || [])];
@@ -335,12 +335,12 @@ const StaffPortalDashboard: React.FC = () => {
     });
   };
 
-  // Save marks to Firestore
+  
   const saveMarks = async () => {
     try {
       setLoading(true);
       
-      // Save marks for each subject
+      
       for (const [subject, subjectMarks] of Object.entries(marksData)) {
         for (const studentMarks of subjectMarks) {
           await addDoc(collection(db, 'students', studentMarks.studentId, 'marks'), {
@@ -367,7 +367,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Export students to Excel
+  
   const exportStudentsToExcel = () => {
     const data = filteredStudents.map(student => ({
       'Student Name': student.fullName,
@@ -386,17 +386,17 @@ const StaffPortalDashboard: React.FC = () => {
     writeFile(wb, 'students.xlsx');
   };
 
-  // Remove student (soft delete)
+  
   const removeStudent = async (studentId: string) => {
     if (window.confirm('Are you sure you want to remove this student?')) {
       try {
-        // Update student status to 'removed' instead of hard delete
+        
         await updateDoc(doc(db, 'users', studentId), {
           status: 'removed',
           removedAt: new Date()
         });
         
-        // Reload students
+        
         loadAllData();
         alert('Student removed successfully!');
       } catch (error) {
@@ -406,7 +406,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Add new notice
+  
   const addNotice = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -425,7 +425,7 @@ const StaffPortalDashboard: React.FC = () => {
         priority: 'normal'
       });
       
-      // Reload notices
+      
       const noticesQuery = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
       const noticesSnapshot = await getDocs(noticesQuery);
       const noticesData = noticesSnapshot.docs.map(doc => ({
@@ -441,13 +441,13 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Delete notice
+  
   const deleteNotice = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this notice?')) {
       try {
         await deleteDoc(doc(db, 'notices', id));
         
-        // Reload notices
+        
         const noticesQuery = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
         const noticesSnapshot = await getDocs(noticesQuery);
         const noticesData = noticesSnapshot.docs.map(doc => ({
@@ -464,7 +464,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Function to add a new student entry
+  
   const addStudentEntry = () => {
     if (currentStudent.name && currentStudent.rollNumber) {
       const newStudent: StudentMarksEntry = {
@@ -480,7 +480,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Function to add subject marks for a student
+  
   const addSubjectMarks = (studentId: string, subject: string, marks: number, maxMarks: number) => {
     setStudentEntries(prev => prev.map(student => {
       if (student.id === studentId) {
@@ -496,20 +496,20 @@ const StaffPortalDashboard: React.FC = () => {
     }));
   };
 
-  // Function to remove a student entry
+  
   const removeStudentEntry = (studentId: string) => {
     setStudentEntries(prev => prev.filter(student => student.id !== studentId));
   };
 
-  // Function to save all marks to Firestore
+  
   const saveAllMarks = async () => {
     try {
       setLoading(true);
       
-      // Save marks for each student and subject
+      
       for (const student of studentEntries) {
         for (const [subject, marksData] of Object.entries(student.subjects)) {
-          // Find student in the database
+          
           const studentQuery = query(
             collection(db, 'users'),
             where('role', '==', 'student'),
@@ -551,19 +551,19 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Function to export marks to Excel
+  
   const exportMarksToExcel = () => {
     if (studentEntries.length === 0) {
       alert('No data to export');
       return;
     }
 
-    // Get all unique subjects
+    
     const allSubjects = Array.from(
       new Set(studentEntries.flatMap(student => Object.keys(student.subjects)))
     );
 
-    // Create data for export
+    
     const exportData = studentEntries.map(student => {
       const rowData: any = {
         'Student Name': student.name,
@@ -571,7 +571,7 @@ const StaffPortalDashboard: React.FC = () => {
         'Admission Number': student.admissionNumber
       };
 
-      // Add marks for each subject
+      
       allSubjects.forEach(subject => {
         const subjectMarks = student.subjects[subject];
         if (subjectMarks) {
@@ -584,14 +584,14 @@ const StaffPortalDashboard: React.FC = () => {
       return rowData;
     });
 
-    // Create worksheet and workbook
+    
     const ws = utils.json_to_sheet(exportData);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, 'Marks');
     writeFile(wb, `marks_${classForMarks}_${sectionForMarks}_${examTypeForMarks}.xlsx`);
   };
 
-  // Add new meeting
+  
   const addMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -610,7 +610,7 @@ const StaffPortalDashboard: React.FC = () => {
         participants: 'all'
       });
       
-      // Reload meetings
+      
       const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
       const meetingsSnapshot = await getDocs(meetingsQuery);
       const meetingsData = meetingsSnapshot.docs.map(doc => ({
@@ -626,13 +626,13 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Delete meeting
+  
   const deleteMeeting = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this meeting?')) {
       try {
         await deleteDoc(doc(db, 'meetings', id));
         
-        // Reload meetings
+        
         const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
         const meetingsSnapshot = await getDocs(meetingsQuery);
         const meetingsData = meetingsSnapshot.docs.map(doc => ({
@@ -649,7 +649,7 @@ const StaffPortalDashboard: React.FC = () => {
     }
   };
 
-  // Export complaints to Excel
+  
   const exportComplaintsToExcel = () => {
     const data = complaints.map(complaint => ({
       'Complaint ID': complaint.id,
@@ -671,7 +671,7 @@ const StaffPortalDashboard: React.FC = () => {
     writeFile(wb, 'complaints.xlsx');
   };
 
-  // Export registrations to Excel
+  
   const exportRegistrationsToExcel = () => {
     const data = registrations.map(reg => ({
       'Student Name': reg.studentName,
@@ -689,7 +689,7 @@ const StaffPortalDashboard: React.FC = () => {
     writeFile(wb, 'registrations.xlsx');
   };
 
-  // Tab navigation
+  
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
     { id: 'students', label: 'Students', icon: Users },
@@ -703,7 +703,7 @@ const StaffPortalDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -717,7 +717,7 @@ const StaffPortalDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
+      {}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
@@ -742,10 +742,10 @@ const StaffPortalDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
-          {/* Dashboard Tab */}
+          {}
           {activeTab === 'dashboard' && (
             <motion.div
               key="dashboard"
@@ -757,7 +757,7 @@ const StaffPortalDashboard: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Total Students Card */}
+                {}
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-blue-100 rounded-lg">
@@ -770,7 +770,7 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Total Complaints Card */}
+                {}
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-red-100 rounded-lg">
@@ -783,7 +783,7 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Pending Complaints Card */}
+                {}
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-yellow-100 rounded-lg">
@@ -798,7 +798,7 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Total Notices Card */}
+                {}
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex items-center">
                     <div className="p-3 bg-green-100 rounded-lg">
@@ -812,7 +812,7 @@ const StaffPortalDashboard: React.FC = () => {
                 </div>
               </div>
               
-              {/* Recent Activity */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
                 <div className="space-y-4">
@@ -834,7 +834,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Students Tab */}
+          {}
           {activeTab === 'students' && (
             <motion.div
               key="students"
@@ -854,7 +854,7 @@ const StaffPortalDashboard: React.FC = () => {
                 </button>
               </div>
               
-              {/* Search and Filters */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div>
@@ -914,7 +914,7 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Students Table */}
+                {}
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -966,7 +966,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Complaints Tab */}
+          {}
           {activeTab === 'complaints' && (
             <motion.div
               key="complaints"
@@ -1067,7 +1067,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Classes Tab */}
+          {}
           {activeTab === 'classes' && (
             <motion.div
               key="classes"
@@ -1152,7 +1152,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Results Tab */}
+          {}
           {activeTab === 'results' && (
             <motion.div
               key="results"
@@ -1170,7 +1170,7 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Original Mode */}
+                    {}
                     <div 
                       className="border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors"
                       onClick={() => {
@@ -1185,7 +1185,7 @@ const StaffPortalDashboard: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Enhanced Mode */}
+                    {}
                     <div 
                       className="border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-green-500 hover:bg-green-50 transition-colors"
                       onClick={() => {
@@ -1201,10 +1201,10 @@ const StaffPortalDashboard: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Original subject-wise entry form (only shown when not in enhanced mode and showMarksEntry is true) */}
+                  {}
                   {!enhancedResultsMode && showMarksEntry && (
                     <div className="mt-6">
-                      {/* Keep the existing subject-wise entry implementation */}
+                      {}
                       <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-semibold text-gray-900">
                           Enter Marks for Class {selectedClass} - Section {selectedSection}
@@ -1318,7 +1318,7 @@ const StaffPortalDashboard: React.FC = () => {
                     </div>
                   )}
                   
-                  {/* Initial form for subject-wise entry */}
+                  {}
                   {!showMarksEntry && !enhancedResultsMode && (
                     <div className="mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -1379,7 +1379,7 @@ const StaffPortalDashboard: React.FC = () => {
                   )}
                 </div>
               ) : (
-                /* Enhanced Student-wise Entry Mode */
+                
                 <div className="bg-white rounded-xl shadow p-6">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-semibold text-gray-900">Student-wise Marks Entry</h3>
@@ -1391,7 +1391,7 @@ const StaffPortalDashboard: React.FC = () => {
                     </button>
                   </div>
                   
-                  {/* Class, Section, Exam Type Selection */}
+                  {}
                   {!classForMarks || !sectionForMarks || !examTypeForMarks ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       <div>
@@ -1441,7 +1441,7 @@ const StaffPortalDashboard: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      {/* Add Student Form */}
+                      {}
                       <div className="bg-gray-50 rounded-lg p-4 mb-6">
                         <h4 className="text-md font-medium text-gray-900 mb-3">Add Student</h4>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -1490,7 +1490,7 @@ const StaffPortalDashboard: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Subject Marks Entry for Each Student */}
+                      {}
                       {studentEntries.length > 0 && (
                         <div className="mb-6">
                           <h4 className="text-md font-medium text-gray-900 mb-4">Enter Subject Marks</h4>
@@ -1512,7 +1512,7 @@ const StaffPortalDashboard: React.FC = () => {
                               
                               <div className="p-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  {/* Get subjects based on class */}
+                                  {}
                                   {(() => {
                                     const classNum = parseInt(classForMarks);
                                     let classSubjects: string[] = [];
@@ -1561,7 +1561,7 @@ const StaffPortalDashboard: React.FC = () => {
                         </div>
                       )}
                       
-                      {/* Action Buttons */}
+                      {}
                       <div className="flex justify-between">
                         <button
                           onClick={() => {
@@ -1612,7 +1612,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Notices Tab */}
+          {}
           {activeTab === 'notices' && (
             <motion.div
               key="notices"
@@ -1623,7 +1623,7 @@ const StaffPortalDashboard: React.FC = () => {
             >
               <h2 className="text-2xl font-bold text-gray-900">Notices Management</h2>
               
-              {/* Add Notice Form */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Notice</h3>
                 <form onSubmit={addNotice} className="space-y-4">
@@ -1710,7 +1710,7 @@ const StaffPortalDashboard: React.FC = () => {
                 </form>
               </div>
               
-              {/* Notices List */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Existing Notices</h3>
                 <div className="space-y-4">
@@ -1757,7 +1757,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Meetings Tab */}
+          {}
           {activeTab === 'meetings' && (
             <motion.div
               key="meetings"
@@ -1768,7 +1768,7 @@ const StaffPortalDashboard: React.FC = () => {
             >
               <h2 className="text-2xl font-bold text-gray-900">Meetings Management</h2>
               
-              {/* Add Meeting Form */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Schedule New Meeting</h3>
                 <form onSubmit={addMeeting} className="space-y-4">
@@ -1866,7 +1866,7 @@ const StaffPortalDashboard: React.FC = () => {
                 </form>
               </div>
               
-              {/* Meetings List */}
+              {}
               <div className="bg-white rounded-xl shadow p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Scheduled Meetings</h3>
                 <div className="space-y-4">
@@ -1909,7 +1909,7 @@ const StaffPortalDashboard: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Registrations Tab */}
+          {}
           {activeTab === 'registrations' && (
             <motion.div
               key="registrations"

@@ -1,12 +1,9 @@
-/**
- * Test utility for the Marks Management System
- * This file contains functions to verify the implementation
- */
+
 
 import { db } from '../config/firebase';
 import { collection, getDocs, query, where, doc, setDoc, getDoc } from 'firebase/firestore';
 
-// Test data for Class 8, Section A
+
 const mockStudents = [
   { username: 'Rahul Sharma', admissionNumber: 'RHPS001', class: '8', section: 'A' },
   { username: 'Priya Patel', admissionNumber: 'RHPS002', class: '8', section: 'A' },
@@ -15,12 +12,12 @@ const mockStudents = [
   { username: 'Vikash Singh', admissionNumber: 'RHPS005', class: '8', section: 'A' }
 ];
 
-// Test function to verify student data structure
+
 export async function testStudentDataStructure() {
   try {
     console.log('Testing student data structure...');
     
-    // Check if students collection exists with proper structure
+    
     const studentsCollection = collection(db, 'users');
     const studentsQuery = query(studentsCollection, where('role', '==', 'student'));
     const studentsSnapshot = await getDocs(studentsQuery);
@@ -51,12 +48,12 @@ export async function testStudentDataStructure() {
   }
 }
 
-// Test function to verify marks data structure
+
 export async function testMarksDataStructure() {
   try {
     console.log('Testing marks data structure...');
     
-    // Check if marks subcollection exists with proper structure
+    
     const studentsCollection = collection(db, 'users');
     const studentsQuery = query(studentsCollection, where('role', '==', 'student'));
     const studentsSnapshot = await getDocs(studentsQuery);
@@ -74,7 +71,7 @@ export async function testMarksDataStructure() {
       
       marksSnapshot.forEach((doc) => {
         const data = doc.data();
-        // Check if exam type is in the document ID or data
+        
         if (!data.unit_test_1 && !data.unit_test_2 && !data.unit_test_3 && 
             !data.half_yearly && !data.final_exam) {
           console.log(`Marks document ${doc.id} for student ${studentId} has no valid exam data`);
@@ -91,25 +88,25 @@ export async function testMarksDataStructure() {
   }
 }
 
-// Test function to verify parent data structure
+
 export async function testParentDataStructure() {
   try {
     console.log('Testing parent data structure...');
     
-    // Check if parents collection exists with proper structure
+    
     const parentsCollection = collection(db, 'users');
     const parentsQuery = query(parentsCollection, where('role', '==', 'parent'));
     const parentsSnapshot = await getDocs(parentsQuery);
     
     if (parentsSnapshot.empty) {
       console.log('No parents found in database');
-      return true; // This is not necessarily a failure
+      return true; 
     }
     
     let validStructure = true;
     parentsSnapshot.forEach((doc) => {
       const data = doc.data();
-      // Parents should have studentId or children array
+      
       if (!data.studentId && !data.children) {
         console.log(`Parent document ${doc.id} missing student reference`);
         validStructure = false;
@@ -124,13 +121,13 @@ export async function testParentDataStructure() {
   }
 }
 
-// Test function to verify Excel upload functionality
+
 export async function testExcelUploadFunctionality() {
   try {
     console.log('Testing Excel upload functionality...');
     
-    // This would require mocking the file upload process
-    // For now, we'll just verify that the required dependencies are available
+    
+    
     const xlsxAvailable = typeof require !== 'undefined';
     
     console.log('Excel upload functionality test:', xlsxAvailable ? 'PASSED' : 'SKIPPED');
@@ -141,7 +138,7 @@ export async function testExcelUploadFunctionality() {
   }
 }
 
-// Main test function
+
 export async function runAllTests() {
   console.log('Running Marks Management System tests...');
   
@@ -175,7 +172,7 @@ export async function runAllTests() {
   }
 }
 
-// Export individual test functions for manual testing
+
 export default {
   testStudentDataStructure,
   testMarksDataStructure,

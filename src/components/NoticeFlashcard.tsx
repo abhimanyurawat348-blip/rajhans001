@@ -13,13 +13,13 @@ interface NoticeFlashcardProps {
 }
 
 const NoticeFlashcard: React.FC<NoticeFlashcardProps> = ({ notice }) => {
-  // Defensive check for notice data
+  
   if (!notice) {
     return null;
   }
 
   const getPriorityStyles = () => {
-    // Default to 'normal' if priority is not set
+    
     const priority = notice.priority || 'normal';
     
     switch (priority) {

@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
     <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
+          {}
           <Link to="/" className="flex items-center space-x-2">
             <School className="h-8 w-8 text-blue-600" />
             <div className="flex flex-col">
@@ -42,7 +42,7 @@ const Navbar: React.FC = () => {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
+          {}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
               {navItems.filter(item => 
@@ -63,7 +63,7 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* User Menu */}
+          {}
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={toggleDarkMode}
@@ -88,7 +88,7 @@ const Navbar: React.FC = () => {
             ) : null}
           </div>
 
-          {/* Mobile menu button */}
+          {}
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {}
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}

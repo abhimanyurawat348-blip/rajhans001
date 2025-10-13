@@ -77,7 +77,7 @@ interface UnregisteredStudentMarks {
   teacherId: string;
 }
 
-// Add new interfaces for our enhanced marksheet system
+
 interface StudentMarks {
   id: string;
   studentId: string;
@@ -137,7 +137,7 @@ const NewStaffPortal: React.FC = () => {
     description: ''
   });
 
-  // Add new state variables for enhanced marksheet functionality
+  
   const [marksheetStep, setMarksheetStep] = useState<number>(1);
   const [numberOfStudents, setNumberOfStudents] = useState<number>(0);
   const [studentMarks, setStudentMarks] = useState<StudentMarks[]>([]);
@@ -145,11 +145,11 @@ const NewStaffPortal: React.FC = () => {
   const [selectedResultRecord, setSelectedResultRecord] = useState<string | null>(null);
   const [showAllMarksheetView, setShowAllMarksheetView] = useState(false);
 
-  // Function to auto-link unregistered student marks when a matching student registers
+  
 
 
 
-  // Enhanced loadAllData to include result records
+  
   const loadAllData = useCallback(async () => {
     try {
       const usersSnap = await getDocs(collection(db, 'users'));
@@ -161,7 +161,7 @@ const NewStaffPortal: React.FC = () => {
       setStudents(usersData.filter((u) => (u as { role?: string }).role === 'student'));
       setParents(usersData.filter((u) => (u as { role?: string }).role === 'parent'));
       
-      // Load unregistered marks
+      
       const unregisteredMarksSnap = await getDocs(collection(db, 'unregistered_student_marks'));
       const unregisteredMarksData = unregisteredMarksSnap.docs.map(doc => ({
         id: doc.id,
@@ -170,7 +170,7 @@ const NewStaffPortal: React.FC = () => {
       
       setUnregisteredMarks(unregisteredMarksData);
       
-      // Load result records
+      
       const resultRecordsSnap = await getDocs(collection(db, 'result_records'));
       const resultRecordsData = resultRecordsSnap.docs.map(doc => ({
         id: doc.id,
@@ -179,16 +179,16 @@ const NewStaffPortal: React.FC = () => {
       
       setResultRecords(resultRecordsData);
       
-      // Auto-link unregistered marks
+      
       try {
-        // Get all unregistered marks
+        
         const unregisteredMarksSnap = await getDocs(collection(db, 'unregistered_student_marks'));
         
-        // For each unregistered mark, check if a matching student now exists
+        
         for (const docSnapshot of unregisteredMarksSnap.docs) {
           const unregisteredMark = { id: docSnapshot.id, ...docSnapshot.data() } as UnregisteredStudentMarks & { id: string };
           
-          // Try to find a matching student by admission number or name
+          
           const studentQuery = query(
             collection(db, 'users'),
             where('role', '==', 'student'),
@@ -198,10 +198,10 @@ const NewStaffPortal: React.FC = () => {
           const studentSnapshot = await getDocs(studentQuery);
           
           if (!studentSnapshot.empty) {
-            // Found a matching student, move the marks to their record
+            
             const student = studentSnapshot.docs[0];
             
-            // Save to student's marks collection
+            
             await setDoc(doc(db, 'students', student.id, 'marks', unregisteredMark.examType), {
               [unregisteredMark.examType]: unregisteredMark.marks,
               uploadedAt: unregisteredMark.uploadedAt,
@@ -210,7 +210,7 @@ const NewStaffPortal: React.FC = () => {
               subject: unregisteredMark.subject
             }, { merge: true });
             
-            // Delete from unregistered marks collection
+            
             await deleteDoc(doc(db, 'unregistered_student_marks', unregisteredMark.id));
           }
         }
@@ -222,7 +222,7 @@ const NewStaffPortal: React.FC = () => {
     }
   }, []);
 
-  // Function to load notices
+  
   const loadNotices = useCallback(async () => {
     try {
       const noticesQuery = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
@@ -237,7 +237,7 @@ const NewStaffPortal: React.FC = () => {
     }
   }, []);
 
-  // Function to load meetings
+  
   const loadMeetings = useCallback(async () => {
     try {
       const meetingsQuery = query(collection(db, 'meetings'), orderBy('date', 'desc'));
@@ -252,7 +252,7 @@ const NewStaffPortal: React.FC = () => {
     }
   }, []);
 
-  // Function to add a new notice
+  
   const addNotice = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -276,7 +276,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to delete a notice
+  
   const deleteNotice = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'notices', id));
@@ -286,7 +286,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to add a new meeting
+  
   const addMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -314,7 +314,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to delete a meeting
+  
   const deleteMeeting = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'meetings', id));
@@ -325,7 +325,7 @@ const NewStaffPortal: React.FC = () => {
   };
 
   useEffect(() => {
-    // Check if user is already authenticated
+    
     const storedAuth = localStorage.getItem('staffPortalAuth');
     if (storedAuth === 'true') {
       setIsAuthenticated(true);
@@ -336,7 +336,7 @@ const NewStaffPortal: React.FC = () => {
     loadNotices();
     loadMeetings();
     
-    // Load login records
+    
     const loadLoginRecords = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'loginRecords'));
@@ -377,7 +377,7 @@ const NewStaffPortal: React.FC = () => {
       
       setSelectedClassStudents(studentsData);
       
-      // Initialize marks data
+      
       setMarksheetData(prev => ({
         ...prev,
         marksData: studentsData.map(student => ({
@@ -391,19 +391,19 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Enhanced error handling for Excel upload
+  
   const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
+    
     const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
     if (!validTypes.includes(file.type) && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
       setUploadStatus({ loading: false, message: 'Invalid file type. Please upload an Excel file (.xlsx or .xls)', error: true });
       return;
     }
 
-    // Validate file size (max 5MB)
+    
     if (file.size > 5 * 1024 * 1024) {
       setUploadStatus({ loading: false, message: 'File size exceeds 5MB limit. Please upload a smaller file.', error: true });
       return;
@@ -421,7 +421,7 @@ const NewStaffPortal: React.FC = () => {
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = utils.sheet_to_json(worksheet);
         
-        // Validate required columns
+        
         if (jsonData.length > 0) {
           const firstRow = jsonData[0];
           if (typeof firstRow === 'object' && firstRow !== null) {
@@ -455,7 +455,7 @@ const NewStaffPortal: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  // Enhanced processExcelData with logging
+  
   const processExcelData = async (examType: string, classValue: string, sectionValue: string) => {
     if (excelData.length === 0) {
       setUploadStatus({ loading: false, message: 'No data to process. Please upload a valid Excel file.', error: true });
@@ -465,9 +465,9 @@ const NewStaffPortal: React.FC = () => {
     setUploadStatus({ loading: true, message: 'Processing and saving marks...', error: false });
 
     try {
-      // Log the upload attempt
+      
       const uploadLog = {
-        teacherId: 'current_teacher_id', // This would be the actual teacher ID in real implementation
+        teacherId: 'current_teacher_id', 
         class: classValue,
         section: sectionValue,
         examType: examType,
@@ -481,41 +481,41 @@ const NewStaffPortal: React.FC = () => {
       let successCount = 0;
       let errorCount = 0;
 
-      // Process each row
+      
       for (const row of excelData) {
         try {
           const rollNumber = row['Roll Number'] || row['roll_number'] || row['Roll_Number'];
           const studentName = row['Student Name'] || row['student_name'] || row['Student_Name'];
           const marks = parseInt(row['Marks'] || row['marks']) || 0;
 
-          // Validate data
+          
           if (!rollNumber || !studentName) {
             errorCount++;
             continue;
           }
 
-          // Find student by roll number or name
+          
           const student = students.find(s => 
             (s.admissionNumber === rollNumber?.toString()) || 
             (s.username?.toLowerCase() === studentName?.toLowerCase())
           );
 
           if (student) {
-            // Save to student's marks collection with proper structure for report card
+            
             await setDoc(doc(db, 'students', student.id, 'marks', examType), {
               [examType]: marks,
-              marks: marks, // Duplicate for easier access
+              marks: marks, 
               maxMarks: 100,
               subject: marksheetData.subject,
               class: classValue,
               section: sectionValue,
               examType: examType,
               uploadedAt: new Date(),
-              uploadedBy: 'staff' // In a real implementation, this would be the actual teacher ID
+              uploadedBy: 'staff' 
             }, { merge: true });
             successCount++;
           } else {
-            // Save to unregistered marks collection
+            
             await setDoc(doc(collection(db, 'unregistered_student_marks')), {
               studentName: studentName,
               admissionNumber: rollNumber,
@@ -526,7 +526,7 @@ const NewStaffPortal: React.FC = () => {
               marks: marks,
               maxMarks: 100,
               uploadedAt: new Date(),
-              teacherId: 'current_teacher_id' // This would be the actual teacher ID in real implementation
+              teacherId: 'current_teacher_id' 
             });
             successCount++;
           }
@@ -536,7 +536,7 @@ const NewStaffPortal: React.FC = () => {
         }
       }
 
-      // Update upload log with results
+      
       await addDoc(collection(db, 'upload_logs'), {
         ...uploadLog,
         completedAt: new Date(),
@@ -551,10 +551,10 @@ const NewStaffPortal: React.FC = () => {
         setUploadStatus({ loading: false, message: `Upload completed with ${errorCount} errors. ${successCount} records processed successfully.`, error: false });
       }
       
-      // Reload data
+      
       loadAllData();
       
-      // Clear form after 3 seconds
+      
       setTimeout(() => {
         setExcelFile(null);
         setExcelData([]);
@@ -564,9 +564,9 @@ const NewStaffPortal: React.FC = () => {
       setUploadStatus({ loading: false, message: 'Error saving marks. Please try again.', error: true });
       console.error('Error saving marks:', err);
       
-      // Log error
+      
       await addDoc(collection(db, 'upload_logs'), {
-        teacherId: 'current_teacher_id', // This would be the actual teacher ID in real implementation
+        teacherId: 'current_teacher_id', 
         class: classValue,
         section: sectionValue,
         examType: examType,
@@ -581,7 +581,7 @@ const NewStaffPortal: React.FC = () => {
   const handleCreateMarksheet = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Create marks records for each student
+      
       for (const markData of marksheetData.marksData) {
         await setDoc(doc(db, 'students', markData.studentId, 'marks', marksheetData.examType), {
           [marksheetData.examType]: markData.marks,
@@ -608,7 +608,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Navigation sections
+  
   const sections = [
     { id: 'dashboard', label: 'Dashboard', icon: Monitor },
     { id: 'students', label: 'Students', icon: Users },
@@ -620,7 +620,7 @@ const NewStaffPortal: React.FC = () => {
     { id: 'notices', label: 'Notices', icon: Bell }
   ];
 
-  // Function to get subjects based on class
+  
   const getSubjectsByClass = (classValue: string) => {
     const classNum = parseInt(classValue);
     
@@ -629,15 +629,15 @@ const NewStaffPortal: React.FC = () => {
     } else if (classNum >= 9 && classNum <= 10) {
       return ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Information Technology', 'Sanskrit (Optional)'];
     } else if (classNum >= 11 && classNum <= 12) {
-      // For 11th and 12th, we would need to know the stream
-      // For now, we'll return a generic set
+      
+      
       return ['English Core', 'Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Physical Education'];
     }
     
     return [];
   };
 
-  // Function to get max marks based on exam type
+  
   const getMaxMarksByExamType = (examType: string) => {
     if (examType.includes('unit_test')) {
       return 20;
@@ -645,7 +645,7 @@ const NewStaffPortal: React.FC = () => {
     return 100;
   };
 
-  // Function to reset marksheet workflow
+  
   const resetMarksheetWorkflow = () => {
     setMarksheetStep(1);
     setMarksheetData({
@@ -660,24 +660,24 @@ const NewStaffPortal: React.FC = () => {
     setShowMarksheetForm(false);
   };
 
-  // Function to handle class and section selection (Step 1)
+  
   const handleClassSectionSelect = () => {
     if (marksheetData.class && marksheetData.section) {
       setMarksheetStep(2);
     }
   };
 
-  // Function to handle exam type selection (Step 2)
+  
   const handleExamTypeSelect = () => {
     if (marksheetData.examType) {
       setMarksheetStep(3);
     }
   };
 
-  // Function to handle student count input (Step 3)
+  
   const handleStudentCountSubmit = () => {
     if (numberOfStudents > 0 && numberOfStudents <= 50) {
-      // Initialize student marks array
+      
       const initialStudentMarks: StudentMarks[] = [];
       for (let i = 1; i <= numberOfStudents; i++) {
         initialStudentMarks.push({
@@ -694,7 +694,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to handle marks entry (Step 4)
+  
   const handleMarksEntry = (index: number, field: keyof StudentMarks, value: string | number) => {
     const updatedStudentMarks = [...studentMarks];
     updatedStudentMarks[index] = {
@@ -704,13 +704,13 @@ const NewStaffPortal: React.FC = () => {
     setStudentMarks(updatedStudentMarks);
   };
 
-  // Function to save marks
+  
   const saveMarks = async () => {
     try {
-      // Save each student's marks
+      
       for (const studentMark of studentMarks) {
         if (studentMark.studentId) {
-          // Save to student's marks collection
+          
           await setDoc(doc(db, 'students', studentMark.studentId, 'marks', `${marksheetData.examType}_${marksheetData.subject}`), {
             examType: marksheetData.examType,
             subject: marksheetData.subject,
@@ -722,7 +722,7 @@ const NewStaffPortal: React.FC = () => {
             uploadedBy: 'staff'
           }, { merge: true });
         } else {
-          // Save to unregistered marks collection
+          
           await setDoc(doc(collection(db, 'unregistered_student_marks')), {
             studentName: studentMark.studentName,
             admissionNumber: studentMark.admissionNumber,
@@ -738,7 +738,7 @@ const NewStaffPortal: React.FC = () => {
         }
       }
       
-      // Save result record
+      
       const resultRecord: ResultRecord = {
         id: Date.now().toString(),
         class: marksheetData.class,
@@ -752,10 +752,10 @@ const NewStaffPortal: React.FC = () => {
       
       await addDoc(collection(db, 'result_records'), resultRecord);
       
-      // Reload data
+      
       loadAllData();
       
-      // Reset workflow
+      
       resetMarksheetWorkflow();
       
       alert('Marks saved successfully!');
@@ -765,18 +765,18 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to export marksheet
+  
   const exportMarksheet = () => {
-    // Implementation for exporting marksheet
+    
     alert('Export functionality would be implemented here');
   };
 
-  // Function to view all students marksheet
+  
   const viewAllStudentsMarksheet = () => {
     setShowAllMarksheetView(true);
   };
 
-  // Enhanced Class Dashboard Component with better UI/UX
+  
   const ClassDashboard = () => {
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
@@ -1195,7 +1195,7 @@ const NewStaffPortal: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300"
                 >
-                  {/* Multi-step Marksheet Workflow */}
+                  {}
                   <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-xl font-bold text-gray-900">Create Marksheet</h3>
@@ -1207,7 +1207,7 @@ const NewStaffPortal: React.FC = () => {
                       </button>
                     </div>
                     
-                    {/* Progress Indicator */}
+                    {}
                     <div className="flex items-center justify-between mb-8">
                       {[1, 2, 3, 4].map((step) => (
                         <div key={step} className="flex items-center">
@@ -1229,7 +1229,7 @@ const NewStaffPortal: React.FC = () => {
                       ))}
                     </div>
                     
-                    {/* Step 1: Class and Section Selection */}
+                    {}
                     {marksheetStep === 1 && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -1277,7 +1277,7 @@ const NewStaffPortal: React.FC = () => {
                       </motion.div>
                     )}
                     
-                    {/* Step 2: Exam Type Selection */}
+                    {}
                     {marksheetStep === 2 && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -1325,7 +1325,7 @@ const NewStaffPortal: React.FC = () => {
                       </motion.div>
                     )}
                     
-                    {/* Step 3: Number of Students */}
+                    {}
                     {marksheetStep === 3 && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -1365,7 +1365,7 @@ const NewStaffPortal: React.FC = () => {
                       </motion.div>
                     )}
                     
-                    {/* Step 4: Subject Selection and Marks Entry */}
+                    {}
                     {marksheetStep === 4 && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -1374,7 +1374,7 @@ const NewStaffPortal: React.FC = () => {
                       >
                         <h4 className="text-lg font-semibold text-gray-900">Step 4: Enter Marks</h4>
                         
-                        {/* Subject Selection */}
+                        {}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                           <select
@@ -1389,7 +1389,7 @@ const NewStaffPortal: React.FC = () => {
                           </select>
                         </div>
                         
-                        {/* Class and Section Display */}
+                        {}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
@@ -1411,7 +1411,7 @@ const NewStaffPortal: React.FC = () => {
                           </div>
                         </div>
                         
-                        {/* Exam Type Display */}
+                        {}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
                           <input
@@ -1428,7 +1428,7 @@ const NewStaffPortal: React.FC = () => {
                           />
                         </div>
                         
-                        {/* Marks Entry Table */}
+                        {}
                         <div className="overflow-x-auto">
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
@@ -1501,7 +1501,7 @@ const NewStaffPortal: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Result Records Dashboard */}
+              {}
               <div className="mt-8">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Result Records</h3>
                 {resultRecords.length === 0 ? (
@@ -1830,10 +1830,10 @@ const NewStaffPortal: React.FC = () => {
       </main>
     </div>
   );
-  // Handle login
+  
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Updated credentials as per requirements
+    
     if (loginData.username === 'rajhans_001@gmail.com' && loginData.password === 'abhimanyu03*9') {
       setIsAuthenticated(true);
       localStorage.setItem('staffPortalAuth', 'true');
@@ -1843,7 +1843,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Handle logout
+  
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('staffPortalAuth');
@@ -1851,7 +1851,7 @@ const NewStaffPortal: React.FC = () => {
     navigate('/login');
   };
 
-  // Helper function to get status color
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'resolved':
@@ -1865,7 +1865,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Helper function to get status icon
+  
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'resolved':
@@ -1890,10 +1890,10 @@ const NewStaffPortal: React.FC = () => {
   const handleRemoveStudent = async (id: string) => {
     if (window.confirm('Are you sure you want to remove this student?')) {
       try {
-        // Remove from users collection
+        
         await deleteDoc(doc(db, 'users', id));
         
-        // Reload data
+        
         loadAllData();
       } catch (error) {
         console.error('Error removing student:', error);
@@ -1905,10 +1905,10 @@ const NewStaffPortal: React.FC = () => {
   const handleRemoveParent = async (id: string) => {
     if (window.confirm('Are you sure you want to remove this parent?')) {
       try {
-        // Remove from users collection
+        
         await deleteDoc(doc(db, 'users', id));
         
-        // Reload data
+        
         loadAllData();
       } catch (error) {
         console.error('Error removing parent:', error);
@@ -1917,13 +1917,13 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // Function to generate mock data for testing
+  
   const generateMockData = async () => {
     try {
-      // Create mock students for all classes (6-12) and sections (A, B, C)
+      
       const mockStudents = [];
       
-      // Generate 25 students for each class and section
+      
       for (let classNum = 6; classNum <= 12; classNum++) {
         for (const section of ['A', 'B', 'C']) {
           for (let i = 1; i <= 25; i++) {
@@ -1949,10 +1949,10 @@ const NewStaffPortal: React.FC = () => {
         }
       }
 
-      // Add mock students to database
+      
       let addedCount = 0;
       for (const student of mockStudents) {
-        // Check if student already exists
+        
         const studentQuery = query(
           collection(db, 'users'),
           where('admissionNumber', '==', student.admissionNumber)
@@ -1961,7 +1961,7 @@ const NewStaffPortal: React.FC = () => {
         const studentSnapshot = await getDocs(studentQuery);
       
         if (studentSnapshot.empty) {
-          // Create new student
+          
           const studentData = {
             ...student,
             role: 'student',
@@ -1974,15 +1974,15 @@ const NewStaffPortal: React.FC = () => {
         }
       }
 
-      // Generate mock marks data for a few students as examples
+      
       const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
       const subjects = ['English', 'Hindi', 'SST', 'Maths', 'Science', 'Computer', 'Sanskrit'];
     
-      // Generate marks for first 5 students of Class 6 as examples
+      
       for (let i = 0; i < Math.min(5, mockStudents.length); i++) {
         const student = mockStudents[i];
       
-        // Get student ID
+        
         const studentQuery = query(
           collection(db, 'users'),
           where('admissionNumber', '==', student.admissionNumber)
@@ -1994,16 +1994,16 @@ const NewStaffPortal: React.FC = () => {
           const studentDoc = studentSnapshot.docs[0];
           const studentId = studentDoc.id;
         
-          // Generate marks for each exam type and subject
+          
           for (const examType of examTypes) {
             for (const subject of subjects) {
-              // Different max marks for different exam types
+              
               let maxMarks = 100;
               if (examType.includes('unit_test')) {
                 maxMarks = 20;
               }
             
-              const mockMarks = Math.floor(Math.random() * (maxMarks - 40)) + 40; // Random marks between 40-maxMarks
+              const mockMarks = Math.floor(Math.random() * (maxMarks - 40)) + 40; 
             
               await setDoc(doc(db, 'students', studentId, 'marks', `${examType}_${subject}`), {
                 [examType]: mockMarks,
@@ -2020,7 +2020,7 @@ const NewStaffPortal: React.FC = () => {
         }
       }
 
-      // Reload data to show mock data
+      
       loadAllData();
     
       alert(`Mock data generated successfully! Added ${addedCount} students across all classes and sections.`);
@@ -2030,7 +2030,7 @@ const NewStaffPortal: React.FC = () => {
     }
   };
 
-  // If not authenticated, show login form
+  
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -2042,7 +2042,7 @@ const NewStaffPortal: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Portal</h1>
             <p className="text-gray-600">Enter your credentials to access the portal</p>
             
-            {/* Test Credentials Section */}
+            {}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>Test Credentials:</strong><br />
@@ -2101,7 +2101,7 @@ const NewStaffPortal: React.FC = () => {
     );
   }
 
-  // Enhanced dashboard with test button
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-md">
@@ -2132,7 +2132,7 @@ const NewStaffPortal: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Navigation */}
+          {}
           <div className="lg:w-64 flex-shrink-0">
             <div className="bg-white rounded-xl shadow-lg p-4">
               <nav className="space-y-2">
@@ -2157,7 +2157,7 @@ const NewStaffPortal: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content */}
+          {}
           <div className="flex-1">
             {activeSection === 'dashboard' && (
               <div className="space-y-6">
@@ -2320,7 +2320,7 @@ const NewStaffPortal: React.FC = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300"
                     >
-                      {/* Multi-step Marksheet Workflow */}
+                      {}
                       <div className="mb-6">
                         <div className="flex justify-between items-center mb-4">
                           <h3 className="text-xl font-bold text-gray-900">Create Marksheet</h3>
@@ -2332,7 +2332,7 @@ const NewStaffPortal: React.FC = () => {
                           </button>
                         </div>
                         
-                        {/* Progress Indicator */}
+                        {}
                         <div className="flex items-center justify-between mb-8">
                           {[1, 2, 3, 4].map((step) => (
                             <div key={step} className="flex items-center">
@@ -2354,7 +2354,7 @@ const NewStaffPortal: React.FC = () => {
                           ))}
                         </div>
                         
-                        {/* Step 1: Class and Section Selection */}
+                        {}
                         {marksheetStep === 1 && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -2402,7 +2402,7 @@ const NewStaffPortal: React.FC = () => {
                           </motion.div>
                         )}
                         
-                        {/* Step 2: Exam Type Selection */}
+                        {}
                         {marksheetStep === 2 && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -2450,7 +2450,7 @@ const NewStaffPortal: React.FC = () => {
                           </motion.div>
                         )}
                         
-                        {/* Step 3: Number of Students */}
+                        {}
                         {marksheetStep === 3 && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -2490,7 +2490,7 @@ const NewStaffPortal: React.FC = () => {
                           </motion.div>
                         )}
                         
-                        {/* Step 4: Subject Selection and Marks Entry */}
+                        {}
                         {marksheetStep === 4 && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -2499,7 +2499,7 @@ const NewStaffPortal: React.FC = () => {
                           >
                             <h4 className="text-lg font-semibold text-gray-900">Step 4: Enter Marks</h4>
                             
-                            {/* Subject Selection */}
+                            {}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
                               <select
@@ -2514,7 +2514,7 @@ const NewStaffPortal: React.FC = () => {
                               </select>
                             </div>
                             
-                            {/* Class and Section Display */}
+                            {}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
@@ -2536,7 +2536,7 @@ const NewStaffPortal: React.FC = () => {
                               </div>
                             </div>
                             
-                            {/* Exam Type Display */}
+                            {}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
                               <input
@@ -2553,7 +2553,7 @@ const NewStaffPortal: React.FC = () => {
                               />
                             </div>
                             
-                            {/* Marks Entry Table */}
+                            {}
                             <div className="overflow-x-auto">
                               <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -2626,7 +2626,7 @@ const NewStaffPortal: React.FC = () => {
                     </motion.div>
                   )}
 
-                  {/* Result Records Dashboard */}
+                  {}
                   <div className="mt-8">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Result Records</h3>
                     {resultRecords.length === 0 ? (
@@ -2695,7 +2695,7 @@ const NewStaffPortal: React.FC = () => {
               </div>
             )}
 
-            {/* Other sections remain the same */}
+            {}
             {activeSection === 'registrations' && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900">Registrations</h2>
@@ -2867,7 +2867,7 @@ const NewStaffPortal: React.FC = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Meeting Management</h2>
                   <p className="text-gray-600 mb-6">Schedule and manage meetings that will be displayed on the student council dashboard.</p>
                   
-                  {/* Add New Meeting Form */}
+                  {}
                   <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Schedule New Meeting</h3>
                     <form onSubmit={addMeeting} className="space-y-4">
@@ -2939,7 +2939,7 @@ const NewStaffPortal: React.FC = () => {
                     </form>
                   </div>
                   
-                  {/* Existing Meetings */}
+                  {}
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Scheduled Meetings</h3>
                     {meetings.length === 0 ? (
@@ -3000,7 +3000,7 @@ const NewStaffPortal: React.FC = () => {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Notices Management</h2>
                   <p className="text-gray-600 mb-6">Create and manage school notices that will be displayed on the home dashboard.</p>
                   
-                  {/* Add New Notice Form */}
+                  {}
                   <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Create New Notice</h3>
                     <form onSubmit={addNotice} className="space-y-4">
@@ -3051,7 +3051,7 @@ const NewStaffPortal: React.FC = () => {
                     </form>
                   </div>
                   
-                  {/* Existing Notices */}
+                  {}
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Published Notices</h3>
                     {notices.length === 0 ? (

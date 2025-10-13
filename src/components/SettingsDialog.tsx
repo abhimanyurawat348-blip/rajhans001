@@ -32,7 +32,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-6">
-              {/* Appearance Settings */}
+              {}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appearance</h4>
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
@@ -61,7 +61,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Notification Settings */}
+              {}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notifications</h4>
                 <div className="space-y-4">

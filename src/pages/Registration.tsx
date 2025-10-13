@@ -93,7 +93,7 @@ const Registration: React.FC = () => {
       if (result.success) {
         setCurrentStep('success');
         if (result.message) {
-          // Store the motivational message to display
+          
           sessionStorage.setItem('motivationalMessage', result.message);
         }
       } else {
@@ -184,7 +184,7 @@ const Registration: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Progress Indicator */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -214,7 +214,7 @@ const Registration: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Category Selection */}
+        {}
         {currentStep === 'category' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -265,7 +265,7 @@ const Registration: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Activity Selection */}
+        {}
         {currentStep === 'activity' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -304,7 +304,7 @@ const Registration: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Registration Form */}
+        {}
         {currentStep === 'form' && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}

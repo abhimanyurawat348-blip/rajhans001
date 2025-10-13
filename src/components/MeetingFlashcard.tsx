@@ -15,7 +15,7 @@ interface MeetingFlashcardProps {
 }
 
 const MeetingFlashcard: React.FC<MeetingFlashcardProps> = ({ meeting }) => {
-  // Defensive check for meeting data
+  
   if (!meeting) {
     return null;
   }

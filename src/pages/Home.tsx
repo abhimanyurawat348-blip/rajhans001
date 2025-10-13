@@ -20,16 +20,16 @@ const Home: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [notices, setNotices] = useState<any[]>([]);
 
-  // Load notices
+  
   useEffect(() => {
     const loadNotices = async () => {
       try {
-        // Check if we're in a browser environment
+        
         if (typeof window !== 'undefined') {
           const noticesQuery = query(
             collection(db, 'notices'),
             orderBy('createdAt', 'desc'),
-            limit(5) // Load only the 5 most recent notices
+            limit(5) 
           );
           const noticesSnapshot = await getDocs(noticesQuery);
           const noticesData = noticesSnapshot.docs.map(doc => {
@@ -52,7 +52,7 @@ const Home: React.FC = () => {
     loadNotices();
   }, []);
 
-  // Product data for each category
+  
   const products = {
     books: [
       { id: 1, name: 'Mathematics Textbook Class 10', price: '₹350', image: '📚' },
@@ -186,7 +186,7 @@ const Home: React.FC = () => {
     }
   ];
 
-  // Flashcards for new features & updates
+  
   const flashcards = [
     {
       id: 'parent-portal',
@@ -242,7 +242,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
-      {/* Hero Section */}
+      {}
       <motion.section 
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
@@ -319,7 +319,7 @@ const Home: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* New Features & Updates Section */}
+      {}
       <section className="py-16 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -337,7 +337,7 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Dronacharya AI Under Development Message */}
+          {}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -407,7 +407,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Important Notices Section */}
+      {}
       {notices.length > 0 && (
         <section className="py-16 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
           <div className="max-w-6xl mx-auto">
@@ -446,7 +446,7 @@ const Home: React.FC = () => {
         </section>
       )}
 
-      {/* Features Section */}
+      {}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -526,7 +526,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {}
       <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-green-600">
         <div className="max-w-4xl mx-auto text-center text-white">
           <motion.div
@@ -554,10 +554,10 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* RHPS E Educational Mall Section - Moved to bottom */}
+      {}
       <section className="py-16 px-4 bg-gradient-to-r from-gray-900 to-black">
         <div className="max-w-6xl mx-auto">
-          {/* Warning Message */}
+          {}
           <div className="bg-yellow-500 text-black py-3 px-6 rounded-lg mb-8 text-center font-bold text-lg">
             ⚠️ This E Mall is under progress - Features and products are subject to change
           </div>
@@ -577,9 +577,9 @@ const Home: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Category Selection - Large Display Options */}
+          {}
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-            {/* Books & Stationery */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -604,7 +604,7 @@ const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            {/* School Uniforms */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -629,7 +629,7 @@ const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            {/* Merchandise */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -654,7 +654,7 @@ const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            {/* Footwear */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -679,7 +679,7 @@ const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            {/* Posters */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -705,7 +705,7 @@ const Home: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* Product Display Section */}
+          {}
           <div className="bg-gray-800 rounded-2xl p-8 mb-12 border-2 border-gray-700">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-3xl font-bold text-white">
@@ -771,7 +771,7 @@ const Home: React.FC = () => {
             </div>
           </div>
 
-          {/* Payment Methods */}
+          {}
           <div className="bg-gray-800 rounded-2xl p-8 mb-12 border-2 border-gray-700">
             <h3 className="text-3xl font-bold text-center text-white mb-6">
               Payment Methods

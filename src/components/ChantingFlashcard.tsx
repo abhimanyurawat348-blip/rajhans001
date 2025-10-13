@@ -26,14 +26,14 @@ const ChantingFlashcard: React.FC<ChantingFlashcardProps> = ({
       navigate('/chanting');
     } catch (error) {
       console.error('Error updating name:', error);
-      // Still navigate even if name update fails
+      
       setIsNamePromptOpen(false);
       navigate('/chanting');
     }
   };
 
   const handleClick = () => {
-    // Check if user has a name, if not prompt for it
+    
     if (user && (!user.name || user.name === 'Student User')) {
       setIsNamePromptOpen(true);
     } else {

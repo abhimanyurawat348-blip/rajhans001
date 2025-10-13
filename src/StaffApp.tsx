@@ -9,7 +9,7 @@ const StaffApp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Check if user is already authenticated on component mount
+  
   useEffect(() => {
     const storedAuth = localStorage.getItem('staffPortalAuth');
     if (storedAuth === 'true') {
@@ -20,7 +20,7 @@ const StaffApp: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Using the same credentials as NewStaffPortal
+    
     if (username === 'rajhans_001@gmail.com' && password === 'abhimanyu03*9') {
       setIsAuthenticated(true);
       localStorage.setItem('staffPortalAuth', 'true');

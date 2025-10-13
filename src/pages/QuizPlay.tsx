@@ -5,11 +5,11 @@ import { Clock, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { quizData } from '../data/quizQuestions';
 import { QuizQuestion } from '../types/quiz';
 
-// Function to randomly select n items from an array
+
 const getRandomQuestions = (questions: QuizQuestion[], count: number): QuizQuestion[] => {
-  // Shuffle array using Fisher-Yates algorithm
+  
   const shuffled = [...questions].sort(() => 0.5 - Math.random());
-  // Return first 'count' items
+  
   return shuffled.slice(0, count);
 };
 
@@ -17,7 +17,7 @@ const QuizPlay: React.FC = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]); // Store all answers
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]); 
   const [timeLeft, setTimeLeft] = useState(120);
   const [startTime] = useState(Date.now());
 
@@ -33,10 +33,10 @@ const QuizPlay: React.FC = () => {
 
     const quizQuestions = quizData[classNum]?.[subject];
     if (quizQuestions) {
-      // Select 10 random questions from the available questions
+      
       const selectedQuestions = getRandomQuestions(quizQuestions, 10);
       setQuestions(selectedQuestions);
-      // Initialize selectedAnswers array with null values
+      
       setSelectedAnswers(Array(selectedQuestions.length).fill(null));
     } else {
       navigate('/quiz/start');
@@ -109,7 +109,7 @@ const QuizPlay: React.FC = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  const selectedAnswer = selectedAnswers[currentQuestionIndex]; // Get answer for current question
+  const selectedAnswer = selectedAnswers[currentQuestionIndex]; 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   const formatTime = (seconds: number) => {

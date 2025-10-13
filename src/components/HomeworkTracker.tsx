@@ -84,7 +84,7 @@ const HomeworkTracker: React.FC = () => {
 
     try {
       const newStatus = currentStatus === 'done' ? 'not-done' : 'done';
-      // Validate that the document exists before updating
+      
       const homeworkRef = doc(db, 'homework', homeworkId);
       const homeworkSnap = await getDoc(homeworkRef);
       

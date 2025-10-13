@@ -128,7 +128,7 @@ const sampleResources: StudyResource[] = [
     year: '2024'
   }
   ,
-  // Notes additions
+  
   {
     id: 'n-10-math-1',
     title: 'Class 10 Mathematics Notes - Real Numbers',
@@ -215,7 +215,7 @@ export const StudyResourcesProvider: React.FC<{ children: ReactNode }> = ({ chil
   };
 
   const downloadResource = (resource: StudyResource) => {
-    // Create a mock PDF download
+    
     const link = document.createElement('a');
     link.href = resource.downloadUrl;
     link.download = `${resource.title}.pdf`;

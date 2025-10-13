@@ -15,7 +15,7 @@ const DeitySelectionPage: React.FC = () => {
   const { religionId } = useParams<{ religionId: string }>();
   const [selectedDeity, setSelectedDeity] = useState<string | null>(null);
 
-  // Define deities for each religion
+  
   const deities: Record<string, Deity[]> = {
     hindu: [
       { id: 'ram', name: 'Ram', subtitle: 'Jai Shree Ram', icon: '🔴' },
@@ -88,7 +88,7 @@ const DeitySelectionPage: React.FC = () => {
 
   const handleDeitySelect = (deityId: string) => {
     setSelectedDeity(deityId);
-    // Navigate to the chanting counter page
+    
     navigate(`/chanting/${religionId}/${deityId}`);
   };
 
@@ -144,7 +144,7 @@ const DeitySelectionPage: React.FC = () => {
             Back
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Spiritual Chanting</h1>
-          <div></div> {/* Spacer for alignment */}
+          <div></div> {}
         </div>
       </div>
 

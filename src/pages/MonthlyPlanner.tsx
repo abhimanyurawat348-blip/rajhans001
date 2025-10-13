@@ -26,12 +26,12 @@ const MonthlyPlanner: React.FC = () => {
 
     const days = [];
     
-    // Add empty cells for days before the first day of the month
+    
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
-    // Add days of the month
+    
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(new Date(year, month, day));
     }
@@ -108,7 +108,7 @@ const MonthlyPlanner: React.FC = () => {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
         >
-          {/* Calendar Header */}
+          {}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
             <div className="flex items-center justify-between">
               <button
@@ -131,7 +131,7 @@ const MonthlyPlanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Days of Week Header */}
+          {}
           <div className="grid grid-cols-7 bg-gray-50">
             {daysOfWeek.map(day => (
               <div key={day} className="p-4 text-center font-semibold text-gray-700 border-b border-gray-200">
@@ -140,7 +140,7 @@ const MonthlyPlanner: React.FC = () => {
             ))}
           </div>
 
-          {/* Calendar Grid */}
+          {}
           <div className="grid grid-cols-7">
             {days.map((date, index) => (
               <motion.div
@@ -163,7 +163,7 @@ const MonthlyPlanner: React.FC = () => {
                       {date.getDate()}
                     </div>
                     
-                    {/* Event indicators */}
+                    {}
                     <div className="space-y-1">
                       {getEventsByDate(date).slice(0, 3).map((event) => (
                         <div
@@ -190,7 +190,7 @@ const MonthlyPlanner: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Legend */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -215,7 +215,7 @@ const MonthlyPlanner: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Event Details Modal */}
+        {}
         {showEventModal && selectedDate && (
           <motion.div
             initial={{ opacity: 0 }}

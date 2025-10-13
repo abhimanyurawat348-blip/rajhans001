@@ -18,7 +18,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); 
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +52,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
         content: msg.content,
       }));
 
-      // Use the selected AI provider
+      
       let response = '';
       if (aiProvider === 'cohere') {
         response = await cohereChat(input, 'homework', conversationHistory);
@@ -120,7 +120,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
             backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23d97706" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
           }}
         >
-          {/* Under Development Banner */}
+          {}
           <div className="bg-gradient-to-r from-amber-700 via-orange-700 to-amber-800 text-white text-center py-2 font-bold">
             AI Tutor (Dronacharya) - Under Development
           </div>
@@ -158,7 +158,7 @@ const HomeworkHelpModal: React.FC<HomeworkHelpModalProps> = ({ isOpen, onClose }
             </div>
           </div>
 
-          {/* Error message display */}
+          {}
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />

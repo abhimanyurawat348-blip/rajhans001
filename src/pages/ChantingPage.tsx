@@ -9,7 +9,7 @@ const ChantingPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [selectedReligion, setSelectedReligion] = useState<string | null>(null);
 
-  // Check if user is authenticated, if not redirect to student login
+  
   React.useEffect(() => {
     if (!isAuthenticated) {
       navigate('/student-login');
@@ -56,7 +56,7 @@ const ChantingPage: React.FC = () => {
 
   const handleReligionSelect = (religionId: string) => {
     setSelectedReligion(religionId);
-    // Navigate to the deity selection page for this religion
+    
     navigate(`/chanting/${religionId}`);
   };
 
@@ -80,7 +80,7 @@ const ChantingPage: React.FC = () => {
             Back
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Spiritual Chanting</h1>
-          <div></div> {/* Spacer for alignment */}
+          <div></div> {}
         </div>
       </div>
 

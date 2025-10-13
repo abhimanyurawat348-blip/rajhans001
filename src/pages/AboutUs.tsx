@@ -6,7 +6,7 @@ const AboutUs: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -18,9 +18,9 @@ const AboutUs: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Founders Section */}
+        {}
         <div className="space-y-8">
-          {/* Abhimanyu Rawat */}
+          {}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -83,7 +83,7 @@ const AboutUs: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Akshat Rawat */}
+          {}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
@@ -125,7 +125,7 @@ const AboutUs: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Mission Statement */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

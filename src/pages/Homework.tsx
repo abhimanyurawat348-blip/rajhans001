@@ -28,7 +28,7 @@ const Homework: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
-      // Set up real-time listener for homework
+      
       const homeworkQuery = query(
         collection(db, 'homework'),
         where('studentId', '==', user.id)
@@ -53,7 +53,7 @@ const Homework: React.FC = () => {
 
   const markAsSubmitted = async (homeworkId: string) => {
     try {
-      // Validate that the document exists before updating
+      
       const homeworkRef = doc(db, 'homework', homeworkId);
       const homeworkSnap = await getDoc(homeworkRef);
       
@@ -117,7 +117,7 @@ const Homework: React.FC = () => {
           <p className="text-gray-600">Manage and track all your assignments</p>
         </motion.div>
 
-        {/* Filter Tabs */}
+        {}
         <div className="mb-8">
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
             {[
@@ -141,7 +141,7 @@ const Homework: React.FC = () => {
           </div>
         </div>
 
-        {/* Homework Stats */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="flex items-center justify-between">
@@ -187,7 +187,7 @@ const Homework: React.FC = () => {
           </div>
         </div>
 
-        {/* Homework List */}
+        {}
         <div className="space-y-6">
           {filteredHomework.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-12 text-center">

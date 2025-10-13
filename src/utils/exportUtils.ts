@@ -18,11 +18,11 @@ export const exportToCSV = (data: Array<Record<string, unknown>>, filename: stri
 export const exportToPDF = (data: Array<Record<string, unknown>>, filename: string, title: string) => {
   const doc = new jsPDF();
   
-  // Add title
+  
   doc.setFontSize(20);
   doc.text(title, 20, 20);
   
-  // Add date
+  
   doc.setFontSize(12);
   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
   
@@ -100,11 +100,11 @@ export const exportLoginRecordsToCSV = (loginRecords: Array<{id: string, email: 
 export const exportLoginRecordsToPDF = (loginRecords: Array<{id: string, email: string, ipAddress: string, loginTime: Date, otpVerified: boolean}>, filename: string, title: string) => {
   const doc = new jsPDF();
   
-  // Add title
+  
   doc.setFontSize(20);
   doc.text(title, 20, 20);
   
-  // Add date
+  
   doc.setFontSize(12);
   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
   

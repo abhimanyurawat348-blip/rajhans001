@@ -1,11 +1,9 @@
 import { CohereClient } from 'cohere-ai';
 
-// Get the API key from environment variables
 const COHERE_API_KEY = import.meta.env.VITE_COHERE_API_KEY || '';
 
 let cohere: CohereClient | null = null;
 
-// Initialize Cohere client only if API key is present
 if (COHERE_API_KEY) {
   try {
     cohere = new CohereClient({
@@ -32,7 +30,6 @@ export async function cohereChat(
       throw new Error('Cohere client not initialized');
     }
 
-    // Create system prompt based on mode
     let systemPrompt = '';
     switch (mode) {
       case 'career':
@@ -48,7 +45,6 @@ export async function cohereChat(
         systemPrompt = 'You are Dronacharya, a helpful educational assistant. Provide concise, accurate, and supportive responses to students. Keep responses under 250 words.';
     }
 
-    // Format conversation history for Cohere
     const chatHistory = conversationHistory.map(msg => ({
       role: msg.role === 'assistant' ? 'CHATBOT' as const : 'USER' as const,
       message: msg.content,
@@ -58,12 +54,11 @@ export async function cohereChat(
     console.log('System prompt:', systemPrompt);
     console.log('Chat history length:', chatHistory.length);
 
-    // Make the API call to Cohere
     const response = await cohere.chat({
       message: userMessage,
       preamble: systemPrompt,
       chatHistory: chatHistory,
-      model: 'command-r-plus', // Using Cohere's latest model
+      model: 'command-r-plus',
       temperature: 0.7,
       maxTokens: 500,
     });
@@ -84,14 +79,12 @@ export async function cohereChat(
     console.error('Error message:', err.message);
     console.error('Error code:', err.code);
     
-    // For Cohere API errors
     if (err.message && typeof err.message === 'string') {
       console.error('Error details:', err.message);
     }
     
     console.error('Stack trace:', err.stack);
 
-    // More specific error handling
     if (err.message && (err.message.includes('invalid_api_key') || err.message.includes('API key'))) {
       return "Dronacharya AI needs a valid API key. Please contact support.";
     }
@@ -100,12 +93,10 @@ export async function cohereChat(
       return "Dronacharya AI is not yet configured. Please check the API key configuration.";
     }
 
-    // Handle network errors
     if (err.message && (err.message.includes('network') || err.message.includes('fetch') || err.message.includes('connection'))) {
       return "Having trouble connecting to the AI service. Please check your internet connection and try again.";
     }
 
-    // Return fallback responses based on mode
     switch (mode) {
       case 'career':
         return generateCareerResponse(userMessage, conversationHistory);
@@ -119,7 +110,6 @@ export async function cohereChat(
   }
 }
 
-// Fallback response generators
 function generateCareerResponse(userMessage: string, conversationHistory: Array<{ role: string; content: string }>): string {
   const responses = [
     "I'd love to help you find the perfect career path! Tell me about your interests, hobbies, and favorite subjects at school.",
@@ -128,7 +118,6 @@ function generateCareerResponse(userMessage: string, conversationHistory: Array<
     "Great question! Based on your interests in technology and problem-solving, I'd suggest considering careers in software development, data science, or cybersecurity. Each offers excellent growth opportunities and aligns with your strengths.",
   ];
   
-  // Simple logic to rotate responses based on conversation length
   const index = conversationHistory.length % responses.length;
   return responses[index];
 }
@@ -141,7 +130,6 @@ function generateStressResponse(userMessage: string): string {
     "Stress is just your mind's way of telling you it cares! Channel that energy into focused study sessions and reward yourself afterward.",
   ];
   
-  // Simple random selection
   const index = Math.floor(Math.random() * responses.length);
   return responses[index];
 }
@@ -154,7 +142,6 @@ function generateHomeworkResponse(userMessage: string): string {
     "When tackling homework, try the Pomodoro Technique: 25 minutes focused work, then a 5-minute break. It helps maintain concentration!",
   ];
   
-  // Simple random selection
   const index = Math.floor(Math.random() * responses.length);
   return responses[index];
 }

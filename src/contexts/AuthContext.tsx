@@ -37,12 +37,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [pendingAuth, setPendingAuth] = useState<{ email: string; role: 'student' | 'teacher' } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Listen for auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Fetch user data from Firestore
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             setUser({
@@ -50,7 +48,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               ...userDoc.data()
             } as User);
           } else {
-            // Create user document if it doesn't exist
             const mockUser: User = {
               id: firebaseUser.uid,
               fullName: 'Student User',
@@ -106,7 +103,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const login = async (email: string, role: 'student' | 'teacher'): Promise<boolean> => {
-    // Validate email format
     if (role === 'student' && !email.endsWith('@gmail.com')) {
       return false;
     }
@@ -116,7 +112,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     try {
-      // For students, send OTP via email link
       if (role === 'student') {
         const actionCodeSettings = {
           url: window.location.origin + '/verify-email',
@@ -134,7 +129,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return false;
     } catch (error) {
       console.error('Error sending OTP:', error);
-      // Fallback to mock OTP for demo
       setPendingAuth({ email, role });
       setOtpSent(true);
       console.log('Mock OTP sent: 123456');
@@ -145,7 +139,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const verifyOTP = async (otp: string): Promise<boolean> => {
     try {
       if (pendingAuth) {
-        // Check if it's an email link sign-in
         if (isSignInWithEmailLink(auth, window.location.href)) {
           let email = window.localStorage.getItem('emailForSignIn');
           if (!email) {
@@ -168,10 +161,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             motherName: 'Mother Name'
           };
           
-          // Store user in Firestore
           await setDoc(doc(db, 'users', result.user.uid), mockUser);
           
-          // Log login record
           await logLoginRecord(email, true);
           
           setUser(mockUser);
@@ -180,7 +171,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return true;
         }
         
-        // Fallback to mock OTP verification
         if (otp === '123456') {
           const mockUser: User = {
             id: '1',
@@ -197,7 +187,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             })
           };
           
-          // Log login record
           await logLoginRecord(pendingAuth.email, true);
           
           setUser(mockUser);
@@ -225,15 +214,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Add this new function to update user name
   const updateUserName = async (name: string) => {
     if (!user) return;
     
     try {
-      // Update user in Firestore
       await setDoc(doc(db, 'users', user.id), { ...user, fullName: name }, { merge: true });
       
-      // Update local user state
       setUser({ ...user, fullName: name });
     } catch (error) {
       console.error('Error updating user name:', error);
@@ -252,7 +238,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     updateUserName
   };
 
-  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

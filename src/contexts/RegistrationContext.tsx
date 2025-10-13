@@ -65,7 +65,7 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
     try {
       const newRegistration: Registration = {
         ...registrationData,
-        id: '', // Firestore will generate this
+        id: '', 
         registeredAt: new Date(),
         eligibilityCategory: calculateEligibilityCategory(registrationData.dateOfBirth),
         status: 'pending'
@@ -108,7 +108,7 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const updateRegistrationStatus = async (id: string, status: Registration['status']) => {
     try {
-      // Validate that the document exists before updating
+      
       const registrationRef = doc(db, 'registrations', id);
       const registrationSnap = await getDoc(registrationRef);
       

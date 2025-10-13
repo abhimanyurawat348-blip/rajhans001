@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-// import { useAuth } from '../contexts/AuthContext';
+
 import { useStudyResources } from '../contexts/StudyResourcesContext';
-// import { Navigate } from 'react-router-dom';
+
 import { BookOpen, Download, Search, FileText, GraduationCap } from 'lucide-react';
 
 const StudyResources: React.FC = () => {
-  // const { isAuthenticated, user } = useAuth();
+  
   const { resources, downloadResource } = useStudyResources();
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Public access - no login required
+  
 
   const classes = ['10', '12'];
   const subjects = ['Mathematics', 'Science', 'English', 'Social Science', 'Physics', 'Chemistry', 'Biology'];
@@ -54,7 +54,7 @@ const StudyResources: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Filters */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -62,7 +62,7 @@ const StudyResources: React.FC = () => {
           className="bg-white rounded-2xl shadow-lg p-6 mb-8"
         >
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Search */}
+            {}
             <div className="lg:col-span-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -76,7 +76,7 @@ const StudyResources: React.FC = () => {
               </div>
             </div>
 
-            {/* Class Filter */}
+            {}
             <div>
               <select
                 value={selectedClass}
@@ -90,7 +90,7 @@ const StudyResources: React.FC = () => {
               </select>
             </div>
 
-            {/* Subject Filter */}
+            {}
             <div>
               <select
                 value={selectedSubject}
@@ -104,7 +104,7 @@ const StudyResources: React.FC = () => {
               </select>
             </div>
 
-            {/* Type Filter */}
+            {}
             <div>
               <select
                 value={selectedType}
@@ -120,7 +120,7 @@ const StudyResources: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Resources Grid */}
+        {}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredResources.map((resource, index) => (
             <motion.div
@@ -173,7 +173,7 @@ const StudyResources: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Info Section */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

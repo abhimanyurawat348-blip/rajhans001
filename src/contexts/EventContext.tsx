@@ -18,9 +18,9 @@ export const useEvents = () => {
   return context;
 };
 
-// Academic Year 2025-2026 events (March 2025 to March 2026)
+
 const sampleEvents: Event[] = [
-  // 2025
+  
   { id: 'e-2025-04-14', title: 'Investiture Ceremony', description: 'Student leadership investiture ceremony', date: new Date(2025, 3, 14), type: 'function' },
   { id: 'e-2025-05-13', title: "Mother's Day Celebration", description: "Celebrating Mother's Day", date: new Date(2025, 4, 13), type: 'function' },
   { id: 'e-2025-05-20', title: 'School Picnic', description: 'School picnic for students', date: new Date(2025, 4, 20), type: 'activity' },
@@ -45,7 +45,7 @@ const sampleEvents: Event[] = [
   { id: 'e-2025-12-18', title: 'Pre-Board Exams Over', description: 'Pre-board examinations end', date: new Date(2025, 11, 18), type: 'exam' },
   { id: 'e-2025-12-25', title: 'School Fest', description: 'Annual school fest', date: new Date(2025, 11, 25), type: 'function' },
   { id: 'e-2025-12-26', title: 'School Closes', description: 'School closes for winter break', date: new Date(2025, 11, 26), type: 'holiday' },
-  // 2026
+  
   { id: 'e-2026-01-26', title: 'Republic Day Celebration', description: 'Republic Day celebration', date: new Date(2026, 0, 26), type: 'function' },
   { id: 'e-2026-01-30', title: 'Farewell', description: 'Farewell ceremony for graduating students', date: new Date(2026, 0, 30), type: 'function' },
   { id: 'e-2026-01-31', title: 'Good Luck Party', description: 'Good luck party for board candidates', date: new Date(2026, 0, 31), type: 'function' },

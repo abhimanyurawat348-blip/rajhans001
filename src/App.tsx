@@ -56,10 +56,8 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Add type definitions
 type ViewType = "home" | "calendar" | "classes" | "shop" | "settings";
 
-// Function to calculate class status based on current time
 function getClassStatus(startHour: number, endHour: number, currentTime: Date) {
   const currentHour = currentTime.getHours() + currentTime.getMinutes() / 60;
   
@@ -110,13 +108,11 @@ function App() {
     }
   ]);
 
-  // Real-time clock update
   useEffect(() => {
     const timer = setInterval(() => {
       const newTime = new Date();
       setCurrentTime(newTime);
       
-      // Update class statuses based on current time
       setClasses(prevClasses => 
         prevClasses.map(classItem => ({
           ...classItem,
@@ -128,7 +124,6 @@ function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Theme effect
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -160,7 +155,6 @@ function App() {
                             <Route path="/student-home" element={
                               <ProtectedRoute requiredRole="student">
                                 <div className="flex">
-                                  {/* Sidebar Navigation */}
                                   <div className="w-64 bg-white dark:bg-gray-800 shadow-lg h-screen sticky top-0 hidden md:block">
                                     <div className="p-6">
                                       <h2 className="text-xl font-bold text-gray-900 dark:text-white">Student Portal</h2>
@@ -241,10 +235,8 @@ function App() {
                                     </nav>
                                   </div>
                                   
-                                  {/* Main Content */}
                                   <div className="flex-1 p-6">
                                     <div className="max-w-7xl mx-auto">
-                                      {/* Header with Clock */}
                                       <div className="flex justify-between items-center mb-8">
                                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                                           {currentView === "home" && "Dashboard"}
@@ -263,7 +255,6 @@ function App() {
                                         </div>
                                       </div>
                                       
-                                      {/* View Content */}
                                       {currentView === "home" && (
                                         <DashboardHome 
                                           studentData={{

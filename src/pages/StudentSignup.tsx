@@ -67,10 +67,10 @@ const StudentSignup: React.FC = () => {
         formData.password
       );
 
-      // Get the user's IP address
+      
       const ipAddress = await getClientIP();
 
-      // Prepare student data
+      
       const studentData = {
         uid: userCredential.user.uid,
         fullName: formData.fullName,
@@ -87,10 +87,10 @@ const StudentSignup: React.FC = () => {
         ipAddress
       };
 
-      // Use utility function to ensure data consistency
+      
       await syncStudentData(studentData);
 
-      // Log signup record
+      
       await setDoc(doc(db, 'signupRecords', userCredential.user.uid), {
         id: userCredential.user.uid,
         email: formData.email,

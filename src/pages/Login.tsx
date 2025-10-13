@@ -9,9 +9,9 @@ const Login: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Updated credentials as per requirements
+    
     if (username === "rajhans_001@gmail.com" && password === "abhimanyu001") {
-      navigate("/staff-portal"); // redirect to staff portal page
+      navigate("/staff-portal"); 
     } else {
       setError("Invalid username or password. Please try again.");
     }

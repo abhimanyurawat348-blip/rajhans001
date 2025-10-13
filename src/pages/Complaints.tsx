@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-// Login not required for complaints
+
 import { useComplaints } from '../contexts/ComplaintContext';
 import { FileText, Send, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -20,7 +20,7 @@ const Complaints: React.FC = () => {
     complaint: ''
   });
 
-  // No access gating
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

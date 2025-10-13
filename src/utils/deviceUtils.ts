@@ -2,14 +2,14 @@ export const getDeviceInfo = (): string => {
   const userAgent = navigator.userAgent;
   const platform = navigator.platform;
   
-  // Parse browser info
+  
   let browser = 'Unknown';
   if (userAgent.includes('Chrome')) browser = 'Chrome';
   else if (userAgent.includes('Firefox')) browser = 'Firefox';
   else if (userAgent.includes('Safari')) browser = 'Safari';
   else if (userAgent.includes('Edge')) browser = 'Edge';
   
-  // Parse OS info
+  
   let os = 'Unknown';
   if (platform.includes('Win')) os = 'Windows';
   else if (platform.includes('Mac')) os = 'MacOS';

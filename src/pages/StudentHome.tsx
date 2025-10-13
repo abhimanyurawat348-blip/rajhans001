@@ -49,12 +49,12 @@ const StudentHome: React.FC = () => {
       }
       
       try {
-        // Fetch student data using utility function
+        
         const studentResult = await fetchStudentData(user.id, user.email);
         if (studentResult.success && studentResult.data) {
           setStudentData(studentResult.data);
           
-          // Fetch marks data using utility function
+          
           const marksData = await fetchStudentMarks(
             user.id, 
             studentResult.data.admissionNumber
@@ -94,7 +94,7 @@ const StudentHome: React.FC = () => {
     return Math.round((marks / maxMarks) * 100);
   };
 
-  // Function to prepare chart data
+  
   const prepareChartData = () => {
     const chartData = examTypes.map(exam => {
       const examMarks = getExamMarks(exam.id);
@@ -112,24 +112,24 @@ const StudentHome: React.FC = () => {
     return chartData;
   };
 
-  // Function to calculate overall rank (simplified implementation)
-  // In a real application, this would fetch data from the database
+  
+  
   const calculateRank = () => {
-    // This is a simplified implementation
-    // In a real app, you would compare the student's performance with others in the same class
-    return Math.floor(Math.random() * 50) + 1; // Random rank between 1-50 for demo
+    
+    
+    return Math.floor(Math.random() * 50) + 1; 
   };
 
-  // Function to get marks for a specific exam
+  
   const getExamMarks = (examId: string) => {
     const examData = marksheets.find(m => m.id === examId);
     if (!examData) return 0;
     
-    // Try different ways to get marks
+    
     return examData[examId] || examData.marks || 0;
   };
 
-  // Function to get max marks for a specific exam
+  
   const getExamMaxMarks = (examId: string) => {
     const examData = marksheets.find(m => m.id === examId);
     return examData?.maxMarks || 100;
@@ -198,7 +198,7 @@ const StudentHome: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Student Info Card */}
+          {}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
               <div className="flex justify-between items-center mb-4">
@@ -254,9 +254,9 @@ const StudentHome: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2 space-y-8">
-            {/* Marks Dashboard */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center">
@@ -273,7 +273,7 @@ const StudentHome: React.FC = () => {
                 <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                   {examTypes.map((exam) => {
-                    // Find marks for this exam type
+                    
                     const examMarks = getExamMarks(exam.id);
                     const maxMarks = getExamMaxMarks(exam.id);
                     
@@ -310,7 +310,7 @@ const StudentHome: React.FC = () => {
                   })}
                 </div>
                 
-                {/* Performance Chart */}
+                {}
                 <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200 mb-8">
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                     <BarChart3 className="h-5 w-5 mr-2 text-blue-600" />
@@ -387,7 +387,7 @@ const StudentHome: React.FC = () => {
               )}
             </div>
 
-            {/* Spiritual Chanting Feature */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Wellness & Spirituality</h2>
               <ChantingFlashcard />

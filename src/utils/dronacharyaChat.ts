@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Get the API key from environment variables
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 console.log('GEMINI_API_KEY from env:', GEMINI_API_KEY ? 'Key present' : 'Key missing');
 
@@ -16,7 +15,6 @@ export async function dronacharyaChat(
       throw new Error('API key not configured');
     }
 
-    // Initialize Google Generative AI
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
@@ -25,11 +23,8 @@ export async function dronacharyaChat(
         ? 'You are Dronacharya, a wise but slightly savage ancient Indian warrior-sage mentor. Ask students career-related questions about their hobbies, skills, favorite subjects, and interests. After gathering information, suggest 2-3 suitable career options with brief explanations. Support Hindi, English, and Hinglish. Keep responses conversational and engaging. Keep responses under 250 words.'
         : 'You are Dronacharya, a savage but supportive ancient Indian warrior-sage mentor for stress relief. Listen to students problems and provide helpful, slightly humorous advice to lighten their mood. Support Hindi, English, and Hinglish. Be casual, supportive, and a bit witty to keep students engaged. Keep responses under 250 words.';
 
-    // For Gemini, we need to send the latest user message as a prompt
-    // and include the system prompt in the generation config
     const prompt = systemPrompt + '\n\nStudent: ' + userMessage;
     
-    // Add conversation history to the prompt
     let fullPrompt = prompt;
     if (conversationHistory.length > 0) {
       fullPrompt += '\n\nConversation history:\n';
@@ -70,7 +65,6 @@ export async function dronacharyaChat(
     console.error('Error message:', err.message);
     console.error('Error code:', err.code);
     
-    // For Google API errors
     if (err.message && typeof err.message === 'string') {
       console.error('Error details:', err.message);
     }

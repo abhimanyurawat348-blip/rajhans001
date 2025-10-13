@@ -3,7 +3,7 @@ import { QuizQuestion } from '../types/quiz';
 export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
   '9': {
     'Maths': [
-      // New CBSE Class 9 Maths Questions
+      
       {
         id: '9m1',
         question: 'What is the zero of the polynomial $ p(x) = 3x - 6 $?',
@@ -64,7 +64,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['$ \\frac{2}{5} $', '$ \\frac{3}{5} $', '$ \\frac{1}{5} $', '$ \\frac{4}{5} $'],
         correctAnswer: 1
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '9m11',
         question: 'What is the value of √144?',
@@ -127,7 +127,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
       }
     ],
     'Science': [
-      // New CBSE Class 9 Science Questions
+      
       {
         id: '9s1',
         question: 'Which of the following is a physical change?',
@@ -188,7 +188,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['Earth\'s shadow', 'Moon\'s rotation', 'Sunlight reflection', 'Moon\'s orbit around the Sun'],
         correctAnswer: 2
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '9s11',
         question: 'What is the SI unit of force?',
@@ -251,7 +251,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
       }
     ],
     'SST': [
-      // New CBSE Class 9 SST Questions
+      
       {
         id: '9sst1',
         question: 'Who led the French Revolution\'s Reign of Terror?',
@@ -312,7 +312,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['February Revolution', 'October Revolution', 'Bloody Sunday', 'Civil War'],
         correctAnswer: 0
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '9sst11',
         question: 'Who was the first Prime Minister of India?',
@@ -377,7 +377,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
   },
   '10': {
     'Maths': [
-      // New CBSE Class 10 Maths Questions
+      
       {
         id: '10m1',
         question: 'What is the LCM of 12 and 18?',
@@ -438,7 +438,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['36π cm³', '108π cm³', '27π cm³', '9π cm³'],
         correctAnswer: 0
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '10m11',
         question: 'What is the discriminant of the quadratic equation ax² + bx + c = 0?',
@@ -501,7 +501,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
       }
     ],
     'Science': [
-      // New CBSE Class 10 Science Questions
+      
       {
         id: '10s1',
         question: 'What is the pH of a neutral solution?',
@@ -562,7 +562,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['Controls light entry', 'Forms images', 'Protects the eye', 'Adjusts lens shape'],
         correctAnswer: 1
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '10s11',
         question: 'What is the valency of oxygen?',
@@ -625,7 +625,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
       }
     ],
     'SST': [
-      // New CBSE Class 10 SST Questions
+      
       {
         id: '10sst1',
         question: 'Who launched the Dandi Salt March in 1930?',
@@ -686,7 +686,7 @@ export const quizData: { [key: string]: { [key: string]: QuizQuestion[] } } = {
         options: ['Municipality', 'Panchayat', 'Corporation', 'Council'],
         correctAnswer: 1
       },
-      // Original questions (keeping 10 total)
+      
       {
         id: '10sst11',
         question: 'Who led the Salt March (Dandi March)?',

@@ -9,16 +9,16 @@ import MeetingFlashcard from '../components/MeetingFlashcard';
 const StudentCouncil: React.FC = () => {
   const [meetings, setMeetings] = useState<any[]>([]);
 
-  // Load meetings
+  
   useEffect(() => {
     const loadMeetings = async () => {
       try {
-        // Check if we're in a browser environment
+        
         if (typeof window !== 'undefined') {
           const meetingsQuery = query(
             collection(db, 'meetings'),
             orderBy('date', 'desc'),
-            limit(5) // Load only the 5 most recent meetings
+            limit(5) 
           );
           const meetingsSnapshot = await getDocs(meetingsQuery);
           const meetingsData = meetingsSnapshot.docs.map(doc => {
@@ -148,7 +148,7 @@ const StudentCouncil: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Hero Section */}
+      {}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <motion.div
@@ -179,7 +179,7 @@ const StudentCouncil: React.FC = () => {
         </div>
       </section>
 
-      {/* Upcoming Meetings Section */}
+      {}
       {meetings.length > 0 && (
         <section className="py-12 px-4 bg-gradient-to-r from-purple-50 to-pink-50">
           <div className="max-w-6xl mx-auto">
@@ -206,7 +206,7 @@ const StudentCouncil: React.FC = () => {
       )}
 
       <div className="max-w-7xl mx-auto px-4 pb-20">
-        {/* Leadership Section */}
+        {}
         <section className="mb-20">
           <SectionHeader 
             title="School Leadership" 
@@ -221,7 +221,7 @@ const StudentCouncil: React.FC = () => {
           </div>
         </section>
 
-        {/* Discipline Section */}
+        {}
         <section className="mb-20">
           <SectionHeader 
             title="Discipline Team" 
@@ -236,7 +236,7 @@ const StudentCouncil: React.FC = () => {
           </div>
         </section>
 
-        {/* Sports Section */}
+        {}
         <section className="mb-20">
           <SectionHeader 
             title="Sports Leadership" 
@@ -251,7 +251,7 @@ const StudentCouncil: React.FC = () => {
           </div>
         </section>
 
-        {/* House System */}
+        {}
         <section className="mb-20">
           <SectionHeader 
             title="House System" 
@@ -260,7 +260,7 @@ const StudentCouncil: React.FC = () => {
             color="bg-gradient-to-r from-orange-500 to-orange-600"
           />
           
-          {/* Yellow House */}
+          {}
           <div className="mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 px-6 py-3 rounded-full">
@@ -279,7 +279,7 @@ const StudentCouncil: React.FC = () => {
             )}
           </div>
 
-          {/* Green House */}
+          {}
           <div className="mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="bg-gradient-to-r from-green-400 to-green-600 px-6 py-3 rounded-full">
@@ -293,7 +293,7 @@ const StudentCouncil: React.FC = () => {
             </div>
           </div>
 
-          {/* Red House */}
+          {}
           <div className="mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="bg-gradient-to-r from-red-400 to-red-600 px-6 py-3 rounded-full">
@@ -307,7 +307,7 @@ const StudentCouncil: React.FC = () => {
             </div>
           </div>
 
-          {/* Blue House */}
+          {}
           <div className="mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="bg-gradient-to-r from-blue-400 to-blue-600 px-6 py-3 rounded-full">
@@ -322,7 +322,7 @@ const StudentCouncil: React.FC = () => {
           </div>
         </section>
 
-        {/* Activity Incharges */}
+        {}
         <section className="mb-20">
           <SectionHeader 
             title="Activity Coordinators" 
@@ -337,7 +337,7 @@ const StudentCouncil: React.FC = () => {
           </div>
         </section>
 
-        {/* Closing Message */}
+        {}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

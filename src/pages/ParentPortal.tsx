@@ -102,7 +102,7 @@ const ParentPortal: React.FC = () => {
 
   const validateStudentEmail = async (email: string): Promise<boolean> => {
     try {
-      // Check if student exists in the database
+      
       const studentQuery = query(collection(db, 'users'), where('email', '==', email), where('role', '==', 'student'));
       const studentSnapshot = await getDocs(studentQuery);
       
@@ -146,7 +146,7 @@ const ParentPortal: React.FC = () => {
           return;
         }
 
-        // Validate student email
+        
         const isStudentValid = await validateStudentEmail(formData.studentEmail);
         if (!isStudentValid) {
           setError('Invalid student email. Please check with the school.');
@@ -197,7 +197,7 @@ const ParentPortal: React.FC = () => {
 
         setParentData(userData);
         
-        // Load student data
+        
         if (userData.studentId) {
           const studentDoc = await getDoc(doc(db, 'users', userData.studentId));
           if (studentDoc.exists()) {
@@ -251,7 +251,7 @@ const ParentPortal: React.FC = () => {
     if (!studentData?.id) return;
 
     try {
-      // Load homework
+      
       const homeworkQuery = query(collection(db, 'homework'), where('studentId', '==', studentData.id));
       const homeworkSnapshot = await getDocs(homeworkQuery);
       const homeworkData = homeworkSnapshot.docs.map(doc => ({
@@ -260,7 +260,7 @@ const ParentPortal: React.FC = () => {
       })) as Homework[];
       setHomework(homeworkData);
 
-      // Load attendance
+      
       const attendanceQuery = query(collection(db, 'attendance'), where('studentId', '==', studentData.id));
       const attendanceSnapshot = await getDocs(attendanceQuery);
       const attendanceData = attendanceSnapshot.docs.map(doc => ({
@@ -268,7 +268,7 @@ const ParentPortal: React.FC = () => {
       })) as AttendanceRecord[];
       setAttendance(attendanceData);
 
-      // Load marksheets
+      
       const marksQuery = query(collection(db, 'marks'), where('studentId', '==', studentData.id));
       const marksSnapshot = await getDocs(marksQuery);
       const marksData = marksSnapshot.docs.map(doc => ({
@@ -277,7 +277,7 @@ const ParentPortal: React.FC = () => {
       })) as Marksheet[];
       setMarksheets(marksData);
 
-      // Load meeting flashcards
+      
       const meetingsQuery = query(collection(db, 'parentTeacherMeetings'));
       const meetingsSnapshot = await getDocs(meetingsQuery);
       const meetingsData = meetingsSnapshot.docs.map(doc => ({
@@ -286,7 +286,7 @@ const ParentPortal: React.FC = () => {
       }));
       setMeetingFlashcards(meetingsData);
 
-      // Load PTM schedules for this parent
+      
       if (parentData?.id) {
         const ptmQuery = query(collection(db, 'ptm_schedule'));
         const ptmSnapshot = await getDocs(ptmQuery);
@@ -298,7 +298,7 @@ const ParentPortal: React.FC = () => {
             createdAt: doc.data().createdAt?.toDate()
           }))
           .filter(ptm => {
-            // Check if parentIds exists and includes the current parent
+            
             const parentIds = (ptm as any).parentIds || [];
             return parentIds.includes(parentData.id);
           }) as PTMSchedule[];
@@ -309,12 +309,12 @@ const ParentPortal: React.FC = () => {
     }
   };
 
-  // Function to load student marks for flashcards
+  
   const loadStudentMarksForFlashcards = async () => {
     if (!studentData?.id) return;
 
     try {
-      // Load marks for all exam types
+      
       const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
       const marksData: any = {};
 
@@ -325,7 +325,7 @@ const ParentPortal: React.FC = () => {
         }
       }
 
-      // Update state with marks data
+      
       setStudentData(prev => prev ? {
         ...prev,
         marks: marksData
@@ -342,15 +342,15 @@ const ParentPortal: React.FC = () => {
     }
   }, [activeTab, studentData?.id]);
 
-  // Helper function to get marks for a specific exam
+  
   const getExamMarks = (examType: string) => {
     if (!studentData?.marks || !studentData.marks[examType]) return 'N/A';
     const examData = studentData.marks[examType];
-    // Return the marks value
+    
     return examData.marks || examData[examType] || 'N/A';
   };
 
-  // Parent Dashboard
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="bg-white shadow-md">
@@ -371,7 +371,7 @@ const ParentPortal: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Student Info Card */}
+          {}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Student Information</h2>
@@ -406,7 +406,7 @@ const ParentPortal: React.FC = () => {
               )}
             </div>
 
-            {/* Attendance Summary */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Attendance</h2>
               {attendance.length > 0 ? (
@@ -452,9 +452,9 @@ const ParentPortal: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content */}
+          {}
           <div className="lg:col-span-2 space-y-8">
-            {/* Child Progress Flashcards */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Child Progress</h2>
               {studentData ? (
@@ -496,7 +496,7 @@ const ParentPortal: React.FC = () => {
               )}
             </div>
 
-            {/* Academic Performance */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Academic Performance</h2>
               {marksheets.length > 0 ? (
@@ -539,7 +539,7 @@ const ParentPortal: React.FC = () => {
               )}
             </div>
 
-            {/* Homework Section */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Homework & Assignments</h2>
               {homework.length > 0 ? (
@@ -577,7 +577,7 @@ const ParentPortal: React.FC = () => {
               )}
             </div>
 
-            {/* Parent-Teacher Meetings */}
+            {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Parent-Teacher Meetings</h2>
               {ptmSchedules.length > 0 ? (

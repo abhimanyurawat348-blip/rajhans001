@@ -4,7 +4,6 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Use environment variables for Firebase configuration with fallbacks
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB4Lcm36gvIon6hM93f_O4vBFubDe7PB5U",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "rajhans001-fa156.firebaseapp.com",
@@ -22,7 +21,6 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 export let analytics: ReturnType<typeof getAnalytics> | null = null;
-// Initialize Analytics only when supported and in browser
 (async () => {
   try {
     if (typeof window !== 'undefined' && (await analyticsIsSupported())) {

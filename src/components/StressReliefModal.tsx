@@ -20,7 +20,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); // Default to Gemini
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'cohere'>('gemini'); 
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +54,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
         content: msg.content,
       }));
 
-      // Use the selected AI provider
+      
       let response = '';
       if (aiProvider === 'cohere') {
         response = await cohereChat(input, 'stress', conversationHistory);
@@ -126,7 +126,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
           className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col border-4 border-pink-400"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Under Development Banner */}
+          {}
           <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-center py-2 font-bold">
             AI Tutor (Dronacharya) - Under Development
           </div>
@@ -156,7 +156,7 @@ const StressReliefModal: React.FC<StressReliefModalProps> = ({ isOpen, onClose }
             </div>
           </div>
 
-          {/* Error message display */}
+          {}
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 flex items-center gap-2">
               <AlertCircle className="h-5 w-5 flex-shrink-0" />

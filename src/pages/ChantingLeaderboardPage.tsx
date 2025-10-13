@@ -25,11 +25,11 @@ const ChantingLeaderboardPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch real data from Firestore
+    
     const q = query(
       collection(db, 'chantingSessions'),
       orderBy('count', 'desc'),
-      limit(50) // Limit to top 50 entries
+      limit(50) 
     );
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -50,7 +50,7 @@ const ChantingLeaderboardPage: React.FC = () => {
       
       setLeaderboard(leaderboardData);
       
-      // Find user's rank
+      
       if (user) {
         const userIndex = leaderboardData.findIndex(entry => entry.userId === user.id);
         setUserRank(userIndex !== -1 ? userIndex + 1 : null);
@@ -62,7 +62,7 @@ const ChantingLeaderboardPage: React.FC = () => {
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
+    
     return () => unsubscribe();
   }, [user]);
 
@@ -109,7 +109,7 @@ const ChantingLeaderboardPage: React.FC = () => {
             Back
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Chanting Leaderboard</h1>
-          <div></div> {/* Spacer for alignment */}
+          <div></div> {}
         </div>
       </div>
 
@@ -129,7 +129,7 @@ const ChantingLeaderboardPage: React.FC = () => {
             See who has chanted the most divine names and achieved spiritual excellence
           </p>
           
-          {/* User's rank display */}
+          {}
           {user && userRank && (
             <div className="mt-6 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-2xl p-4 max-w-md mx-auto">
               <div className="flex items-center justify-center gap-3">

@@ -44,7 +44,7 @@ const YearlyPlanner: React.FC = () => {
     return new Date(date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  // Group events by month
+  
   const eventsByMonth = filteredEvents.reduce((acc, event) => {
     const monthKey = getMonthName(event.date);
     if (!acc[monthKey]) {
@@ -69,7 +69,7 @@ const YearlyPlanner: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Filters and Search */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ const YearlyPlanner: React.FC = () => {
           className="bg-white rounded-2xl shadow-lg p-6 mb-8"
         >
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Search */}
+            {}
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -91,7 +91,7 @@ const YearlyPlanner: React.FC = () => {
               </div>
             </div>
 
-            {/* Filter */}
+            {}
             <div className="flex items-center space-x-4">
               <Filter className="h-5 w-5 text-gray-600" />
               <select
@@ -108,7 +108,7 @@ const YearlyPlanner: React.FC = () => {
             </div>
           </div>
 
-          {/* Event Type Legend */}
+          {}
           <div className="mt-6 flex flex-wrap gap-3">
             {eventTypes.slice(1).map(type => (
               <div key={type.value} className="flex items-center space-x-2">
@@ -119,7 +119,7 @@ const YearlyPlanner: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Events Timeline */}
+        {}
         <div className="space-y-8">
           {Object.entries(eventsByMonth).map(([month, monthEvents], monthIndex) => (
             <motion.div

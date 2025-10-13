@@ -61,7 +61,7 @@ interface ChildPerformanceData {
     unit_test_3?: number;
     half_yearly?: number;
     final_exam?: number;
-    [key: string]: any; // Allow dynamic keys
+    [key: string]: any; 
   };
   maxMarks: number;
 }
@@ -95,11 +95,11 @@ const ParentHome: React.FC = () => {
               } as StudentData;
               setStudentData(student);
 
-              // Fetch marks for the child from the new structure
+              
               const examTypes = ['unit_test_1', 'unit_test_2', 'unit_test_3', 'half_yearly', 'final_exam'];
               const marksData: ChildPerformanceData[] = [];
               
-              // Create a base entry for the child
+              
               const childEntry: ChildPerformanceData = {
                 id: 'performance',
                 name: student.username,
@@ -109,13 +109,13 @@ const ParentHome: React.FC = () => {
                 maxMarks: 100
               };
               
-              // Fetch each exam type
+              
               for (const examType of examTypes) {
                 try {
                   const marksDoc = await getDoc(doc(db, 'students', student.id, 'marks', examType));
                   if (marksDoc.exists()) {
                     const data = marksDoc.data();
-                    // Try different ways to get marks
+                    
                     const marksValue = data[examType] || data.marks || 0;
                     childEntry.marks[examType] = marksValue;
                   }
@@ -127,7 +127,7 @@ const ParentHome: React.FC = () => {
               marksData.push(childEntry);
               setChildrenPerformance(marksData);
 
-              // Old marks structure (for backward compatibility)
+              
               const marksQuery = query(
                 collection(db, 'marks'),
                 where('studentUid', '==', parentData.studentUid)
@@ -223,7 +223,7 @@ const ParentHome: React.FC = () => {
     return examCount > 0 ? Math.round((totalMarks / (examCount * maxMarks)) * 100) : 0;
   };
 
-  // Function to get marks for a specific exam type
+  
   const getExamMarks = (examType: string) => {
     if (childrenPerformance.length === 0) return '-';
     const child = childrenPerformance[0];
@@ -273,7 +273,7 @@ const ParentHome: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Child Performance Section */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -364,7 +364,7 @@ const ParentHome: React.FC = () => {
             </div>
           )}
           
-          {/* Performance Chart for Child */}
+          {}
           {childrenPerformance.length > 0 && (
             <div className="mt-8 bg-white rounded-xl p-6 shadow-lg">
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">

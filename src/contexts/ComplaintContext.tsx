@@ -60,7 +60,7 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       const newComplaint: Complaint = {
         ...complaintData,
-        id: '', // Firestore will generate this
+        id: '', 
         submittedAt: new Date(),
         status: 'pending',
         ipAddress
@@ -92,13 +92,13 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const updateComplaintStatus = async (id: string, status: Complaint['status']) => {
     try {
-      // Validate the document ID
+      
       if (!id) {
         console.error('Invalid complaint ID');
         return;
       }
       
-      // Validate that the document exists before updating
+      
       const complaintRef = doc(db, 'complaints', id);
       const complaintSnap = await getDoc(complaintRef);
       

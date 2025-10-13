@@ -13,28 +13,28 @@ const CalendarView: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
 
-  // Get the first day of the month to align the calendar
+  
   const getFirstDayOfMonth = () => {
     return new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   };
 
-  // Get the number of days in the month
+  
   const getDaysInMonth = () => {
     return new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   };
 
-  // Get the days of the month
+  
   const getDaysArray = () => {
     const days = [];
     const firstDay = getFirstDayOfMonth();
     const daysInMonth = getDaysInMonth();
 
-    // Add empty cells for days before the first day of the month
+    
     for (let i = 0; i < firstDay; i++) {
       days.push(null);
     }
 
-    // Add the days of the month
+    
     for (let i = 1; i <= daysInMonth; i++) {
       days.push(i);
     }
@@ -42,7 +42,7 @@ const CalendarView: React.FC = () => {
     return days;
   };
 
-  // Check if a date is today
+  
   const isToday = (day: number | null) => {
     if (!day) return false;
     const today = new Date();
@@ -53,11 +53,11 @@ const CalendarView: React.FC = () => {
     );
   };
 
-  // Get events for a specific date
+  
   const getEventsForDate = (day: number | null): CalendarEvent[] => {
     if (!day) return [];
     
-    // Mock data for demonstration
+    
     const mockEvents: CalendarEvent[] = [
       {
         date: 11,
@@ -88,7 +88,7 @@ const CalendarView: React.FC = () => {
     return mockEvents.filter(event => event.date === day);
   };
 
-  // Get event dot color based on type
+  
   const getEventDotColor = (type: CalendarEvent['type']) => {
     switch (type) {
       case 'class': return 'bg-blue-500';
@@ -98,17 +98,17 @@ const CalendarView: React.FC = () => {
     }
   };
 
-  // Navigate to previous month
+  
   const prevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
-  // Navigate to next month
+  
   const nextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  // Navigate to today
+  
   const goToToday = () => {
     setCurrentDate(new Date());
     setSelectedDate(new Date().getDate());

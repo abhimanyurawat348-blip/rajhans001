@@ -6,7 +6,7 @@ import { db } from '../config/firebase';
 
 interface StudentData {
   uid: string;
-  name: string; // Changed from fullName to name for consistency
+  name: string; 
   email: string;
   admissionNumber: string;
   class: string;
@@ -36,7 +36,7 @@ const StudentProfileEditModal: React.FC<StudentProfileEditModalProps> = ({
 
   useEffect(() => {
     if (studentData) {
-      // Map fullName to name if needed for backward compatibility
+      
       const dataToUse = {
         ...studentData,
         name: studentData.name || studentData.fullName || ''
@@ -59,7 +59,7 @@ const StudentProfileEditModal: React.FC<StudentProfileEditModalProps> = ({
     setError('');
 
     try {
-      // Update only in users collection for consistency
+      
       await updateDoc(doc(db, 'users', formData.uid), {
         ...formData,
         updatedAt: new Date()
