@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background -->
+  <rect width="192" height="192" fill="#2563eb" rx="32"/>
+  
+  <!-- Building structure -->
+  <g fill="#fbbf24">
+    <!-- Main building -->
+    <rect x="60" y="60" width="72" height="90" rx="4"/>
+    
+    <!-- Building details -->
+    <rect x="68" y="68" width="20" height="20" rx="2"/> <!-- Window -->
+    <rect x="104" y="68" width="20" height="20" rx="2"/> <!-- Window -->
+    <rect x="68" y="100" width="20" height="20" rx="2"/> <!-- Window -->
+    <rect x="104" y="100" width="20" height="20" rx="2"/> <!-- Window -->
+    <rect x="86" y="130" width="20" height="20" rx="2"/> <!-- Door -->
+    
+    <!-- Roof -->
+    <polygon points="40,60 152,60 140,40 52,40" fill="#fbbf24"/>
+    
+    <!-- Chimney -->
+    <rect x="130" y="30" width="8" height="15" fill="#fbbf24"/>
+    
+    <!-- Text -->
+    <text x="96" y="170" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fbbf24" text-anchor="middle">RHPS</text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <circle cx="160" cy="32" r="4" fill="#fbbf24">
+    <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="32" cy="160" r="4" fill="#fbbf24">
+    <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

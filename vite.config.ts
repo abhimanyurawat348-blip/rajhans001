@@ -18,7 +18,19 @@ export default defineConfig({
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
-        icon: 'public/vite.svg' // Add your app icon here
+        // Fixed: Removed invalid 'icon' property and referenced actual icon files
+        icons: [
+          {
+            src: 'public/app-icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'public/app-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
       }
     })
   ],
@@ -26,9 +38,21 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
-    historyApiFallback: true,
+    // Vite handles history API fallback automatically for SPA routing
   },
   preview: {
-    historyApiFallback: true,
+    // Vite handles history API fallback automatically for SPA routing
   },
+  // Added build configuration for better caching
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          utils: ['framer-motion', 'recharts', 'lucide-react']
+        }
+      }
+    }
+  }
 });

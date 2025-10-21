@@ -3,7 +3,30 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { School, Users, FileText, BookOpen, Calendar, ArrowRight, Brain, Heart, Briefcase, ListTodo, MessageCircle, UserCheck, ShoppingCart, Book, Shirt, Zap, Footprints, X, Bell } from 'lucide-react';
+import { 
+  School, 
+  Users, 
+  FileText, 
+  BookOpen, 
+  Calendar, 
+  ArrowRight, 
+  Brain, 
+  Heart, 
+  Briefcase, 
+  ListTodo, 
+  MessageCircle, 
+  UserCheck, 
+  ShoppingCart, 
+  Book, 
+  Shirt, 
+  Zap, 
+  Footprints, 
+  X, 
+  Bell,
+  BarChart3  
+} from 'lucide-react';
+import RHPSLogo from '../components/RHPSLogo';
+import AIMentorChat from '../components/AIMentorChat';
 import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
@@ -11,6 +34,7 @@ import HomeworkHelpModal from '../components/HomeworkHelpModal';
 import ChantingFlashcard from '../components/ChantingFlashcard';
 import MemoriesFlashcard from '../components/MemoriesFlashcard';
 import NoticeFlashcard from '../components/NoticeFlashcard';
+import LearningInsightsFlashcard from '../components/LearningInsightsFlashcard';
 
 const Home: React.FC = () => {
   const [isCareerModalOpen, setIsCareerModalOpen] = useState(false);
@@ -242,6 +266,31 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+      {}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 260, 
+          damping: 20,
+          delay: 1.5
+        }}
+        whileHover={{ 
+          scale: 1.1,
+          rotate: [0, -5, 5, -5, 5, 0],
+          transition: { duration: 0.5 }
+        }}
+        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-8 right-8 z-50 cursor-pointer"
+      >
+        <Link to="/about-us">
+          <RHPSLogo size="lg" className="drop-shadow-lg hover:drop-shadow-xl" />
+          <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+          </div>
+        </Link>
+      </motion.div>
       {}
       <motion.section 
         initial={{ opacity: 0, y: 50 }}
@@ -802,6 +851,7 @@ const Home: React.FC = () => {
       <StressReliefModal isOpen={isStressModalOpen} onClose={() => setIsStressModalOpen(false)} />
       <EnhancedTodoListModal isOpen={isTodoModalOpen} onClose={() => setIsTodoModalOpen(false)} />
       <HomeworkHelpModal isOpen={isHomeworkModalOpen} onClose={() => setIsHomeworkModalOpen(false)} />
+      <AIMentorChat />
     </div>
   );
 };

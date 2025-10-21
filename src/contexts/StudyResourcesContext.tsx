@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { StudyResource } from '../types';
+import { AttendanceData } from '../components/AttendanceCard';
 
 interface StudyResourcesContextType {
   resources: StudyResource[];
@@ -233,3 +234,6 @@ export const StudyResourcesProvider: React.FC<{ children: ReactNode }> = ({ chil
     </StudyResourcesContext.Provider>
   );
 };
+export interface AttendanceCardProps {
+  attendanceData: AttendanceData;
+}

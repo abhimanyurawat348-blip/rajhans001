@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, addDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -27,12 +28,17 @@ import {
   Eye,
   Clock,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  TrendingUp,
+  BarChart3,
+  Award
 } from 'lucide-react';
 
 interface StudentDoc {
   id: string;
   username?: string;
+  name?: string;
   email?: string;
   role?: string;
   class?: string;
@@ -60,7 +66,17 @@ interface MarksheetUpload {
     marks: number;
     maxMarks: number;
     grade?: string;
+    attendance?: 'present' | 'absent' | 'late';
+    remarks?: string;
   }>;
+}
+
+interface PerformanceEntry {
+  studentId: string;
+  marks: number;
+  maxMarks: number;
+  attendance: 'present' | 'absent' | 'late';
+  remarks: string;
 }
 
 interface UnregisteredStudentMarks {
@@ -75,6 +91,8 @@ interface UnregisteredStudentMarks {
   maxMarks: number;
   uploadedAt: Date;
   teacherId: string;
+  attendance?: 'present' | 'absent' | 'late';
+  remarks?: string;
 }
 
 
@@ -85,6 +103,8 @@ interface StudentMarks {
   admissionNumber: string;
   marks: number;
   maxMarks: number;
+  attendance?: 'present' | 'absent' | 'late';
+  remarks?: string;
 }
 
 interface ResultRecord {
@@ -104,7 +124,7 @@ const NewStaffPortal: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
-  const [activeSection, setActiveSection] = useState<'dashboard' | 'students' | 'registrations' | 'complaints' | 'meetings' | 'notices' | 'marksheets' | 'classes'>('dashboard');
+  const [activeSection, setActiveSection] = useState<'dashboard' | 'students' | 'registrations' | 'complaints' | 'meetings' | 'notices' | 'marksheets' | 'classes' | 'insights' | 'performance' | 'analytics'>('dashboard');
   const [students, setStudents] = useState<StudentDoc[]>([]);
   const [parents, setParents] = useState<ParentDoc[]>([]);
   const [showMarksheetForm, setShowMarksheetForm] = useState(false);
@@ -155,10 +175,17 @@ const NewStaffPortal: React.FC = () => {
       const usersSnap = await getDocs(collection(db, 'users'));
       const usersData = usersSnap.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        // Ensure we have both username and name fields for compatibility
+        username: doc.data().username || doc.data().name || 'Unknown',
+        name: doc.data().name || doc.data().username || 'Unknown'
       })) as StudentDoc[];
       
-      setStudents(usersData.filter((u) => (u as { role?: string }).role === 'student'));
+      // Log student data for debugging
+      const studentData = usersData.filter((u) => (u as { role?: string }).role === 'student');
+      console.log('Student data loaded:', studentData);
+      
+      setStudents(studentData);
       setParents(usersData.filter((u) => (u as { role?: string }).role === 'parent'));
       
       
@@ -207,7 +234,9 @@ const NewStaffPortal: React.FC = () => {
               uploadedAt: unregisteredMark.uploadedAt,
               class: unregisteredMark.class,
               section: unregisteredMark.section,
-              subject: unregisteredMark.subject
+              subject: unregisteredMark.subject,
+              attendance: 'present',
+              remarks: ''
             }, { merge: true });
             
             
@@ -383,7 +412,9 @@ const NewStaffPortal: React.FC = () => {
         marksData: studentsData.map(student => ({
           studentId: student.id,
           marks: 0,
-          maxMarks: 100
+          maxMarks: 100,
+          attendance: 'present',
+          remarks: ''
         }))
       }));
     } catch (err) {
@@ -511,7 +542,9 @@ const NewStaffPortal: React.FC = () => {
               section: sectionValue,
               examType: examType,
               uploadedAt: new Date(),
-              uploadedBy: 'staff' 
+              uploadedBy: 'staff',
+              attendance: 'present',
+              remarks: ''
             }, { merge: true });
             successCount++;
           } else {
@@ -526,7 +559,9 @@ const NewStaffPortal: React.FC = () => {
               marks: marks,
               maxMarks: 100,
               uploadedAt: new Date(),
-              teacherId: 'current_teacher_id' 
+              teacherId: 'current_teacher_id',
+              attendance: 'present',
+              remarks: ''
             });
             successCount++;
           }
@@ -589,7 +624,9 @@ const NewStaffPortal: React.FC = () => {
           subject: marksheetData.subject,
           uploadedAt: new Date(),
           class: marksheetData.class,
-          section: marksheetData.section
+          section: marksheetData.section,
+          attendance: markData.attendance || 'present',
+          remarks: markData.remarks || ''
         }, { merge: true });
       }
       
@@ -613,7 +650,10 @@ const NewStaffPortal: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: Monitor },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'classes', label: 'Classes', icon: BookOpen },
+    { id: 'performance', label: 'Performance Entry', icon: Upload },
     { id: 'marksheets', label: 'Marksheets', icon: FileText },
+    { id: 'insights', label: 'Learning Insights', icon: BarChart3 },
+    { id: 'analytics', label: 'Student Analytics', icon: TrendingUp },
     { id: 'registrations', label: 'Registrations', icon: ClipboardList },
     { id: 'complaints', label: 'Complaints', icon: MessageSquare },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
@@ -686,7 +726,9 @@ const NewStaffPortal: React.FC = () => {
           studentName: '',
           admissionNumber: '',
           marks: 0,
-          maxMarks: getMaxMarksByExamType(marksheetData.examType)
+          maxMarks: getMaxMarksByExamType(marksheetData.examType),
+          attendance: 'present',
+          remarks: ''
         });
       }
       setStudentMarks(initialStudentMarks);
@@ -719,7 +761,9 @@ const NewStaffPortal: React.FC = () => {
             class: marksheetData.class,
             section: marksheetData.section,
             uploadedAt: new Date(),
-            uploadedBy: 'staff'
+            uploadedBy: 'staff',
+            attendance: studentMark.attendance || 'present',
+            remarks: studentMark.remarks || ''
           }, { merge: true });
         } else {
           
@@ -733,7 +777,9 @@ const NewStaffPortal: React.FC = () => {
             marks: studentMark.marks,
             maxMarks: studentMark.maxMarks,
             uploadedAt: new Date(),
-            teacherId: 'current_teacher_id'
+            teacherId: 'current_teacher_id',
+            attendance: studentMark.attendance || 'present',
+            remarks: studentMark.remarks || ''
           });
         }
       }
@@ -868,7 +914,9 @@ const NewStaffPortal: React.FC = () => {
                         marksData: selectedClassStudents.map(student => ({
                           studentId: student.id,
                           marks: 0,
-                          maxMarks: 100
+                          maxMarks: 100,
+                          attendance: 'present',
+                          remarks: ''
                         }))
                       });
                       setShowMarksheetForm(true);
@@ -1964,6 +2012,7 @@ const NewStaffPortal: React.FC = () => {
           
           const studentData = {
             ...student,
+            name: student.username, // Add name field for compatibility
             role: 'student',
             email: `${student.username.replace(' ', '.').toLowerCase()}@gmail.com`,
             createdAt: new Date()
@@ -2197,6 +2246,13 @@ const NewStaffPortal: React.FC = () => {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-gray-900">Students</h2>
                     <div className="flex space-x-2">
+                      <button 
+                        onClick={loadAllData}
+                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh Data
+                      </button>
                       <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
                         <UserPlus className="h-4 w-4 mr-2" />
                         Add Student
@@ -2222,10 +2278,10 @@ const NewStaffPortal: React.FC = () => {
                         <tbody className="bg-white divide-y divide-gray-200">
                           {students.map((student) => (
                             <tr key={student.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.username}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.email}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.section}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.username || student.name || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.email || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.section || 'N/A'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber || 'N/A'}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 <button 
@@ -2273,7 +2329,7 @@ const NewStaffPortal: React.FC = () => {
                             <tr key={parent.id}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{parent.email}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {students.find(s => s.id === parent.studentId)?.username || 'N/A'}
+                                {students.find(s => s.id === parent.studentId)?.username || students.find(s => s.id === parent.studentId)?.name || 'N/A'}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{parent.studentEmail}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -2695,7 +2751,491 @@ const NewStaffPortal: React.FC = () => {
               </div>
             )}
 
-            {}
+            {activeSection === 'performance' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Performance Entry</h2>
+                  <p className="text-gray-600 mb-6">Enter student marks, attendance, and remarks for assessments.</p>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Quick Entry</h3>
+                        <Upload className="h-6 w-6" />
+                      </div>
+                      <p className="text-blue-100 mb-4">Enter marks for a single student or class</p>
+                      <button 
+                        onClick={() => {
+                          setMarksheetStep(1);
+                          setShowMarksheetForm(true);
+                        }}
+                        className="w-full bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+                      >
+                        Start Entry
+                      </button>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Bulk Upload</h3>
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <p className="text-green-100 mb-4">Upload marks for multiple students via Excel</p>
+                      <button 
+                        onClick={() => {
+                          setShowMarksheetForm(true);
+                          setMarksheetStep(1);
+                        }}
+                        className="w-full bg-white text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                      >
+                        Upload File
+                      </button>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Entry Guidelines</h3>
+                        <BookOpen className="h-6 w-6" />
+                      </div>
+                      <ul className="text-amber-100 text-sm space-y-2 mb-4">
+                        <li>• Select correct class and section</li>
+                        <li>• Choose appropriate exam type</li>
+                        <li>• Enter valid marks within range</li>
+                        <li>• Add remarks for improvement</li>
+                      </ul>
+                      <button className="w-full bg-white text-amber-600 font-semibold py-2 px-4 rounded-lg hover:bg-amber-50 transition-colors duration-200">
+                        View Full Guide
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {showMarksheetForm && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 p-6 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300"
+                    >
+                      <div className="mb-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-xl font-bold text-gray-900">Performance Entry Form</h3>
+                          <button
+                            onClick={resetMarksheetWorkflow}
+                            className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-8">
+                          {[1, 2, 3, 4].map((step) => (
+                            <div key={step} className="flex items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                marksheetStep === step 
+                                  ? 'bg-blue-600 text-white' 
+                                  : marksheetStep > step 
+                                    ? 'bg-green-600 text-white' 
+                                    : 'bg-gray-200 text-gray-500'
+                              }`}>
+                                {marksheetStep > step ? <Check className="h-4 w-4" /> : step}
+                              </div>
+                              {step < 4 && (
+                                <div className={`w-16 h-1 mx-2 ${
+                                  marksheetStep > step ? 'bg-green-600' : 'bg-gray-200'
+                                }`}></div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {marksheetStep === 1 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 1: Select Class and Section</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                                <select
+                                  value={marksheetData.class}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, class: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Class</option>
+                                  {[...Array(12)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Section</label>
+                                <select
+                                  value={marksheetData.section}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, section: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Section</option>
+                                  <option value="A">A</option>
+                                  <option value="B">B</option>
+                                  <option value="C">C</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-end">
+                              <button
+                                onClick={handleClassSectionSelect}
+                                disabled={!marksheetData.class || !marksheetData.section}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                        
+                        {marksheetStep === 2 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 2: Select Subject and Exam Type</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                                <select
+                                  value={marksheetData.subject}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, subject: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Subject</option>
+                                  {getSubjectsByClass(marksheetData.class).map((subject) => (
+                                    <option key={subject} value={subject}>{subject}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Exam Type</label>
+                                <select
+                                  value={marksheetData.examType}
+                                  onChange={(e) => setMarksheetData({ ...marksheetData, examType: e.target.value })}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                  <option value="">Select Exam Type</option>
+                                  <option value="unit_test_1">Unit Test 1</option>
+                                  <option value="unit_test_2">Unit Test 2</option>
+                                  <option value="unit_test_3">Unit Test 3</option>
+                                  <option value="half_yearly">Half Yearly</option>
+                                  <option value="final_exam">Final Exam</option>
+                                  <option value="assignment">Assignment</option>
+                                  <option value="project">Project</option>
+                                  <option value="practical">Practical</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-between">
+                              <button
+                                onClick={() => setMarksheetStep(1)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                              >
+                                Back
+                              </button>
+                              <button
+                                onClick={handleExamTypeSelect}
+                                disabled={!marksheetData.examType || !marksheetData.subject}
+                                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                        
+                        {marksheetStep === 3 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="space-y-6"
+                          >
+                            <h4 className="text-lg font-semibold text-gray-900">Step 3: Enter Student Performance Data</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                              <div className="bg-blue-50 p-4 rounded-lg">
+                                <p className="text-sm text-blue-800 font-medium">Class: {marksheetData.class}</p>
+                              </div>
+                              <div className="bg-green-50 p-4 rounded-lg">
+                                <p className="text-sm text-green-800 font-medium">Section: {marksheetData.section}</p>
+                              </div>
+                              <div className="bg-amber-50 p-4 rounded-lg">
+                                <p className="text-sm text-amber-800 font-medium">Subject: {marksheetData.subject}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission No</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marks</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Marks</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {selectedClassStudents.map((student, index) => (
+                                    <tr key={student.id}>
+                                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {student.username || student.name || 'N/A'}
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        {student.admissionNumber || 'N/A'}
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <input
+                                          type="number"
+                                          min="0"
+                                          max={getMaxMarksByExamType(marksheetData.examType)}
+                                          value={marksheetData.marksData[index]?.marks || ''}
+                                          onChange={(e) => {
+                                            const updatedMarksData = [...marksheetData.marksData];
+                                            updatedMarksData[index] = {
+                                              ...updatedMarksData[index],
+                                              marks: parseInt(e.target.value) || 0
+                                            };
+                                            setMarksheetData({ ...marksheetData, marksData: updatedMarksData });
+                                          }}
+                                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                        />
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                        {getMaxMarksByExamType(marksheetData.examType)}
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <select
+                                          value={marksheetData.marksData[index]?.attendance || 'present'}
+                                          onChange={(e) => {
+                                            const updatedMarksData = [...marksheetData.marksData];
+                                            updatedMarksData[index] = {
+                                              ...updatedMarksData[index],
+                                              attendance: e.target.value as 'present' | 'absent' | 'late'
+                                            };
+                                            setMarksheetData({ ...marksheetData, marksData: updatedMarksData });
+                                          }}
+                                          className="px-2 py-1 border border-gray-300 rounded text-sm"
+                                        >
+                                          <option value="present">Present</option>
+                                          <option value="absent">Absent</option>
+                                          <option value="late">Late</option>
+                                        </select>
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <input
+                                          type="text"
+                                          value={marksheetData.marksData[index]?.remarks || ''}
+                                          onChange={(e) => {
+                                            const updatedMarksData = [...marksheetData.marksData];
+                                            updatedMarksData[index] = {
+                                              ...updatedMarksData[index],
+                                              remarks: e.target.value
+                                            };
+                                            setMarksheetData({ ...marksheetData, marksData: updatedMarksData });
+                                          }}
+                                          className="w-32 px-2 py-1 border border-gray-300 rounded text-sm"
+                                          placeholder="Remarks"
+                                        />
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            
+                            <div className="flex justify-between">
+                              <button
+                                onClick={() => setMarksheetStep(2)}
+                                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                              >
+                                Back
+                              </button>
+                              <div className="space-x-2">
+                                <button
+                                  onClick={saveMarks}
+                                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
+                                >
+                                  <Check className="h-4 w-4 mr-2" />
+                                  Save Performance Data
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  <div className="mt-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Performance Entries</h3>
+                    {resultRecords.length === 0 ? (
+                      <p className="text-gray-500 text-center py-4">No performance entries found</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exam Type</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {resultRecords.slice(0, 5).map((record) => (
+                              <tr key={record.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.class}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.section}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.subject}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {record.examType === 'unit_test_1' ? 'Unit Test 1' :
+                                   record.examType === 'unit_test_2' ? 'Unit Test 2' :
+                                   record.examType === 'unit_test_3' ? 'Unit Test 3' :
+                                   record.examType === 'half_yearly' ? 'Half Yearly' :
+                                   record.examType === 'final_exam' ? 'Final Exam' :
+                                   record.examType}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.studentCount}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {record.uploadedAt.toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedResultRecord(selectedResultRecord === record.id ? null : record.id);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-900 mr-3"
+                                  >
+                                    {selectedResultRecord === record.id ? 'Hide' : 'View'}
+                                  </button>
+                                  <button
+                                    onClick={exportMarksheet}
+                                    className="text-green-600 hover:text-green-900"
+                                  >
+                                    Export
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeSection === 'analytics' && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Student Analytics</h2>
+                  <p className="text-gray-600 mb-6">View performance analytics and insights for your students.</p>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Class Performance</h3>
+                        <BarChart3 className="h-6 w-6" />
+                      </div>
+                      <p className="text-blue-100 mb-4">View average performance across different classes</p>
+                      <button className="w-full bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors duration-200">
+                        View Analytics
+                      </button>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">Subject Trends</h3>
+                        <TrendingUp className="h-6 w-6" />
+                      </div>
+                      <p className="text-green-100 mb-4">Analyze performance trends by subject</p>
+                      <button className="w-full bg-white text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 transition-colors duration-200">
+                        View Trends
+                      </button>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 text-white">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold">At-Risk Students</h3>
+                        <AlertTriangle className="h-6 w-6" />
+                      </div>
+                      <p className="text-amber-100 mb-4">Identify students who need additional support</p>
+                      <button className="w-full bg-white text-amber-600 font-semibold py-2 px-4 rounded-lg hover:bg-amber-50 transition-colors duration-200">
+                        View Alerts
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
+                    <div className="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-300">
+                      <div className="flex items-center justify-center h-64">
+                        <div className="text-center">
+                          <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-500">Interactive charts and analytics will appear here</p>
+                          <p className="text-sm text-gray-400 mt-2">Select a class or subject to view detailed analytics</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Insights</h3>
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center">
+                          <div className="bg-blue-100 p-2 rounded-full mr-3">
+                            <TrendingUp className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">Mathematics Performance Improving</h4>
+                            <p className="text-sm text-gray-600">Class 10A showing 15% improvement in last 3 assessments</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                        <div className="flex items-center">
+                          <div className="bg-amber-100 p-2 rounded-full mr-3">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">3 Students at Risk in Science</h4>
+                            <p className="text-sm text-gray-600">Students with declining performance in Class 9B</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <div className="flex items-center">
+                          <div className="bg-green-100 p-2 rounded-full mr-3">
+                            <Award className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">Top Performers in English</h4>
+                            <p className="text-sm text-gray-600">5 students scoring above 90% consistently</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeSection === 'registrations' && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-bold text-gray-900">Registrations</h2>

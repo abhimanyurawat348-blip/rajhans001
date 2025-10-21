@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { collection, getDocs, query, where, doc, deleteDoc, updateDoc, addDoc, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc, updateDoc, addDoc, orderBy, writeBatch, setDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useComplaints } from '../contexts/ComplaintContext';
 import { useRegistrations } from '../contexts/RegistrationContext';
@@ -31,7 +31,10 @@ import {
   Plus,
   Edit,
   Save,
-  ExternalLink
+  ExternalLink,
+  UserCheck,
+  Send,
+  Monitor
 } from 'lucide-react';
 
 
@@ -47,6 +50,7 @@ interface Student {
   ipAddress?: string;
   deviceInfo?: string;
   createdAt?: Date;
+  username?: string; // Add username field to handle both fullName and username
 }
 
 interface Complaint {
@@ -124,7 +128,7 @@ const StaffPortalDashboard: React.FC = () => {
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
   const { registrations, loadRegistrations, updateRegistrationStatus, deleteRegistration } = useRegistrations();
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'students' | 'complaints' | 'classes' | 'results' | 'notices' | 'meetings' | 'registrations'
+    'dashboard' | 'students' | 'complaints' | 'classes' | 'results' | 'attendance' | 'messages' | 'notices' | 'meetings' | 'registrations' | 'performance' | 'analytics'
   >('dashboard');
   
   
@@ -264,10 +268,23 @@ const StaffPortalDashboard: React.FC = () => {
       );
       
       const studentsSnapshot = await getDocs(studentsQuery);
-      const studentsData = studentsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Student));
+      const studentsData = studentsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Handle both fullName and username fields
+        const fullName = data.fullName || data.username || 'Unknown Student';
+        return {
+          id: doc.id,
+          fullName,
+          email: data.email || '',
+          class: data.class || '',
+          section: data.section || '',
+          admissionNumber: data.admissionNumber || '',
+          rollNumber: data.rollNumber || '',
+          schoolName: data.schoolName || 'RHPS',
+          ipAddress: data.ipAddress || '',
+          ...data
+        } as Student;
+      });
       
       setClassStudents(studentsData);
     } catch (error) {
@@ -280,7 +297,7 @@ const StaffPortalDashboard: React.FC = () => {
     if (selectedClass && selectedSection) {
       loadStudentsByClassSection(selectedClass, selectedSection);
       
-      
+      // Initialize subjects based on class
       const classNum = parseInt(selectedClass);
       let classSubjects: string[] = [];
       
@@ -293,7 +310,7 @@ const StaffPortalDashboard: React.FC = () => {
       } else if (classNum >= 9 && classNum <= 10) {
         classSubjects = ['English', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'Computer/IT', 'PE', 'Work Education'];
       } else if (classNum >= 11 && classNum <= 12) {
-        
+        // For classes 11-12, determine subjects based on stream
         classSubjects = ['English', 'Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Physical Education'];
       }
       
@@ -303,7 +320,9 @@ const StaffPortalDashboard: React.FC = () => {
   };
 
   
-  const initializeMarksData = (subject: string) => {
+  const initializeMarksData = () => {
+    if (!selectedSubject) return;
+    
     const initialMarksData: MarksheetEntry[] = classStudents.map(student => ({
       studentId: student.id,
       studentName: student.fullName,
@@ -315,11 +334,164 @@ const StaffPortalDashboard: React.FC = () => {
     
     setMarksData(prev => ({
       ...prev,
-      [subject]: initialMarksData
+      [selectedSubject]: initialMarksData
     }));
   };
 
   
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setExcelFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = utils.sheet_to_json(worksheet, { header: 1 });
+        setExcelData(jsonData);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
+  
+  const handleFileSubmit = async () => {
+    if (excelData.length === 0) {
+      alert('No data to upload.');
+      return;
+    }
+    
+    try {
+      setUploadStatus({ loading: true, message: '', error: false });
+      const batch = writeBatch(db);
+      excelData.forEach((row, index) => {
+        if (index === 0) return; // Skip header row
+        const [fullName, email, studentClass, section, admissionNumber, rollNumber] = row;
+        const studentRef = doc(collection(db, 'users'));
+        batch.set(studentRef, {
+          fullName,
+          email,
+          class: studentClass,
+          section,
+          admissionNumber,
+          rollNumber,
+          role: 'student',
+          createdAt: new Date()
+        });
+      });
+      await batch.commit();
+      setUploadStatus({ loading: false, message: 'Data uploaded successfully!', error: false });
+      loadAllData();
+    } catch (error) {
+      console.error('Error uploading data:', error);
+      setUploadStatus({ loading: false, message: 'Error uploading data.', error: true });
+    }
+  };
+
+  
+  const handleExportToCSV = () => {
+    const csvData = students.map(student => ({
+      'Full Name': student.fullName || '',
+      'Email': student.email || '',
+      'Class': student.class || '',
+      'Section': student.section || '',
+      'Admission Number': student.admissionNumber || '',
+      'Roll Number': student.rollNumber || ''
+    }));
+    exportToCSV(csvData, 'students.csv');
+  };
+
+  
+  const handleNoticeSubmit = async () => {
+    try {
+      const noticeRef = doc(collection(db, 'notices'));
+      await setDoc(noticeRef, {
+        ...newNotice,
+        createdAt: new Date()
+      });
+      setNewNotice({
+        title: '',
+        content: '',
+        venue: '',
+        dateTime: '',
+        targetAudience: 'all',
+        priority: 'normal'
+      });
+      loadAllData();
+    } catch (error) {
+      console.error('Error adding notice:', error);
+    }
+  };
+
+  
+  const handleMeetingSubmit = async () => {
+    try {
+      const meetingRef = doc(collection(db, 'meetings'));
+      await setDoc(meetingRef, {
+        ...newMeeting,
+        createdAt: new Date()
+      });
+      setNewMeeting({
+        title: '',
+        description: '',
+        date: '',
+        time: '',
+        venue: '',
+        meetingUrl: '',
+        participants: 'all'
+      });
+      loadAllData();
+    } catch (error) {
+      console.error('Error adding meeting:', error);
+    }
+  };
+
+  
+  const handleComplaintStatusUpdate = async (complaintId: string, newStatus: 'pending' | 'resolved' | 'in-progress') => {
+    try {
+      const complaintRef = doc(db, 'complaints', complaintId);
+      await updateDoc(complaintRef, { status: newStatus });
+      loadComplaints();
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+    }
+  };
+
+  
+  const handleRegistrationStatusUpdate = async (registrationId: string, newStatus: 'pending' | 'approved' | 'rejected') => {
+    try {
+      const registrationRef = doc(db, 'registrations', registrationId);
+      await updateDoc(registrationRef, { status: newStatus });
+      loadRegistrations();
+    } catch (error) {
+      console.error('Error updating registration status:', error);
+    }
+  };
+
+  
+  const handleDeleteComplaint = async (complaintId: string) => {
+    try {
+      const complaintRef = doc(db, 'complaints', complaintId);
+      await deleteDoc(complaintRef);
+      loadComplaints();
+    } catch (error) {
+      console.error('Error deleting complaint:', error);
+    }
+  };
+
+  
+  const handleDeleteRegistration = async (registrationId: string) => {
+    try {
+      const registrationRef = doc(db, 'registrations', registrationId);
+      await deleteDoc(registrationRef);
+      loadRegistrations();
+    } catch (error) {
+      console.error('Error deleting registration:', error);
+    }
+  };
+
   const updateStudentMarks = (subject: string, studentIndex: number, marks: number) => {
     setMarksData(prev => {
       const updatedSubjectData = [...(prev[subject] || [])];
@@ -695,10 +867,14 @@ const StaffPortalDashboard: React.FC = () => {
     { id: 'students', label: 'Students', icon: Users },
     { id: 'complaints', label: 'Complaints', icon: MessageSquare },
     { id: 'classes', label: 'Classes', icon: BookOpen },
+    { id: 'performance', label: 'Performance Entry', icon: Upload },
     { id: 'results', label: 'Results', icon: FileText },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck },
+    { id: 'messages', label: 'Messages', icon: Send },
     { id: 'notices', label: 'Notices', icon: Bell },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
-    { id: 'registrations', label: 'Registrations', icon: ClipboardList }
+    { id: 'registrations', label: 'Registrations', icon: ClipboardList },
+    { id: 'analytics', label: 'Student Analytics', icon: Monitor }
   ];
 
   return (
@@ -807,6 +983,48 @@ const StaffPortalDashboard: React.FC = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">Total Notices</p>
                       <p className="text-2xl font-semibold text-gray-900">{notices.length}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Analytics</h3>
+                  <div className="h-80">
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Performance chart will be displayed here
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-xl shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance Trends</h3>
+                  <div className="h-80">
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Attendance trend chart will be displayed here
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Complaint Resolution Time</h3>
+                  <div className="h-64">
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Resolution time chart will be displayed here
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-xl shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Student Performance Comparison</h3>
+                  <div className="h-64">
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Performance comparison chart will be displayed here
                     </div>
                   </div>
                 </div>
@@ -1124,6 +1342,980 @@ const StaffPortalDashboard: React.FC = () => {
                       Class {selectedClass} - Section {selectedSection} ({classStudents.length} students)
                     </h3>
                     
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'performance' && (
+            <motion.div
+              key="performance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Performance Entry</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Enter Performance Data</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Select the class and section for which you want to enter performance data</li>
+                    <li>Choose the subject or exam type</li>
+                    <li>Enter marks, remarks, and attendance for each student</li>
+                    <li>Save the data to generate analytics automatically</li>
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Class</label>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Subject</label>
+                    <select
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a subject</option>
+                      {subjects.map(subject => (
+                        <option key={subject} value={subject}>{subject}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+                    <input
+                      type="text"
+                      value={examType}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    if (selectedSubject && !marksData[selectedSubject]) {
+                      initializeMarksData();
+                    }
+                  }}
+                  disabled={!selectedSubject}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Initialize Marks Entry
+                </button>
+                
+                {showMarksEntry && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Class {selectedClass} - Section {selectedSection} ({classStudents.length} students)
+                    </h3>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marks</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Marks</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {marksData[selectedSubject]?.map((student, index) => (
+                            <tr key={student.studentId}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.studentName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <input
+                                  type="number"
+                                  value={student.marks}
+                                  onChange={(e) => updateStudentMarks(selectedSubject, index, parseInt(e.target.value))}
+                                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.maxMarks}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <button
+                      onClick={saveMarks}
+                      disabled={loading}
+                      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Save Marks
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'results' && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Results Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to View and Export Results</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Select the class and section for which you want to view results</li>
+                    <li>Choose the subject or exam type</li>
+                    <li>View the marks and attendance for each student</li>
+                    <li>Export the results to Excel for further analysis</li>
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Class</label>
+                    <select
+                      value={classForMarks}
+                      onChange={(e) => setClassForMarks(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Section</label>
+                    <select
+                      value={sectionForMarks}
+                      onChange={(e) => setSectionForMarks(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+                    <input
+                      type="text"
+                      value={examTypeForMarks}
+                      onChange={(e) => setExamTypeForMarks(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => setEnhancedResultsMode(true)}
+                  disabled={!classForMarks || !sectionForMarks || !examTypeForMarks}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  View Results
+                </button>
+                
+                {enhancedResultsMode && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Class {classForMarks} - Section {sectionForMarks} ({studentEntries.length} students)
+                    </h3>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {studentEntries.map(student => (
+                            <tr key={student.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button
+                                  onClick={() => removeStudentEntry(student.id)}
+                                  className="text-red-600 hover:text-red-900"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <button
+                      onClick={addStudentEntry}
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      Add Student Entry
+                    </button>
+                    
+                    <button
+                      onClick={exportMarksToExcel}
+                      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                    >
+                      Export to Excel
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'attendance' && (
+            <motion.div
+              key="attendance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Attendance Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Mark Attendance</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Select the class and section for which you want to mark attendance</li>
+                    <li>Choose the date for which you want to mark attendance</li>
+                    <li>Mark attendance for each student as present or absent</li>
+                    <li>Save the attendance data to generate reports</li>
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Class</label>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={examType}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={initializeMarksData}
+                  disabled={!selectedClass || !selectedSection || !examType}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Initialize Attendance Entry
+                </button>
+                
+                {showMarksEntry && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Class {selectedClass} - Section {selectedSection} ({classStudents.length} students)
+                    </h3>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attendance</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {marksData['Attendance']?.map((student, index) => (
+                            <tr key={student.studentId}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.studentName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <select
+                                  value={student.marks}
+                                  onChange={(e) => updateStudentMarks('Attendance', index, parseInt(e.target.value))}
+                                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="1">Present</option>
+                                  <option value="0">Absent</option>
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <button
+                      onClick={saveMarks}
+                      disabled={loading}
+                      className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Save Attendance
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'messages' && (
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Send Messages</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Select the recipient (students, parents, or specific groups)</li>
+                    <li>Compose your message</li>
+                    <li>Send the message to the selected recipients</li>
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a recipient</option>
+                      <option value="students">All Students</option>
+                      <option value="parents">All Parents</option>
+                      <option value="class">Specific Class</option>
+                      <option value="section">Specific Section</option>
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <textarea
+                    value={examType}
+                    onChange={(e) => setExamType(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                
+                <button
+                  onClick={initializeMarksData}
+                  disabled={!selectedClass || !selectedSection || !examType}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Send Message
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'notices' && (
+            <motion.div
+              key="notices"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Notices Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Add and Manage Notices</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Compose a new notice with a title, content, and other details</li>
+                    <li>Set the target audience (all students, specific classes, etc.)</li>
+                    <li>Set the priority level (normal, important, urgent)</li>
+                    <li>Save the notice to make it visible to the target audience</li>
+                    <li>Delete notices that are no longer relevant</li>
+                  </ul>
+                </div>
+                
+                <form onSubmit={addNotice}>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={newNotice.title}
+                        onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                      <textarea
+                        value={newNotice.content}
+                        onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                      <input
+                        type="text"
+                        value={newNotice.venue}
+                        onChange={(e) => setNewNotice({ ...newNotice, venue: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date and Time</label>
+                      <input
+                        type="datetime-local"
+                        value={newNotice.dateTime}
+                        onChange={(e) => setNewNotice({ ...newNotice, dateTime: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Target Audience</label>
+                      <select
+                        value={newNotice.targetAudience}
+                        onChange={(e) => setNewNotice({ ...newNotice, targetAudience: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">All Students</option>
+                        <option value="parents">All Parents</option>
+                        <option value="class">Specific Class</option>
+                        <option value="section">Specific Section</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                      <select
+                        value={newNotice.priority}
+                        onChange={(e) => setNewNotice({ ...newNotice, priority: e.target.value as 'normal' | 'important' | 'urgent' })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="important">Important</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Add Notice
+                  </button>
+                </form>
+                
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Notices</h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venue</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date and Time</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target Audience</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {notices.map(notice => (
+                          <tr key={notice.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{notice.title}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{notice.content}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{notice.venue}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{notice.dateTime.toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{notice.targetAudience}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{notice.priority}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => deleteNotice(notice.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'meetings' && (
+            <motion.div
+              key="meetings"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Meetings Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Add and Manage Meetings</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Compose a new meeting with a title, description, and other details</li>
+                    <li>Set the date, time, and venue for the meeting</li>
+                    <li>Set the participants (all students, specific classes, etc.)</li>
+                    <li>Save the meeting to make it visible to the participants</li>
+                    <li>Delete meetings that are no longer relevant</li>
+                  </ul>
+                </div>
+                
+                <form onSubmit={addMeeting}>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                      <input
+                        type="text"
+                        value={newMeeting.title}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, title: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <textarea
+                        value={newMeeting.description}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                      <input
+                        type="date"
+                        value={newMeeting.date}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, date: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                      <input
+                        type="time"
+                        value={newMeeting.time}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, time: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                      <input
+                        type="text"
+                        value={newMeeting.venue}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, venue: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Meeting URL</label>
+                      <input
+                        type="text"
+                        value={newMeeting.meetingUrl}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, meetingUrl: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Participants</label>
+                      <select
+                        value={newMeeting.participants}
+                        onChange={(e) => setNewMeeting({ ...newMeeting, participants: e.target.value })}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">All Students</option>
+                        <option value="parents">All Parents</option>
+                        <option value="class">Specific Class</option>
+                        <option value="section">Specific Section</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Add Meeting
+                  </button>
+                </form>
+                
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Meetings</h3>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Venue</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meeting URL</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {meetings.map(meeting => (
+                          <tr key={meeting.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{meeting.title}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.description}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.time}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.venue}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.meetingUrl}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{meeting.participants}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => deleteMeeting(meeting.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'registrations' && (
+            <motion.div
+              key="registrations"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Registrations Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to Manage Registrations</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>View all student registrations for activities, sports, and events</li>
+                    <li>Approve or reject registrations based on criteria</li>
+                    <li>Export the list of approved registrations to Excel</li>
+                  </ul>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity/Sport/Event</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact Details</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {registrations.map(reg => (
+                        <tr key={reg.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{reg.studentName}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.class}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.section}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.activityType}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reg.registeredAt.toLocaleString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              reg.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              reg.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {reg.status ? reg.status.charAt(0).toUpperCase() + reg.status.slice(1) : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{`${reg.fatherName}, ${reg.motherName}`}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => updateRegistrationStatus(reg.id, 'approved')}
+                                className="text-green-600 hover:text-green-900"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => updateRegistrationStatus(reg.id, 'removed')}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteRegistration(reg.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {registrations.length === 0 && (
+                  <div className="text-center py-8">
+                    <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No registrations found</p>
+                  </div>
+                )}
+                
+                <button
+                  onClick={exportRegistrationsToExcel}
+                  className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Export to Excel
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Student Analytics</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-800 mb-2">How to View Student Analytics</h3>
+                  <ul className="list-disc list-inside text-blue-700 text-sm space-y-1">
+                    <li>Select the class and section for which you want to view analytics</li>
+                    <li>Choose the subject or exam type</li>
+                    <li>View the performance analytics for each student</li>
+                    <li>Generate reports based on the analytics</li>
+                  </ul>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Class</label>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Subject</label>
+                    <select
+                      value={selectedSubject}
+                      onChange={(e) => setSelectedSubject(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a subject</option>
+                      {subjects.map(subject => (
+                        <option key={subject} value={subject}>{subject}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
+                    <input
+                      type="text"
+                      value={examType}
+                      onChange={(e) => setExamType(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={initializeMarksData}
+                  disabled={!selectedClass || !selectedSection || !selectedSubject || !examType}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Initialize Analytics Entry
+                </button>
+                
+                {showMarksEntry && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Class {selectedClass} - Section {selectedSection} ({classStudents.length} students)
+                    </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -1169,6 +2361,7 @@ const StaffPortalDashboard: React.FC = () => {
                     <h3 className="text-lg font-semibold text-gray-900">Select Mode</h3>
                   </div>
                   
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {}
                     <div 
@@ -1201,6 +2394,7 @@ const StaffPortalDashboard: React.FC = () => {
                     </div>
                   </div>
                   
+
                   {}
                   {!enhancedResultsMode && showMarksEntry && (
                     <div className="mt-6">
@@ -1215,38 +2409,6 @@ const StaffPortalDashboard: React.FC = () => {
                         >
                           <X className="h-5 w-5" />
                         </button>
-                      </div>
-                      
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Subject</label>
-                        <div className="flex space-x-2">
-                          <select
-                            value={selectedSubject}
-                            onChange={(e) => {
-                              setSelectedSubject(e.target.value);
-                              if (e.target.value && !marksData[e.target.value]) {
-                                initializeMarksData(e.target.value);
-                              }
-                            }}
-                            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="">Choose a subject</option>
-                            {subjects.map(subject => (
-                              <option key={subject} value={subject}>{subject}</option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => {
-                              if (selectedSubject && !marksData[selectedSubject]) {
-                                initializeMarksData(selectedSubject);
-                              }
-                            }}
-                            disabled={!selectedSubject || !!marksData[selectedSubject]}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
                       </div>
                       
                       {selectedSubject && marksData[selectedSubject] && (
@@ -1753,6 +2915,330 @@ const StaffPortalDashboard: React.FC = () => {
                     <p className="text-gray-500">No notices found</p>
                   </div>
                 )}
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'attendance' && (
+            <motion.div
+              key="attendance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Attendance Management</h2>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
+                    <select
+                      value={selectedClass}
+                      onChange={(e) => setSelectedClass(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a class</option>
+                      {[...Array(12)].map((_, i) => (
+                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose a section</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                    <input
+                      type="date"
+                      value={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {}}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    if (selectedClass && selectedSection) {
+                      loadStudentsByClassSection(selectedClass, selectedSection);
+                    }
+                  }}
+                  disabled={!selectedClass || !selectedSection}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  Load Students
+                </button>
+                
+                {classStudents.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Mark Attendance for Class {selectedClass} - Section {selectedSection}
+                    </h3>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admission Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Roll Number</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {classStudents.map((student) => (
+                            <tr key={student.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.fullName}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.admissionNumber}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNumber || 'N/A'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <select
+                                  className="rounded-lg border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="present">Present</option>
+                                  <option value="absent">Absent</option>
+                                  <option value="late">Late</option>
+                                  <option value="excused">Excused</option>
+                                </select>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <input
+                                  type="text"
+                                  placeholder="Remarks (optional)"
+                                  className="w-full rounded-lg border border-gray-300 px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div className="flex justify-end mt-6">
+                      <button
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                      >
+                        Save Attendance
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendance Reports</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Class-wise Attendance Summary</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span>Class 10A</span>
+                        <span className="font-semibold">92%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '92%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Absentee Notifications</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-2 bg-red-50 rounded">
+                        <div>
+                          <p className="font-medium text-gray-900">Rahul Sharma</p>
+                          <p className="text-sm text-gray-600">Class 10A • 3 consecutive days</p>
+                        </div>
+                        <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                          Notify Parents
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {}
+          {activeTab === 'messages' && (
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <h2 className="text-2xl font-bold text-gray-900">Parent-Teacher Communication</h2>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 bg-white rounded-xl shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Conversations</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-gray-900">Rahul Sharma (10A)</h4>
+                        <span className="text-xs text-gray-500">2 min ago</span>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">Regarding quarterly results...</p>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-gray-900">Priya Patel (9B)</h4>
+                        <span className="text-xs text-gray-500">1 hour ago</span>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">Homework submission query</p>
+                    </div>
+                    
+                    <div className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                      <div className="flex justify-between">
+                        <h4 className="font-medium text-gray-900">Amit Kumar (11C)</h4>
+                        <span className="text-xs text-gray-500">3 hours ago</span>
+                      </div>
+                      <p className="text-sm text-gray-600 truncate">PTM schedule confirmation</p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <h4 className="font-medium text-gray-900 mb-3">Send Announcement</h4>
+                    <div className="space-y-3">
+                      <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select Class</option>
+                        <option value="all">All Students</option>
+                        <option value="10">Class 10</option>
+                        <option value="9">Class 9</option>
+                        <option value="11">Class 11</option>
+                        <option value="12">Class 12</option>
+                      </select>
+                      
+                      <input 
+                        type="text" 
+                        placeholder="Subject" 
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      
+                      <textarea 
+                        placeholder="Message" 
+                        rows={3}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      ></textarea>
+                      
+                      <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Send Message
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="lg:col-span-2 bg-white rounded-xl shadow p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900">Rahul Sharma (10A)</h3>
+                    <button className="text-gray-500 hover:text-gray-700">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-lg rounded-tl-none p-4 max-w-xs md:max-w-md">
+                        <p className="text-gray-800">Hello Sir, I wanted to discuss my quarterly results. I'm concerned about my performance in Mathematics.</p>
+                        <p className="text-xs text-gray-500 mt-1">10:30 AM</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end">
+                      <div className="bg-blue-500 text-white rounded-lg rounded-tr-none p-4 max-w-xs md:max-w-md">
+                        <p>Hello Rahul, I'm glad you reached out. Let's schedule a meeting to discuss your progress in detail.</p>
+                        <p className="text-xs text-blue-100 mt-1">10:32 AM</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 rounded-lg rounded-tl-none p-4 max-w-xs md:max-w-md">
+                        <p className="text-gray-800">That would be great, Sir. When would be a convenient time for you?</p>
+                        <p className="text-xs text-gray-500 mt-1">10:35 AM</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex">
+                    <input 
+                      type="text" 
+                      placeholder="Type your message..." 
+                      className="flex-1 rounded-l-lg border border-gray-300 px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-r-lg hover:bg-blue-700">
+                      <Send className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Report Sharing</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Generate Progress Report</h4>
+                    <div className="space-y-3">
+                      <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select Student</option>
+                        <option value="1">Rahul Sharma (10A)</option>
+                        <option value="2">Priya Patel (9B)</option>
+                        <option value="3">Amit Kumar (11C)</option>
+                      </select>
+                      
+                      <select className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select Period</option>
+                        <option value="quarterly">Quarterly Report</option>
+                        <option value="half_yearly">Half-Yearly Report</option>
+                        <option value="annual">Annual Report</option>
+                      </select>
+                      
+                      <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        Generate Report
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-3">Share Report</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <input type="checkbox" id="email" className="rounded text-blue-600" />
+                        <label htmlFor="email" className="ml-2 text-gray-700">Send via Email</label>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <input type="checkbox" id="portal" className="rounded text-blue-600" defaultChecked />
+                        <label htmlFor="portal" className="ml-2 text-gray-700">Share via Parent Portal</label>
+                      </div>
+                      
+                      <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Share Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

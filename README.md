@@ -7,16 +7,20 @@ A comprehensive school management system for RHPS Public School with portals for
 
 ### Student Portal
 - Interactive dashboard with flashcards for quick access
-- Career guidance and stress relief AI chatbot
+- Career guidance and stress relief AI chatbot (Dronacharya)
 - Homework management with real-time updates
 - Quiz system for self-assessment
 - Activity registration and complaint submission
+- AI Mentor Chat for personalized academic support
+- Gamified Learning Badges and Leaderboard
+- Smart Educational Marketplace access
 
 ### Parent Portal
 - Secure registration with student validation
 - Real-time access to child's academic performance
 - Attendance tracking and homework monitoring
 - Parent-teacher meeting schedules
+- Automated Performance Digest reports
 - Responsive design for mobile and desktop
 
 ### Staff Portal
@@ -25,6 +29,7 @@ A comprehensive school management system for RHPS Public School with portals for
 - Homework tracking and performance monitoring
 - Complaint management system
 - Meeting scheduler and notice board
+- Performance Entry and Analytics dashboard
 - Real-time notifications for all activities
 
 ### Security & Best Practices

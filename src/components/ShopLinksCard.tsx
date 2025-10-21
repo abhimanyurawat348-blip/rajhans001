@@ -1,33 +1,38 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BookOpen, Shirt, PenTool } from 'lucide-react';
 
 const ShopLinksCard: React.FC = () => {
+  const navigate = useNavigate();
+  
   const shopLinks = [
     {
       id: 1,
       title: "Purchase Books",
       description: "Textbooks & Reference Materials",
       icon: <BookOpen className="h-6 w-6" />,
-      color: "bg-blue-500",
-      href: "#"
+      color: "bg-blue-500"
     },
     {
       id: 2,
       title: "Purchase Uniforms",
       description: "School Uniforms & Sports Wear",
       icon: <Shirt className="h-6 w-6" />,
-      color: "bg-purple-500",
-      href: "#"
+      color: "bg-purple-500"
     },
     {
       id: 3,
       title: "Purchase Stationery",
       description: "Notebooks, Pens & Supplies",
       icon: <PenTool className="h-6 w-6" />,
-      color: "bg-green-500",
-      href: "#"
+      color: "bg-green-500"
     }
   ];
+
+  const handleShopClick = () => {
+    // Redirect to the homepage
+    navigate('/');
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
@@ -35,10 +40,10 @@ const ShopLinksCard: React.FC = () => {
       
       <div className="space-y-4">
         {shopLinks.map((link) => (
-          <a
+          <div
             key={link.id}
-            href={link.href}
-            className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+            onClick={handleShopClick}
+            className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 cursor-pointer"
           >
             <div className={`${link.color} p-3 rounded-lg text-white`}>
               {link.icon}
@@ -52,7 +57,7 @@ const ShopLinksCard: React.FC = () => {
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
             </div>
-          </a>
+          </div>
         ))}
       </div>
     </div>

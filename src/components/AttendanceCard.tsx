@@ -1,15 +1,12 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { AttendanceCardProps } from '../contexts/StudyResourcesContext';
 
-interface AttendanceData {
+export interface AttendanceData {
   percentage: number;
   present: number;
   total: number;
   trend: "up" | "down" | "stable";
-}
-
-interface AttendanceCardProps {
-  attendanceData: AttendanceData;
 }
 
 const AttendanceCard: React.FC<AttendanceCardProps> = ({ attendanceData }) => {

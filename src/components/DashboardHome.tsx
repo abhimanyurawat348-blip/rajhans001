@@ -1,9 +1,9 @@
-import React from 'react';
-import ProfileCard from './ProfileCard.tsx';
-import ClassScheduleCard from './ClassScheduleCard.tsx';
-import AttendanceCard from './AttendanceCard.tsx';
-import HomeworkCard from './HomeworkCard.tsx';
-import ShopLinksCard from './ShopLinksCard.tsx';
+import React, { memo } from 'react';
+import ProfileCard from './ProfileCard';
+import ClassScheduleCard from './ClassScheduleCard';
+import AttendanceCard from './AttendanceCard';
+import HomeworkCard from './HomeworkCard';
+import ShopLinksCard from './ShopLinksCard';
 
 interface StudentProfile {
   name: string;
@@ -48,6 +48,13 @@ interface DashboardHomeProps {
   homeworkList: Homework[];
 }
 
+// Memoized components for better performance
+const MemoizedProfileCard = memo(ProfileCard);
+const MemoizedClassScheduleCard = memo(ClassScheduleCard);
+const MemoizedAttendanceCard = memo(AttendanceCard);
+const MemoizedHomeworkCard = memo(HomeworkCard);
+const MemoizedShopLinksCard = memo(ShopLinksCard);
+
 const DashboardHome: React.FC<DashboardHomeProps> = ({
   studentData,
   todaysClasses,
@@ -57,17 +64,24 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
-        <ProfileCard studentData={studentData} />
-        <ClassScheduleCard classes={todaysClasses} />
+        <MemoizedProfileCard studentData={studentData} />
+        <MemoizedClassScheduleCard classes={todaysClasses} />
       </div>
       
       <div className="space-y-6">
-        <AttendanceCard attendanceData={attendanceData} />
-        <HomeworkCard homeworkList={homeworkList} />
-        <ShopLinksCard />
+        <MemoizedAttendanceCard attendanceData={attendanceData} />
+        <MemoizedHomeworkCard homeworkList={homeworkList} />
+        <MemoizedShopLinksCard />
       </div>
     </div>
   );
 };
+
+// Add display names for debugging
+MemoizedProfileCard.displayName = 'MemoizedProfileCard';
+MemoizedClassScheduleCard.displayName = 'MemoizedClassScheduleCard';
+MemoizedAttendanceCard.displayName = 'MemoizedAttendanceCard';
+MemoizedHomeworkCard.displayName = 'MemoizedHomeworkCard';
+MemoizedShopLinksCard.displayName = 'MemoizedShopLinksCard';
 
 export default DashboardHome;
