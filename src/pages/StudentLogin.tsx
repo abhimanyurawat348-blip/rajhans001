@@ -116,6 +116,8 @@ const StudentLogin: React.FC = () => {
 
       await logLoginRecord(formData.email, userCredential.user.uid);
 
+      // Show success message before navigation
+      alert('Login successful! Redirecting to dashboard...');
       navigate('/student-home');
     } catch (err: unknown) {
       const errorObj = err as { code?: string };

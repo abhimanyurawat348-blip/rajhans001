@@ -20,7 +20,7 @@ import DashboardHome from './components/DashboardHome';
 import CalendarView from './components/CalendarView';
 import StaffApp from './StaffApp';
 import AIMentorChat from './components/AIMentorChat';
-import SmartMarketplace from './components/SmartMarketplace';
+// SmartMarketplace is imported as a page component
 import LearningBadges from './components/LearningBadges';
 import UnifiedSidebar from './components/UnifiedSidebar';
 import FlashcardCollection from './components/FlashcardCollection';
@@ -29,7 +29,6 @@ import PersonalizedLearningPath from './components/PersonalizedLearningPath';
 import VirtualLabSimulation from './components/VirtualLabSimulation';
 import RHPSConnect from './components/RHPSConnect';
 import PremiumSubscription from './components/PremiumSubscription';
-import ParentInsightPortal from './components/ParentInsightPortal';
 
 // Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -64,6 +63,17 @@ const DeitySelectionPage = lazy(() => import('./pages/DeitySelectionPage'));
 const ChantingCounterPage = lazy(() => import('./pages/ChantingCounterPage'));
 const ChantingLeaderboardPage = lazy(() => import('./pages/ChantingLeaderboardPage'));
 const LearningInsights = lazy(() => import('./pages/LearningInsights'));
+const SmartMarketplace = lazy(() => import('./components/SmartMarketplace'));
+
+// New pages for proper routing
+const FlashcardsHub = lazy(() => import('./pages/FlashcardsHub'));
+const Results = lazy(() => import('./pages/Results'));
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Settings = lazy(() => import('./pages/Settings'));
+const LearningPath = lazy(() => import('./pages/LearningPath'));
+const VirtualLab = lazy(() => import('./pages/VirtualLab'));
+const Connect = lazy(() => import('./pages/Connect'));
+const Premium = lazy(() => import('./pages/Premium'));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900">
@@ -318,7 +328,7 @@ function App() {
                                   <Route path="/student-login" element={<StudentLogin />} />
                                   <Route path="/student-home" element={
                                     <ProtectedRoute requiredRole="student">
-                                      <StudentPortalContent />
+                                      <StudentHome />
                                     </ProtectedRoute>
                                   } />
                                   <Route path="/rules" element={<Rules />} />
@@ -328,8 +338,16 @@ function App() {
                                   <Route path="/monthly-planner" element={<MonthlyPlanner />} />
                                   <Route path="/registration" element={<Registration />} />
                                   <Route path="/staff-portal" element={<StaffApp />} />
-                                  <Route path="/complaints" element={<Complaints />} />
-                                  <Route path="/study-resources" element={<EnhancedStudyResources />} />
+                                  <Route path="/complaints" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Complaints />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/study-resources" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <EnhancedStudyResources />
+                                    </ProtectedRoute>
+                                  } />
                                   <Route path="/parent-portal" element={<ParentPortal />} />
                                   <Route path="/parent-signup" element={<ParentSignup />} />
                                   <Route path="/parent-login" element={<ParentLogin />} />
@@ -340,7 +358,11 @@ function App() {
                                   <Route path="/quiz/select-subject" element={<QuizSubjectSelect />} />
                                   <Route path="/quiz/play" element={<QuizPlay />} />
                                   <Route path="/quiz/results" element={<QuizResults />} />
-                                  <Route path="/homework" element={<Homework />} />
+                                  <Route path="/homework" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Homework />
+                                    </ProtectedRoute>
+                                  } />
                                   <Route path="/chanting" element={<ChantingPage />} />
                                   <Route path="/chanting/:religionId" element={<DeitySelectionPage />} />
                                   <Route path="/chanting/:religionId/:deityId" element={<ChantingCounterPage />} />
@@ -352,6 +374,48 @@ function App() {
                                   } />
                                   <Route path="/smart-marketplace" element={<SmartMarketplace />} />
                                   <Route path="/learning-badges" element={<LearningBadges />} />
+                                  
+                                  {/* New proper routes for student portal sections */}
+                                  <Route path="/flashcards" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <FlashcardsHub />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/results" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Results />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/attendance" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Attendance />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/settings" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Settings />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/learning-path" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <LearningPath />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/virtual-lab" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <VirtualLab />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/connect" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Connect />
+                                    </ProtectedRoute>
+                                  } />
+                                  <Route path="/premium" element={
+                                    <ProtectedRoute requiredRole="student">
+                                      <Premium />
+                                    </ProtectedRoute>
+                                  } />
                                 </Routes>
                               </Suspense>
                             </div>

@@ -2,6 +2,7 @@
 
 /* Import custom backdrop utilities with proper vendor prefixes */
 @import './utils/backdropUtils.css';
+@import './styles/designSystem.css';
 
 @tailwind base;
 @tailwind components;

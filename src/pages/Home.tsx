@@ -31,8 +31,7 @@ import CareerGuidanceModal from '../components/CareerGuidanceModal';
 import StressReliefModal from '../components/StressReliefModal';
 import EnhancedTodoListModal from '../components/EnhancedTodoListModal';
 import HomeworkHelpModal from '../components/HomeworkHelpModal';
-import ChantingFlashcard from '../components/ChantingFlashcard';
-import MemoriesFlashcard from '../components/MemoriesFlashcard';
+// Flashcard components moved to FlashcardsHub
 import NoticeFlashcard from '../components/NoticeFlashcard';
 import LearningInsightsFlashcard from '../components/LearningInsightsFlashcard';
 
@@ -261,11 +260,21 @@ const Home: React.FC = () => {
       bgGradient: 'from-blue-50 to-indigo-50',
       link: '/about-us',
       isNew: true,
+    },
+    {
+      id: 'flashcards-summary',
+      title: 'Flashcards Hub',
+      description: 'Access all your flashcards in one organized place.',
+      icon: Zap,
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-50 to-amber-50',
+      link: '/flashcards',
+      isNew: true,
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-primary">
       {}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -286,18 +295,13 @@ const Home: React.FC = () => {
       >
         <Link to="/about-us">
           <RHPSLogo size="lg" className="drop-shadow-lg hover:drop-shadow-xl" />
-          <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+          <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center animate-pulse">
             <div className="w-2 h-2 bg-white rounded-full"></div>
           </div>
         </Link>
       </motion.div>
       {}
-      <motion.section 
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative py-20 px-4"
-      >
+      <section className="relative py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ scale: 0 }}
@@ -305,14 +309,14 @@ const Home: React.FC = () => {
             transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
             className="mb-8"
           >
-            <School className="h-20 w-20 text-blue-600 mx-auto mb-4" />
+            <School className="h-20 w-20 text-primary-600 mx-auto mb-4" />
           </motion.div>
           
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 dark:text-white"
+            className="text-5xl md:text-6xl font-bold text-primary mb-6"
           >
             R.H.P.S. GROUP
           </motion.h1>
@@ -321,7 +325,7 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.6 }}
-            className="text-xl text-gray-600 mb-4 dark:text-gray-300"
+            className="text-xl text-secondary mb-4"
           >
             Royal Hindustan Private School Society
           </motion.p>
@@ -330,7 +334,7 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
-            className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent"
+            className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent"
           >
             <p className="text-2xl font-semibold mb-8">
               "Excellence in Education, Character in Life"
@@ -345,31 +349,31 @@ const Home: React.FC = () => {
           >
             <Link
               to="/student-dashboard"
-              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="btn btn-primary btn-lg"
             >
               Student Portal
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
               to="/parent-portal"
-              className="inline-flex items-center px-8 py-4 bg-teal-600 text-white font-semibold rounded-full hover:bg-teal-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="btn btn-secondary btn-lg"
             >
               Parent Portal
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
               to="/staff-portal"
-              className="inline-flex items-center px-8 py-4 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="btn btn-success btn-lg"
             >
               Staff Portal
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </motion.div>
         </div>
-      </motion.section>
+      </section>
 
       {}
-      <section className="py-16 px-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800">
+      <section className="py-16 px-4 bg-secondary">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -378,10 +382,10 @@ const Home: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4 dark:text-white">
+            <h2 className="text-4xl font-bold text-primary mb-4">
               New Features & Updates
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-xl text-secondary">
               Discover the latest additions to our school portal
             </p>
           </motion.div>
@@ -406,7 +410,7 @@ const Home: React.FC = () => {
             </div>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {flashcards.map((card, index) => (
               <motion.div
                 key={card.id}
@@ -416,49 +420,52 @@ const Home: React.FC = () => {
                 transition={{ delay: index * 0.1, duration: 0.6 }}
                 whileHover={{ y: -10, scale: 1.02 }}
                 onClick={card.onClick}
-                className={`bg-gradient-to-br ${card.bgGradient} rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-gray-200 hover:border-gray-300 relative overflow-hidden cursor-pointer`}
+                className={`card relative overflow-hidden cursor-pointer ${
+                  card.isNew ? 'border-2 border-primary-300' : ''
+                }`}
               >
                 {card.isNew && (
                   <div className="absolute top-2 right-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse">
                     NEW
                   </div>
                 )}
-                <div className={`bg-gradient-to-r ${card.gradient} w-16 h-16 rounded-full flex items-center justify-center text-white mb-4 mx-auto shadow-lg`}>
-                  <card.icon className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold text-center mb-3 text-gray-900 dark:text-white">
-                  {card.title}
-                </h3>
-                <p className="text-gray-700 text-center text-sm dark:text-gray-300">
-                  {card.description}
-                </p>
-                <div className="text-center mt-4">
-                  {card.link ? (
-                    <Link
-                      to={card.link}
-                      className="inline-flex items-center font-semibold text-sm transition-colors duration-200 text-purple-600 hover:text-purple-700"
-                    >
-                      Learn More
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <button className="inline-flex items-center font-semibold text-sm transition-colors duration-200 text-purple-600 hover:text-purple-700">
-                      Open Now
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </button>
-                  )}
+                <div className="card-body flex-center flex-col">
+                  <div className={`bg-gradient-to-r ${card.gradient} w-16 h-16 rounded-full flex items-center justify-center text-white mb-4 shadow-lg`}>
+                    <card.icon className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl font-bold text-center mb-3 text-primary">
+                    {card.title}
+                  </h3>
+                  <p className="text-secondary text-center text-sm">
+                    {card.description}
+                  </p>
+                  <div className="text-center mt-4">
+                    {card.link ? (
+                      <Link
+                        to={card.link}
+                        className="inline-flex items-center font-semibold text-sm transition-colors duration-200 text-primary-600 hover:text-primary-700"
+                      >
+                        Learn More
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button className="inline-flex items-center font-semibold text-sm transition-colors duration-200 text-primary-600 hover:text-primary-700">
+                        Open Now
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
-            <ChantingFlashcard />
-            <MemoriesFlashcard />
+            {/* Flashcard components moved to FlashcardsHub */}
           </div>
         </div>
       </section>
 
       {}
       {notices.length > 0 && (
-        <section className="py-16 px-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800">
+        <section className="py-16 px-4 bg-tertiary">
           <div className="max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -467,11 +474,11 @@ const Home: React.FC = () => {
               transition={{ duration: 0.6 }}
               className="text-center mb-12"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-4 dark:text-white flex items-center justify-center">
-                <Bell className="h-8 w-8 mr-3 text-blue-600" />
+              <h2 className="text-4xl font-bold text-primary mb-4 flex items-center justify-center">
+                <Bell className="h-8 w-8 mr-3 text-primary-600" />
                 Important Notices
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-300">
+              <p className="text-xl text-secondary">
                 Stay updated with the latest announcements
               </p>
             </motion.div>
@@ -485,7 +492,7 @@ const Home: React.FC = () => {
             <div className="text-center mt-8">
               <Link
                 to="/staff-portal"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-full hover:bg-blue-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
+                className="btn btn-primary btn-md"
               >
                 View All Notices
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -505,26 +512,26 @@ const Home: React.FC = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-bold text-primary mb-4">
               School Portal Features
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-secondary">
               Everything you need for a connected school experience
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={`feature-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.2, duration: 0.6 }}
-                whileHover={{ y: -10, scale: feature.special ? 1.05 : 1 }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                whileHover={{ y: -10 }}
                 onClick={feature.onClick}
-                className={`bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 ${
-                  feature.special ? 'border-4 border-purple-300 relative overflow-hidden' : ''
+                className={`card ${
+                  feature.special ? 'border-2 border-primary-300 relative overflow-hidden' : ''
                 } ${feature.onClick ? 'cursor-pointer' : ''}`}
               >
                 {feature.isNew && (
@@ -532,42 +539,44 @@ const Home: React.FC = () => {
                     NEW
                   </div>
                 )}
-                <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 mx-auto shadow-lg`}>
-                  {feature.icon}
-                </div>
-                <h3 className={`text-2xl font-bold mb-4 text-center ${
-                  feature.special ? 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent' : 'text-gray-900'
-                }`}>
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-center mb-6">
-                  {feature.description}
-                </p>
-                <div className="text-center">
-                  {feature.link ? (
-                    <Link
-                      to={feature.link}
-                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
-                        feature.special
-                          ? 'text-purple-600 hover:text-purple-700'
-                          : 'text-blue-600 hover:text-blue-700'
-                      }`}
-                    >
-                      {feature.title === 'Quiz Zone' ? 'Start Quiz Now' : 'Learn More'}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  ) : (
-                    <button
-                      className={`inline-flex items-center font-semibold transition-colors duration-200 ${
-                        feature.special
-                          ? 'text-purple-600 hover:text-purple-700'
-                          : 'text-blue-600 hover:text-blue-700'
-                      }`}
-                    >
-                      Open Now
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </button>
-                  )}
+                <div className="card-body flex-center flex-col">
+                  <div className={`${feature.color} w-16 h-16 rounded-full flex items-center justify-center text-white mb-6 shadow-lg`}>
+                    {feature.icon}
+                  </div>
+                  <h3 className={`text-2xl font-bold mb-4 text-center ${
+                    feature.special ? 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent' : 'text-primary'
+                  }`}>
+                    {feature.title}
+                  </h3>
+                  <p className="text-secondary text-center mb-6">
+                    {feature.description}
+                  </p>
+                  <div className="text-center">
+                    {feature.link ? (
+                      <Link
+                        to={feature.link}
+                        className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                          feature.special
+                            ? 'text-primary-600 hover:text-primary-700'
+                            : 'text-secondary-600 hover:text-secondary-700'
+                        }`}
+                      >
+                        {feature.title === 'Quiz Zone' ? 'Start Quiz Now' : 'Learn More'}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        className={`inline-flex items-center font-semibold transition-colors duration-200 ${
+                          feature.special
+                            ? 'text-primary-600 hover:text-primary-700'
+                            : 'text-secondary-600 hover:text-secondary-700'
+                        }`}
+                      >
+                        Open Now
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -576,7 +585,7 @@ const Home: React.FC = () => {
       </section>
 
       {}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-600 to-green-600">
+      <section className="py-16 px-4 bg-gradient-to-r from-primary-600 to-secondary-600">
         <div className="max-w-4xl mx-auto text-center text-white">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -604,10 +613,10 @@ const Home: React.FC = () => {
       </section>
 
       {}
-      <section className="py-16 px-4 bg-gradient-to-r from-gray-900 to-black">
+      <section className="py-16 px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto">
           {}
-          <div className="bg-yellow-500 text-black py-3 px-6 rounded-lg mb-8 text-center font-bold text-lg">
+          <div className="bg-warning-500 text-black py-3 px-6 rounded-lg mb-8 text-center font-bold text-lg">
             ⚠️ This E Mall is under progress - Features and products are subject to change
           </div>
           
@@ -785,9 +794,9 @@ const Home: React.FC = () => {
                     <div className="text-4xl">{product.image}</div>
                     <div className="ml-4 flex-1">
                       <h4 className="text-white font-bold">{product.name}</h4>
-                      <p className="text-yellow-400 font-semibold">{product.price}</p>
+                      <p className="text-warning-400 font-semibold">{product.price}</p>
                     </div>
-                    <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all">
+                    <button className="bg-gradient-to-r from-warning-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:from-warning-600 hover:to-orange-600 transition-all">
                       Add
                     </button>
                   </motion.div>

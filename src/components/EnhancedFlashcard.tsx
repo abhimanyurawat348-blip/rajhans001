@@ -46,13 +46,22 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
     setUserRating(rating);
     // In a real implementation, this would be sent to a backend
     console.log(`User rated card ${id} as ${rating}`);
+    
+    // Show feedback to user
+    alert(`Thank you for rating this card as ${rating}!`);
+  };
+
+  const handleReset = () => {
+    setIsFlipped(false);
+    setShowAnswer(false);
+    setUserRating(null);
   };
 
   const getDifficultyColor = () => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
+      case 'easy': return 'bg-success-100 text-success-800';
+      case 'medium': return 'bg-warning-100 text-warning-800';
+      case 'hard': return 'bg-error-100 text-error-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -72,10 +81,10 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
             transition={{ duration: 0.4 }}
             className="absolute inset-0 w-full h-full preserve-3d"
           >
-            <div className="relative w-full h-full rounded-xl shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex flex-col">
+            <div className="relative w-full h-full rounded-xl shadow-lg bg-secondary border border-primary flex flex-col">
               {/* Card Header */}
-              <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              <div className="flex justify-between items-center p-4 border-b border-primary">
+                <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">
                   {subject}
                 </span>
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getDifficultyColor()}`}>
@@ -85,12 +94,12 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
               
               {/* Card Content */}
               <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                <div className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <div className="text-lg font-medium text-primary mb-4">
                   {isFlipped ? back : front}
                 </div>
                 
                 {!isFlipped && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="text-sm text-tertiary">
                     Click to reveal answer
                   </div>
                 )}
@@ -102,7 +111,8 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
                         e.stopPropagation();
                         handleRating('easy');
                       }}
-                      className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200"
+                      className="p-2 rounded-full bg-success-100 text-success-600 hover:bg-success-200"
+                      title="I knew this easily"
                     >
                       <CheckCircle className="h-5 w-5" />
                     </button>
@@ -111,7 +121,8 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
                         e.stopPropagation();
                         handleRating('medium');
                       }}
-                      className="p-2 rounded-full bg-yellow-100 text-yellow-600 hover:bg-yellow-200"
+                      className="p-2 rounded-full bg-warning-100 text-warning-600 hover:bg-warning-200"
+                      title="I knew this with some effort"
                     >
                       <HelpCircle className="h-5 w-5" />
                     </button>
@@ -120,7 +131,8 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
                         e.stopPropagation();
                         handleRating('hard');
                       }}
-                      className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                      className="p-2 rounded-full bg-error-100 text-error-600 hover:bg-error-200"
+                      title="I didn't know this"
                     >
                       <XCircle className="h-5 w-5" />
                     </button>
@@ -129,7 +141,7 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
               </div>
               
               {/* Card Footer */}
-              <div className="flex justify-between items-center p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center p-4 border-t border-primary">
                 <div className="flex space-x-1">
                   {tags.slice(0, 2).map((tag, index) => (
                     <span 
@@ -150,7 +162,8 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
                     e.stopPropagation();
                     onBookmark?.(id);
                   }}
-                  className={`p-1 rounded-full ${isBookmarked ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}`}
+                  className={`p-1 rounded-full ${isBookmarked ? 'text-warning-500' : 'text-gray-400 hover:text-warning-500'}`}
+                  title={isBookmarked ? 'Remove bookmark' : 'Bookmark this card'}
                 >
                   <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
                 </button>
@@ -165,18 +178,16 @@ const EnhancedFlashcard: React.FC<FlashcardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            setIsFlipped(false);
-            setShowAnswer(false);
-            setUserRating(null);
+            handleReset();
           }}
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+          className="flex items-center text-sm text-tertiary hover:text-secondary"
         >
           <RotateCcw className="h-4 w-4 mr-1" />
           Reset
         </button>
         
         {showAnswer && (
-          <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center text-sm text-tertiary">
             <Clock className="h-4 w-4 mr-1" />
             {userRating ? (
               <span className="capitalize">{userRating} rated</span>

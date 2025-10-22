@@ -30,15 +30,15 @@ const UnifiedSidebar: React.FC = () => {
   const sidebarItems: SidebarItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/student-home' },
     { id: 'study', label: 'Study', icon: BookOpen, path: '/study-resources' },
-    { id: 'flashcards', label: 'Flashcards', icon: Zap, path: '/student-home' },
-    { id: 'results', label: 'Results', icon: FileText, path: '/student-home' },
-    { id: 'attendance', label: 'Attendance', icon: UserCheck, path: '/student-home' },
+    { id: 'flashcards', label: 'Flashcards', icon: Zap, path: '/flashcards' },
+    { id: 'results', label: 'Results', icon: FileText, path: '/results' },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck, path: '/attendance' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, path: '/learning-insights' },
-    { id: 'learning-path', label: 'Learning Path', icon: Map, path: '/student-home' },
-    { id: 'virtual-lab', label: 'Virtual Lab', icon: Beaker, path: '/student-home' },
-    { id: 'connect', label: 'Connect', icon: MessageSquare, path: '/student-home' },
-    { id: 'premium', label: 'Premium', icon: Crown, path: '/student-home' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/student-home' },
+    { id: 'learning-path', label: 'Learning Path', icon: Map, path: '/learning-path' },
+    { id: 'virtual-lab', label: 'Virtual Lab', icon: Beaker, path: '/virtual-lab' },
+    { id: 'connect', label: 'Connect', icon: MessageSquare, path: '/connect' },
+    { id: 'premium', label: 'Premium', icon: Crown, path: '/premium' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const toggleSidebar = () => {
@@ -51,6 +51,7 @@ const UnifiedSidebar: React.FC = () => {
       <button
         onClick={toggleSidebar}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg text-gray-700 hover:bg-gray-100"
+        aria-label="Toggle sidebar"
       >
         {isSidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
       </button>
@@ -60,6 +61,7 @@ const UnifiedSidebar: React.FC = () => {
         <div 
           className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={toggleSidebar}
+          aria-hidden="true"
         />
       )}
 
@@ -76,7 +78,7 @@ const UnifiedSidebar: React.FC = () => {
           </div>
 
           {/* Navigation items */}
-          <nav className="flex-1 overflow-y-auto py-4">
+          <nav className="flex-1 overflow-y-auto py-4" aria-label="Main navigation">
             <ul className="space-y-1 px-3">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;

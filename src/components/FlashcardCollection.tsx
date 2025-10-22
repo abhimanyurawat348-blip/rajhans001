@@ -95,6 +95,16 @@ const FlashcardCollection: React.FC = () => {
     ));
   };
 
+  const handleCreateNew = () => {
+    // In a real implementation, this would open a modal or navigate to a create page
+    alert('Create new flashcard functionality would be implemented here');
+  };
+
+  const handleAIGenerate = () => {
+    // In a real implementation, this would generate flashcards using AI
+    alert('AI flashcard generation functionality would be implemented here');
+  };
+
   const filteredFlashcards = flashcards.filter(card => {
     const matchesSearch = card.front.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           card.back.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -112,17 +122,23 @@ const FlashcardCollection: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Flashcards</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-primary">Flashcards</h1>
+          <p className="text-sm text-tertiary mt-1">
             Study smarter with interactive flashcards
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex space-x-2">
-          <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button 
+            onClick={handleAIGenerate}
+            className="btn btn-primary btn-md"
+          >
             <Zap className="h-4 w-4 mr-2" />
             AI Generate
           </button>
-          <button className="flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <button 
+            onClick={handleCreateNew}
+            className="btn btn-outline btn-md"
+          >
             <BookOpen className="h-4 w-4 mr-2" />
             Create New
           </button>
@@ -131,64 +147,64 @@ const FlashcardCollection: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <div className="card">
+          <div className="p-md flex items-center">
+            <div className="p-2 bg-primary-100 dark:bg-primary-900 rounded-lg">
+              <BookOpen className="h-5 w-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Cards</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{flashcards.length}</p>
+              <p className="text-sm text-tertiary">Total Cards</p>
+              <p className="text-xl font-bold text-primary">{flashcards.length}</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <Star className="h-5 w-5 text-green-600 dark:text-green-400" />
+        <div className="card">
+          <div className="p-md flex items-center">
+            <div className="p-2 bg-success-100 dark:bg-success-900 rounded-lg">
+              <Star className="h-5 w-5 text-success-600 dark:text-success-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Mastered</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">24</p>
+              <p className="text-sm text-tertiary">Mastered</p>
+              <p className="text-xl font-bold text-primary">24</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-              <Bookmark className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+        <div className="card">
+          <div className="p-md flex items-center">
+            <div className="p-2 bg-warning-100 dark:bg-warning-900 rounded-lg">
+              <Bookmark className="h-5 w-5 text-warning-600 dark:text-warning-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Bookmarked</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm text-tertiary">Bookmarked</p>
+              <p className="text-xl font-bold text-primary">
                 {flashcards.filter(card => card.isBookmarked).length}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-              <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        <div className="card">
+          <div className="p-md flex items-center">
+            <div className="p-2 bg-secondary-100 dark:bg-secondary-900 rounded-lg">
+              <Clock className="h-5 w-5 text-secondary-600 dark:text-secondary-400" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-gray-600 dark:text-gray-400">Study Streak</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">7 days</p>
+              <p className="text-sm text-tertiary">Study Streak</p>
+              <p className="text-xl font-bold text-primary">7 days</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filters</h2>
+      <div className="card">
+        <div className="card-header flex-between">
+          <h2 className="text-lg font-semibold text-primary">Filters</h2>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 mt-2 md:mt-0"
+            className="flex items-center text-sm text-tertiary hover:text-secondary"
           >
             <Filter className="h-4 w-4 mr-1" />
             {showFilters ? 'Hide Filters' : 'Show Filters'}
@@ -196,7 +212,7 @@ const FlashcardCollection: React.FC = () => {
         </div>
         
         {showFilters && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="card-body grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
               <div className="relative">
@@ -206,7 +222,7 @@ const FlashcardCollection: React.FC = () => {
                   placeholder="Search flashcards..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="input"
                 />
               </div>
             </div>
@@ -216,7 +232,7 @@ const FlashcardCollection: React.FC = () => {
               <select
                 value={selectedSubject}
                 onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="select"
               >
                 {subjects.map(subject => (
                   <option key={subject} value={subject}>
@@ -231,7 +247,7 @@ const FlashcardCollection: React.FC = () => {
               <select
                 value={selectedDifficulty}
                 onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="select"
               >
                 {difficulties.map(difficulty => (
                   <option key={difficulty} value={difficulty}>
@@ -248,9 +264,9 @@ const FlashcardCollection: React.FC = () => {
                 id="bookmarkedOnly"
                 checked={bookmarkedOnly}
                 onChange={(e) => setBookmarkedOnly(e.target.checked)}
-                className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                className="h-4 w-4 text-primary-600 rounded focus:ring-primary-500"
               />
-              <label htmlFor="bookmarkedOnly" className="ml-2 text-gray-700 dark:text-gray-300">
+              <label htmlFor="bookmarkedOnly" className="ml-2 text-secondary">
                 Bookmarked Only
               </label>
             </div>
@@ -282,10 +298,10 @@ const FlashcardCollection: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12">
+        <div className="text-center py-12 card">
           <BookOpen className="h-12 w-12 mx-auto text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">No flashcards found</h3>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">
+          <h3 className="mt-4 text-lg font-medium text-primary">No flashcards found</h3>
+          <p className="mt-1 text-tertiary">
             Try adjusting your search or filter criteria
           </p>
         </div>

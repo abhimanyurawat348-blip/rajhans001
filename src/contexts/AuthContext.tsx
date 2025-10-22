@@ -117,11 +117,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Validate email based on role
     if (role === 'student' && !email.endsWith('@gmail.com')) {
       setAuthLoading(false);
+      alert('Student emails must end with @gmail.com');
       return false;
     }
     
     if (role === 'teacher' && !email.endsWith('@rhpsschool.edu.in')) {
       setAuthLoading(false);
+      alert('Teacher emails must end with @rhpsschool.edu.in');
       return false;
     }
 
@@ -138,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPendingAuth({ email, role });
         setOtpSent(true);
         setAuthLoading(false);
+        alert('OTP sent to your email. Please check your inbox.');
         return true;
       }
       
@@ -148,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setPendingAuth({ email, role });
       setOtpSent(true);
       console.log('Mock OTP sent: 123456');
+      alert('OTP sent to your email. Please check your inbox.');
       setAuthLoading(false);
       return true;
     }
@@ -189,6 +193,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPendingAuth(null);
         setOtpSent(false);
         setAuthLoading(false);
+        alert('Login successful!');
         return true;
       }
       
@@ -214,14 +219,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPendingAuth(null);
         setOtpSent(false);
         setAuthLoading(false);
+        alert('Login successful!');
         return true;
       }
       
       setAuthLoading(false);
+      alert('Invalid OTP. Please try again.');
       return false;
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setAuthLoading(false);
+      alert('Error verifying OTP. Please try again.');
       return false;
     }
   }, [authLoading, pendingAuth, logLoginRecord]);
@@ -233,8 +241,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       await signOut(auth);
+      alert('You have been logged out successfully.');
     } catch (error) {
       console.error('Error signing out:', error);
+      alert('Error signing out. Please try again.');
     } finally {
       setUser(null);
       setOtpSent(false);
@@ -253,9 +263,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser({ ...user, fullName: name });
       setAuthLoading(false);
+      alert('Name updated successfully!');
     } catch (error) {
       console.error('Error updating user name:', error);
       setAuthLoading(false);
+      alert('Error updating name. Please try again.');
       throw error;
     }
   }, [user, authLoading]);
