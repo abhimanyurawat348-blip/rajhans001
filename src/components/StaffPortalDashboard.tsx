@@ -9,6 +9,9 @@ import { getDeviceInfo, getDeviceType } from '../utils/deviceUtils';
 import { getClientIP } from '../utils/ipUtils';
 import { exportToCSV } from '../utils/exportUtils';
 import AIQuestionPaperGenerator from './AIQuestionPaperGenerator';
+import EnhancedAttendanceManager from './EnhancedAttendanceManager';
+import AdminAttendanceReports from './AdminAttendanceReports';
+import AttendanceAudit from './AttendanceAudit';
 import {
   Users,
   FileText,
@@ -872,6 +875,8 @@ const StaffPortalDashboard: React.FC = () => {
     { id: 'performance', label: 'Performance Entry', icon: Upload },
     { id: 'results', label: 'Results', icon: FileText },
     { id: 'attendance', label: 'Attendance', icon: UserCheck },
+    { id: 'attendance-reports', label: 'Attendance Reports', icon: BarChart2 },
+    { id: 'attendance-audit', label: 'Attendance Audit', icon: AlertTriangle },
     { id: 'messages', label: 'Messages', icon: Send },
     { id: 'notices', label: 'Notices', icon: Bell },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
@@ -1619,6 +1624,24 @@ const StaffPortalDashboard: React.FC = () => {
               </div>
             </motion.div>
           )}
+
+          {/* Attendance Tab */}
+          {activeTab === 'attendance' && (
+            <EnhancedAttendanceManager />
+          )}
+          
+          {/* Attendance Reports Tab */}
+          {activeTab === 'attendance-reports' && (
+            <AdminAttendanceReports />
+          )}
+          
+          {/* Attendance Audit Tab */}
+          {activeTab === 'attendance-audit' && (
+            <AttendanceAudit />
+          )}
+
+          {/* Messages Tab */}
+          {}
 
           {}
           {activeTab === 'attendance' && (

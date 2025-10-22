@@ -22,6 +22,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } f
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { formatISTDateTime } from '../utils/zohoMeeting';
+import ParentAttendanceView from '../components/ParentAttendanceView';
 
 interface StudentData {
   id: string;
@@ -409,45 +410,10 @@ const ParentPortal: React.FC = () => {
             {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Attendance</h2>
-              {attendance.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">This Month</span>
-                    <span className="font-semibold text-gray-900">
-                      {attendance.filter(a => a.status === 'present').length}/{attendance.length} days
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-green-500 h-2 rounded-full" 
-                      style={{ 
-                        width: `${(attendance.filter(a => a.status === 'present').length / attendance.length) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-green-50 rounded-lg p-2">
-                      <p className="text-2xl font-bold text-green-600">
-                        {attendance.filter(a => a.status === 'present').length}
-                      </p>
-                      <p className="text-xs text-gray-600">Present</p>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-2">
-                      <p className="text-2xl font-bold text-red-600">
-                        {attendance.filter(a => a.status === 'absent').length}
-                      </p>
-                      <p className="text-xs text-gray-600">Absent</p>
-                    </div>
-                    <div className="bg-yellow-50 rounded-lg p-2">
-                      <p className="text-2xl font-bold text-yellow-600">
-                        {attendance.filter(a => a.status === 'late').length}
-                      </p>
-                      <p className="text-xs text-gray-600">Late</p>
-                    </div>
-                  </div>
-                </div>
+              {studentData?.id ? (
+                <ParentAttendanceView studentId={studentData.id} />
               ) : (
-                <p className="text-gray-500">No attendance data available</p>
+                <p className="text-gray-500">Loading attendance data...</p>
               )}
             </div>
           </div>

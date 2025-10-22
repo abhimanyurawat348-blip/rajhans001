@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Eye, Lock, LogOut } from 'lucide-react';
 import StaffPortalDashboard from './components/StaffPortalDashboard';
+import AttendanceNotifications from './components/AttendanceNotifications';
 
 const StaffApp: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -125,6 +126,7 @@ const StaffApp: React.FC = () => {
       </div>
       
       <StaffPortalDashboard />
+      <AttendanceNotifications />
     </div>
   );
 };
