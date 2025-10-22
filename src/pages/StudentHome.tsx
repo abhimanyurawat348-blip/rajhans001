@@ -19,6 +19,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import FloatingDronacharyaButton from '../components/FloatingDronacharyaButton';
 import ChantingFlashcard from '../components/ChantingFlashcard';
 import StudentProfileEditModal from '../components/StudentProfileEditModal';
+import GeneratedQuestionPapersDisplay from '../components/GeneratedQuestionPapersDisplay';
 
 interface Marksheet {
   id: string;
@@ -387,6 +388,12 @@ const StudentHome: React.FC = () => {
               )}
             </div>
 
+            {}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">CBSE Sample Question Papers</h2>
+              <GeneratedQuestionPapersDisplay />
+            </div>
+            
             {}
             <div className="bg-white rounded-2xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Wellness & Spirituality</h2>

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where, getDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Student } from '../types';
+import { updateAttendanceSummaryInLearningInsights } from '../utils/learningInsightsUtils';
 
 interface AttendanceRecord {
   id: string;
@@ -96,8 +97,14 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
 
       setAttendanceRecords(prev => [...prev, newRecord]);
 
-      // Update summary
+      // Update local summary first
       await updateAttendanceSummary(recordData.studentId, recordData.status);
+      
+      // Then sync with learning insights
+      const summary = getAttendanceSummary(recordData.studentId);
+      if (summary) {
+        await updateAttendanceSummaryInLearningInsights(recordData.studentId, summary);
+      }
       
       return true;
     } catch (error) {

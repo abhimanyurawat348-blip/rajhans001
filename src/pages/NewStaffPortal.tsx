@@ -6,6 +6,7 @@ import { collection, getDocs, query, where, doc, setDoc, getDoc, updateDoc, addD
 import { db } from '../config/firebase';
 import { useComplaints } from '../contexts/ComplaintContext';
 import { read, utils } from 'xlsx';
+import QuestionPaperManagement from '../components/QuestionPaperManagement';
 import {
   Shield,
   Bell,
@@ -652,6 +653,7 @@ const NewStaffPortal: React.FC = () => {
     { id: 'classes', label: 'Classes', icon: BookOpen },
     { id: 'performance', label: 'Performance Entry', icon: Upload },
     { id: 'marksheets', label: 'Marksheets', icon: FileText },
+    { id: 'question-papers', label: 'Question Papers', icon: FileText },
     { id: 'insights', label: 'Learning Insights', icon: BarChart3 },
     { id: 'analytics', label: 'Student Analytics', icon: TrendingUp },
     { id: 'registrations', label: 'Registrations', icon: ClipboardList },
@@ -3645,6 +3647,10 @@ const NewStaffPortal: React.FC = () => {
                   </div>
                 </div>
               </div>
+            )}
+
+            {activeSection === 'question-papers' && (
+              <QuestionPaperManagement />
             )}
           </div>
         </div>

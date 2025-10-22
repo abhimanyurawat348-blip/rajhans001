@@ -5,6 +5,7 @@ import { ComplaintProvider } from './contexts/ComplaintContext';
 import { EventProvider } from './contexts/EventContext';
 import { RegistrationProvider } from './contexts/RegistrationContext';
 import { StudyResourcesProvider } from './contexts/StudyResourcesContext';
+import { EnhancedStudyResourcesProvider } from './contexts/EnhancedStudyResourcesContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { EventGalleryProvider } from './contexts/EventGalleryContext';
 import { AttendanceProvider } from './contexts/AttendanceContext';
@@ -26,6 +27,7 @@ const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Complaints = lazy(() => import('./pages/Complaints'));
 const StudyResources = lazy(() => import('./pages/StudyResources'));
+const EnhancedStudyResources = lazy(() => import('./pages/EnhancedStudyResources'));
 const Rules = lazy(() => import('./pages/Rules'));
 const StudentCouncil = lazy(() => import('./pages/StudentCouncil'));
 const YearlyPlanner = lazy(() => import('./pages/YearlyPlanner'));
@@ -356,13 +358,14 @@ function App() {
             <EventProvider>
               <RegistrationProvider>
                 <StudyResourcesProvider>
-                  <EventGalleryProvider>
-                    <AttendanceProvider>
-                      <MessagesProvider>
-                        <Router>
-                          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-                            <Navbar />
-                            <Suspense fallback={<LoadingFallback />}>
+                  <EnhancedStudyResourcesProvider>
+                    <EventGalleryProvider>
+                      <AttendanceProvider>
+                        <MessagesProvider>
+                          <Router>
+                            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+                              <Navbar />
+                              <Suspense fallback={<LoadingFallback />}>
                               <Routes>
                                 <Route path="/" element={<Home />} />
                                 <Route path="/about-us" element={<AboutUs />} />
@@ -383,7 +386,7 @@ function App() {
                                 <Route path="/registration" element={<Registration />} />
                                 <Route path="/staff-portal" element={<StaffApp />} />
                                 <Route path="/complaints" element={<Complaints />} />
-                                <Route path="/study-resources" element={<StudyResources />} />
+                                <Route path="/study-resources" element={<EnhancedStudyResources />} />
                                 <Route path="/parent-portal" element={<ParentPortal />} />
                                 <Route path="/parent-signup" element={<ParentSignup />} />
                                 <Route path="/parent-login" element={<ParentLogin />} />
@@ -413,7 +416,8 @@ function App() {
                       </MessagesProvider>
                     </AttendanceProvider>
                   </EventGalleryProvider>
-                </StudyResourcesProvider>
+                </EnhancedStudyResourcesProvider>
+              </StudyResourcesProvider>
               </RegistrationProvider>
             </EventProvider>
           </ComplaintProvider>

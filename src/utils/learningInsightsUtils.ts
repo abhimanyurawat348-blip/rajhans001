@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, setDoc, updateDoc, addDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { User } from '../types';
 
@@ -64,6 +64,11 @@ export interface InsightsCache {
   studyPatterns: StudyPattern[];
   performancePredictions: PerformancePrediction[];
   subjectDistribution: SubjectDistributionItem[];
+  attendanceData?: {
+    percentage: number;
+    total: number;
+    present: number;
+  };
   lastCached: Date;
 }
 
@@ -497,6 +502,37 @@ export const generateSubjectDistribution = (performanceData: SubjectPerformance[
 };
 
 // New: Save learning insights to Firestore
+export const updateAttendanceSummary = async (studentId: string, attendanceData: any) => {
+  try {
+    // Get all attendance records for this student
+    // This is a placeholder - in a real implementation, this would be passed from the context
+    const total = 0;
+    const present = 0;
+    const percentage = 0;
+    
+    const summaryData = {
+      present,
+      total,
+      percentage
+    };
+    
+    // Update or create summary document
+    const summaryRef = doc(db, 'attendanceSummary', studentId);
+    const summarySnap = await getDoc(summaryRef);
+    
+    if (summarySnap.exists()) {
+      await updateDoc(summaryRef, summaryData);
+    } else {
+      await addDoc(collection(db, 'attendanceSummary'), { ...summaryData, studentId });
+    }
+    
+    return summaryData;
+  } catch (error) {
+    console.error('Error updating attendance summary:', error);
+    return null;
+  }
+};
+
 export const saveLearningInsights = async (studentId: string, insights: LearningInsights) => {
   try {
     await setDoc(doc(db, 'learning_insights', studentId), {
@@ -505,6 +541,77 @@ export const saveLearningInsights = async (studentId: string, insights: Learning
     });
   } catch (error) {
     console.error('Error saving learning insights:', error);
+  }
+};
+
+// New: Update attendance summary in learning insights
+export const updateAttendanceSummaryInLearningInsights = async (studentId: string, attendanceSummary: any) => {
+  try {
+    // Get current learning insights for the student
+    const insightsDoc = doc(db, 'learning_insights', studentId);
+    const insightsSnap = await getDoc(insightsDoc);
+    
+    if (insightsSnap.exists()) {
+      // Update existing insights with attendance data
+      const currentInsights = insightsSnap.data();
+      
+      // Add attendance metrics to insights
+      const updatedInsights = {
+        ...currentInsights,
+        attendanceRate: attendanceSummary.percentage,
+        attendanceTrend: 'stable', // We'll determine trend based on history
+        totalDays: attendanceSummary.total || 0,
+        presentDays: attendanceSummary.present || 0,
+        lastUpdated: new Date()
+      };
+      
+      await updateDoc(insightsDoc, updatedInsights);
+      
+      // Also update the cached data
+      const cacheDoc = doc(db, 'insights_cache', studentId);
+      const cacheSnap = await getDoc(cacheDoc);
+      
+      if (cacheSnap.exists()) {
+        const currentCache = cacheSnap.data();
+        const updatedCache = {
+          ...currentCache,
+          attendanceData: {
+            percentage: attendanceSummary.percentage,
+            total: attendanceSummary.total || 0,
+            present: attendanceSummary.present || 0
+          },
+          lastCached: new Date()
+        };
+        
+        await updateDoc(cacheDoc, updatedCache);
+      }
+      
+      return true;
+    } else {
+      // Create new insights document with attendance data
+      const newInsights = {
+        studentId,
+        attendanceRate: attendanceSummary.percentage,
+        attendanceTrend: 'new',
+        totalDays: attendanceSummary.total || 0,
+        presentDays: attendanceSummary.present || 0,
+        subject: 'Overall',
+        avgScore: 0,
+        improvementRate: 0,
+        predictedNextScore: [0, 0],
+        weakTopics: [],
+        recommendations: [],
+        lastUpdated: new Date(),
+        consistencyIndex: 0,
+        learningVelocity: 0
+      };
+      
+      await setDoc(insightsDoc, newInsights);
+      return true;
+    }
+  } catch (error) {
+    console.error('Error updating attendance summary in learning insights:', error);
+    return false;
   }
 };
 
