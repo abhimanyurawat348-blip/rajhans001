@@ -8,6 +8,7 @@ import { read, utils, writeFile } from 'xlsx';
 import { getDeviceInfo, getDeviceType } from '../utils/deviceUtils';
 import { getClientIP } from '../utils/ipUtils';
 import { exportToCSV } from '../utils/exportUtils';
+import AIQuestionPaperGenerator from './AIQuestionPaperGenerator';
 import {
   Users,
   FileText,
@@ -34,7 +35,8 @@ import {
   ExternalLink,
   UserCheck,
   Send,
-  Monitor
+  Monitor,
+  Brain
 } from 'lucide-react';
 
 
@@ -128,7 +130,7 @@ const StaffPortalDashboard: React.FC = () => {
   const { complaints, loadComplaints, updateComplaintStatus, deleteComplaint } = useComplaints();
   const { registrations, loadRegistrations, updateRegistrationStatus, deleteRegistration } = useRegistrations();
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'students' | 'complaints' | 'classes' | 'results' | 'attendance' | 'messages' | 'notices' | 'meetings' | 'registrations' | 'performance' | 'analytics'
+    'dashboard' | 'students' | 'complaints' | 'classes' | 'results' | 'attendance' | 'messages' | 'notices' | 'meetings' | 'registrations' | 'performance' | 'analytics' | 'question-papers'
   >('dashboard');
   
   
@@ -874,7 +876,8 @@ const StaffPortalDashboard: React.FC = () => {
     { id: 'notices', label: 'Notices', icon: Bell },
     { id: 'meetings', label: 'Meetings', icon: Calendar },
     { id: 'registrations', label: 'Registrations', icon: ClipboardList },
-    { id: 'analytics', label: 'Student Analytics', icon: Monitor }
+    { id: 'analytics', label: 'Student Analytics', icon: Monitor },
+    { id: 'question-papers', label: 'Question Papers', icon: FileText }
   ];
 
   return (
@@ -3485,6 +3488,25 @@ const StaffPortalDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
+          
+          {/* Question Papers Tab */}
+          {activeTab === 'question-papers' && (
+            <motion.div
+              key="question-papers"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">AI Question Paper Generator</h2>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Brain className="h-4 w-4 text-purple-600" />
+                  <span>Powered by NCERT/CBSE Curriculum</span>
+                </div>
+              </div>
+              <AIQuestionPaperGenerator />
             </motion.div>
           )}
         </AnimatePresence>

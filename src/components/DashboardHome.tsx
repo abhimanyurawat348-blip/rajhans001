@@ -1,36 +1,30 @@
-import React, { memo } from 'react';
-import ProfileCard from './ProfileCard';
-import ClassScheduleCard from './ClassScheduleCard';
-import AttendanceCard from './AttendanceCard';
-import HomeworkCard from './HomeworkCard';
-import ShopLinksCard from './ShopLinksCard';
+import React from 'react';
+import { motion } from 'framer-motion';
+import ModernDashboard from './ModernDashboard';
 
-interface StudentProfile {
+interface StudentData {
   name: string;
   studentId: string;
   grade: string;
   section: string;
   email: string;
   phone: string;
-  avatar?: string;
 }
 
-interface ClassSchedule {
+interface Class {
   id: string;
   subject: string;
   time: string;
   teacher: string;
   room: string;
-  startHour: number;
-  endHour: number;
-  status?: "upcoming" | "ongoing" | "completed";
+  status: 'upcoming' | 'ongoing' | 'completed';
 }
 
 interface AttendanceData {
   percentage: number;
   present: number;
   total: number;
-  trend: "up" | "down" | "stable";
+  trend: 'up' | 'down' | 'stable';
 }
 
 interface Homework {
@@ -38,50 +32,27 @@ interface Homework {
   subject: string;
   title: string;
   dueDate: string;
-  status: "pending" | "completed";
+  status: 'pending' | 'completed';
 }
 
 interface DashboardHomeProps {
-  studentData: StudentProfile;
-  todaysClasses: ClassSchedule[];
+  studentData: StudentData;
+  todaysClasses: Class[];
   attendanceData: AttendanceData;
   homeworkList: Homework[];
 }
 
-// Memoized components for better performance
-const MemoizedProfileCard = memo(ProfileCard);
-const MemoizedClassScheduleCard = memo(ClassScheduleCard);
-const MemoizedAttendanceCard = memo(AttendanceCard);
-const MemoizedHomeworkCard = memo(HomeworkCard);
-const MemoizedShopLinksCard = memo(ShopLinksCard);
-
-const DashboardHome: React.FC<DashboardHomeProps> = ({
-  studentData,
-  todaysClasses,
-  attendanceData,
-  homeworkList
-}) => {
+const DashboardHome: React.FC<DashboardHomeProps> = (props) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        <MemoizedProfileCard studentData={studentData} />
-        <MemoizedClassScheduleCard classes={todaysClasses} />
-      </div>
-      
-      <div className="space-y-6">
-        <MemoizedAttendanceCard attendanceData={attendanceData} />
-        <MemoizedHomeworkCard homeworkList={homeworkList} />
-        <MemoizedShopLinksCard />
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      <ModernDashboard />
+    </motion.div>
   );
 };
-
-// Add display names for debugging
-MemoizedProfileCard.displayName = 'MemoizedProfileCard';
-MemoizedClassScheduleCard.displayName = 'MemoizedClassScheduleCard';
-MemoizedAttendanceCard.displayName = 'MemoizedAttendanceCard';
-MemoizedHomeworkCard.displayName = 'MemoizedHomeworkCard';
-MemoizedShopLinksCard.displayName = 'MemoizedShopLinksCard';
 
 export default DashboardHome;

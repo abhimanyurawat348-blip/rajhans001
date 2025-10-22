@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getGeneratedPapers } from '../utils/questionPaperApiUtils';
 import { GeneratedQuestionPaper } from '../types';
+import QuestionPaperDisplay from './QuestionPaperDisplay';
 
 const GeneratedQuestionPapersDisplay: React.FC = () => {
   const [papers, setPapers] = useState<GeneratedQuestionPaper[]>([]);
@@ -19,6 +20,7 @@ const GeneratedQuestionPapersDisplay: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [displayedPaper, setDisplayedPaper] = useState<GeneratedQuestionPaper | null>(null);
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -78,8 +80,12 @@ const GeneratedQuestionPapersDisplay: React.FC = () => {
   };
 
   const handlePreview = (paper: GeneratedQuestionPaper) => {
-    // In a real implementation, this would open a preview modal
-    alert(`Previewing ${paper.title}`);
+    // Open paper in browser instead of just showing an alert
+    setDisplayedPaper(paper);
+  };
+
+  const handleCloseDisplay = () => {
+    setDisplayedPaper(null);
   };
 
   if (loading) {
@@ -246,6 +252,15 @@ const GeneratedQuestionPapersDisplay: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Question Paper Display Modal */}
+      {displayedPaper && (
+        <QuestionPaperDisplay
+          resource={displayedPaper}
+          onClose={handleCloseDisplay}
+          onDownload={handleDownload}
+        />
+      )}
     </div>
   );
 };

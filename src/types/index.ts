@@ -173,6 +173,7 @@ export interface StudyResource {
   updated_at?: Date;
   broken_report_count?: number;
   accessibility_notes?: string;
+  has_solutions?: boolean;
 }
 
 export interface Marksheet {

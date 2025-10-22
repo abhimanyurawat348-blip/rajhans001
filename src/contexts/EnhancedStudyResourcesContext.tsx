@@ -27,13 +27,17 @@ interface EnhancedStudyResourcesContextType {
   }>>;
   getResourcesByClass: (className: string) => StudyResource[];
   getResourcesBySubject: (subject: string) => StudyResource[];
-  downloadResource: (resource: StudyResource) => void;
+  downloadResource: (resource: StudyResource, withSolutions?: boolean) => void;
   reportBrokenLink: (resourceId: string, userId: string) => Promise<void>;
   verifyResource: (resourceId: string) => Promise<void>;
   getResourceVerificationLogs: (resourceId: string) => Promise<ResourceVerificationLog[]>;
   getResourcePlagiarismCheck: (resourceId: string) => Promise<PlagiarismCheckResult | null>;
   getResourceBrokenReports: (resourceId: string) => Promise<BrokenLinkReport[]>;
   refreshResources: () => Promise<void>;
+  // Add new function to open paper in browser
+  openPaperInBrowser: (resource: StudyResource) => void;
+  // Add function to get paper data for display
+  getPaperData: (resourceId: string) => any;
 }
 
 const EnhancedStudyResourcesContext = createContext<EnhancedStudyResourcesContextType | undefined>(undefined);
@@ -67,7 +71,8 @@ const enhancedSampleResources: StudyResource[] = [
     is_verified: true,
     created_at: new Date('2024-01-22'),
     updated_at: new Date('2024-01-22'),
-    broken_report_count: 0
+    broken_report_count: 0,
+    has_solutions: true
   },
   {
     id: 'sample-10-science',
@@ -126,10 +131,10 @@ export const EnhancedStudyResourcesProvider: React.FC<{ children: ReactNode }> =
     return resources.filter(resource => resource.subject === subject);
   };
 
-  const downloadResource = (resource: StudyResource) => {
+  const downloadResource = (resource: StudyResource, withSolutions = false) => {
     // Generate PDF content based on resource ID
     if (resource.id === 'sample-9-science') {
-      generateClass9SciencePaper();
+      generateClass9SciencePaper(withSolutions);
     } else if (resource.id === 'sample-10-science') {
       generateClass10SciencePaper();
     } else {
@@ -142,98 +147,592 @@ export const EnhancedStudyResourcesProvider: React.FC<{ children: ReactNode }> =
     }
   };
 
-  const generateClass9SciencePaper = () => {
+  // New function to open paper in browser
+  const openPaperInBrowser = (resource: StudyResource) => {
+    // This will be handled by the UI component that uses this context
+    // We just need to expose this function in the context
+  };
+
+  const generateClass9SciencePaper = (withAnswers = false) => {
     const doc = new jsPDF();
     
     // Add title
     doc.setFontSize(16);
-    doc.text('Class 9 Science Sample Paper - Maximum Marks 80', 105, 20, { align: 'center' });
+    doc.text('CBSE Sample Papers for Class 9 Science – Set 1', 105, 20, { align: 'center' });
     
     // Add general instructions
     doc.setFontSize(12);
-    doc.text('General Instructions:', 20, 35);
+    doc.text('General Instructions', 20, 35);
     doc.setFontSize(10);
-    doc.text('1. All questions are compulsory.', 25, 42);
-    doc.text('2. Internal choices are provided in some questions.', 25, 48);
-    doc.text('3. The question paper consists of five sections A-E.', 25, 54);
-    doc.text('4. Use of a calculator is not allowed.', 25, 60);
-    doc.text('5. Wherever necessary, neat and labeled diagrams should be drawn.', 25, 66);
+    doc.text('This question paper consists of 39 questions divided into three sections:', 25, 42);
+    doc.text('Section A – Biology, Section B – Chemistry, and Section C – Physics.', 25, 48);
+    doc.text('All questions are compulsory. However, internal choices are provided.', 25, 54);
+    doc.text('Students are expected to attempt only one of the alternatives in such cases.', 25, 60);
     
-    // Add section information
+    // Add time and marks
     doc.setFontSize(12);
-    doc.text('SECTION A - Very Short Answer Questions (1 mark each)', 20, 80);
-    doc.text('Questions 1 to 5 - 1 × 5 = 5 marks', 20, 87);
-    doc.text('1. Define matter.', 25, 94);
-    doc.text('2. State the law of conservation of mass with an example.', 25, 101);
-    doc.text('3. What is the SI unit of acceleration?', 25, 108);
-    doc.text('4. Name the structural and functional unit of life.', 25, 115);
-    doc.text('5. Mention one method of separation used for separating salt and water mixture.', 25, 122);
+    doc.text('Time: 3 Hours', 150, 35);
+    doc.text('Max. Marks: 80', 150, 42);
     
-    doc.text('SECTION B - Short Answer Type-I (2 marks each)', 20, 135);
-    doc.text('Questions 6 to 10 - 2 × 5 = 10 marks', 20, 142);
-    doc.text('6. Differentiate between homogeneous and heterogeneous mixtures with examples.', 25, 149);
-    doc.text('7. What is meant by displacement? How is it different from distance?', 25, 156);
-    doc.text('8. Write two differences between unicellular and multicellular organisms.', 25, 163);
-    doc.text('9. Explain how the motion of a body changes when an unbalanced force acts on it.', 25, 170);
-    doc.text('10. List any two functions of cell membrane.', 25, 177);
+    // Section A - Biology
+    doc.setFontSize(14);
+    doc.text('Section – A (Biology)', 20, 80);
     
-    doc.text('SECTION C - Short Answer Type-II (3 marks each)', 20, 190);
-    doc.text('Questions 11 to 16 - 3 × 6 = 18 marks', 20, 197);
-    doc.text('11. Write the postulates of Dalton’s Atomic Theory. Mention one limitation.', 25, 204);
-    doc.text('12. Derive the relation between acceleration, initial velocity, final velocity, and time.', 25, 211);
-    doc.text('13. Draw a neat labeled diagram of a plant cell.', 25, 218);
-    doc.text('14. Write three differences between solids, liquids, and gases based on particle arrangement and compressibility.', 25, 225);
-    doc.text('15. Define inertia. State Newton’s First Law of Motion and give one example from daily life.', 25, 232);
-    doc.text('16. Explain the process of evaporation and list any three factors affecting its rate.', 25, 239);
+    doc.setFontSize(10);
+    doc.text('Question 1.', 20, 90);
+    doc.text('Which of the following structures helps in gaseous exchange in plants? [1]', 25, 97);
+    doc.text('(a) Cuticle', 30, 104);
+    doc.text('(b) Stomata', 30, 111);
+    doc.text('(c) Lenticels', 30, 118);
+    doc.text('(d) Both (b) and (c)', 30, 125);
     
-    doc.text('SECTION D - Long Answer Type (5 marks each)', 20, 252);
-    doc.text('Questions 17 to 20 - 5 × 4 = 20 marks', 20, 259);
-    doc.text('17. (a) Define velocity and acceleration.', 25, 266);
-    doc.text('    (b) A car accelerates uniformly from rest to a speed of 72 km/h in 10 seconds. Calculate:', 25, 273);
-    doc.text('        (i) The acceleration.', 30, 280);
-    doc.text('        (ii) The distance covered.', 30, 287);
-    doc.text('        (iii) Draw a velocity-time graph for the motion.', 30, 294);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (d) Both (b) and (c)', 30, 132);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Explanation:', 30, 139);
+      doc.text('Stomata are small pores on leaves, and lenticels are openings on woody stems that help in exchange of gases.', 35, 146);
+    }
     
-    doc.text('18. (a) Explain the structure of an atom according to Bohr’s model.', 25, 307);
-    doc.text('    (b) Define valency and atomic number with examples.', 25, 314);
+    doc.text('Question 2.', 20, 160);
+    doc.text('Xylem and phloem together form which type of tissue? [1]', 25, 167);
+    doc.text('(a) Permanent tissue', 30, 174);
+    doc.text('(b) Simple tissue', 30, 181);
+    doc.text('(c) Complex tissue', 30, 188);
+    doc.text('(d) Meristematic tissue', 30, 195);
     
-    doc.text('19. (a) Draw a neat labeled diagram of the human digestive system.', 25, 327);
-    doc.text('    (b) Describe the function of any two digestive glands.', 25, 334);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Complex tissue', 30, 202);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Explanation:', 30, 209);
+      doc.text('Xylem and phloem consist of more than one type of cell performing a common function — hence called complex tissues.', 35, 216);
+    }
     
-    doc.text('20. (a) Explain the role of decomposers in an ecosystem.', 25, 347);
-    doc.text('    (b) What will happen if all decomposers are removed from the environment?', 25, 354);
-    doc.text('    (c) Suggest any two methods to reduce non-biodegradable waste.', 25, 361);
+    doc.text('Question 3.', 20, 230);
+    doc.text('Which of the following is a plant hormone that promotes cell division? [1]', 25, 237);
+    doc.text('(a) Auxin', 30, 244);
+    doc.text('(b) Gibberellin', 30, 251);
+    doc.text('(c) Cytokinin', 30, 258);
+    doc.text('(d) Abscisic acid', 30, 265);
     
-    doc.text('SECTION E - Case-Based / Source-Based Questions (4 marks each)', 20, 374);
-    doc.text('Questions 21 to 23 - 4 × 3 = 12 marks', 20, 381);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Cytokinin', 30, 272);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Explanation:', 30, 279);
+      doc.text('Cytokinins promote cell division in plant tissues, especially in roots and shoots.', 35, 286);
+    }
     
-    doc.text('Q21. (Physics – Motion)', 25, 388);
-    doc.text('A train starts from rest and accelerates uniformly for 10 seconds to reach a velocity of 20 m/s.', 30, 395);
-    doc.text('Then it runs at this velocity for 40 seconds and finally decelerates uniformly to stop in 10 seconds.', 30, 402);
-    doc.text('Read the passage and answer:', 30, 409);
-    doc.text('a. What is the acceleration during the first 10 seconds?', 35, 416);
-    doc.text('b. Draw a velocity-time graph for the motion.', 35, 423);
-    doc.text('c. Calculate total distance travelled by the train.', 35, 430);
-    doc.text('d. State one use of velocity-time graph.', 35, 437);
+    doc.text('Question 4.', 20, 300);
+    doc.text('Which organelle is responsible for detoxifying harmful substances in liver cells? [1]', 25, 307);
+    doc.text('(a) Ribosome', 30, 314);
+    doc.text('(b) Lysosome', 30, 321);
+    doc.text('(c) Smooth Endoplasmic Reticulum', 30, 328);
+    doc.text('(d) Mitochondria', 30, 335);
     
-    doc.text('Q22. (Chemistry – Matter Around Us)', 25, 450);
-    doc.text('A student was given a mixture of sand, salt, and water. He was asked to separate all three components.', 30, 457);
-    doc.text('a. List the steps he should follow in correct order.', 35, 464);
-    doc.text('b. Write the principle involved in each step.', 35, 471);
-    doc.text('c. Mention one change you will observe at each stage of separation.', 35, 478);
-    doc.text('d. Identify physical and chemical changes involved, if any.', 35, 485);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Smooth Endoplasmic Reticulum', 30, 342);
+    }
     
-    doc.text('Q23. (Biology – Tissues)', 25, 498);
-    doc.text('Read the following passage and answer:', 30, 505);
-    doc.text('A student observed thin slices of potato and onion under a microscope. He found differences in shape,', 30, 512);
-    doc.text('size, and internal structure of cells.', 30, 519);
-    doc.text('a. Identify the types of tissues observed in both cases.', 35, 526);
-    doc.text('b. Write two functions of parenchyma.', 35, 533);
-    doc.text('c. State one difference between plant and animal tissues.', 35, 540);
-    doc.text('d. Explain how plant tissues are classified broadly.', 35, 547);
+    doc.text('Question 5.', 20, 355);
+    doc.text('Identify the correctly matched pair. [1]', 25, 362);
+    doc.text('(a) Guard cells – Transpiration', 30, 369);
+    doc.text('(b) Root hair – Photosynthesis', 30, 376);
+    doc.text('(c) Stomata – Water absorption', 30, 383);
+    doc.text('(d) Xylem – Transport of food', 30, 390);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (a) Guard cells – Transpiration', 30, 397);
+    }
+    
+    doc.text('Question 6.', 20, 410);
+    doc.text('Which among the following is a rabi crop? [1]', 25, 417);
+    doc.text('(a) Paddy', 30, 424);
+    doc.text('(b) Maize', 30, 431);
+    doc.text('(c) Mustard', 30, 438);
+    doc.text('(d) Groundnut', 30, 445);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Mustard', 30, 452);
+    }
+    
+    doc.text('Question 7.', 20, 465);
+    doc.text('Rearing of fish for commercial purposes is called: [1]', 25, 472);
+    doc.text('(a) Apiculture', 30, 479);
+    doc.text('(b) Sericulture', 30, 486);
+    doc.text('(c) Pisciculture', 30, 493);
+    doc.text('(d) Floriculture', 30, 500);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Pisciculture', 30, 507);
+    }
+    
+    doc.text('Question 8.', 20, 520);
+    doc.text('Assertion (A): Phloem transports food from leaves to other parts of the plant.', 25, 527);
+    doc.text('Reason (R): Phloem conducts only water and minerals. [1]', 25, 534);
+    doc.text('(a) Both A and R are true and R is the correct explanation of A.', 30, 541);
+    doc.text('(b) Both A and R are true but R is not the correct explanation of A.', 30, 548);
+    doc.text('(c) A is true but R is false.', 30, 555);
+    doc.text('(d) A is false but R is true.', 30, 562);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) A is true but R is false.', 30, 569);
+    }
+    
+    doc.text('Question 9.', 20, 582);
+    doc.text('Assertion (A): Root hair increases the surface area for water absorption.', 25, 589);
+    doc.text('Reason (R): Root hair transports food materials to different plant organs. [1]', 25, 596);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) A is true but R is false.', 30, 603);
+    }
+    
+    doc.addPage();
+    
+    doc.text('Question 10.', 20, 20);
+    doc.text('Why are mitochondria called the “powerhouse of the cell”? [2]', 25, 27);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 34);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Mitochondria produce energy in the form of ATP during cellular respiration. This ATP acts as the main energy currency for all cellular activities.', 30, 41);
+    }
+    
+    doc.text('Question 11.', 20, 58);
+    doc.text('Attempt either A or B. [2]', 25, 65);
+    doc.text('A. Write any two advantages of using biofertilisers in crop production.', 30, 72);
+    doc.text('Answer:', 30, 79);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('1. They increase soil fertility naturally without harming soil microorganisms.', 35, 86);
+      doc.text('2. They are eco-friendly and cost-effective compared to chemical fertilisers.', 35, 93);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 100);
+    doc.text('B. Explain the importance of crop rotation.', 30, 107);
+    doc.text('Answer:', 30, 114);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('1. Crop rotation prevents depletion of specific nutrients from the soil.', 35, 121);
+      doc.text('2. It reduces pest attacks and helps in maintaining soil fertility.', 35, 128);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 12.', 20, 142);
+    doc.text('Differentiate between smooth and striated muscles. [2]', 25, 149);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 156);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Feature          Smooth Muscle     Striated Muscle', 30, 163);
+      doc.text('Structure        Non-striated,     Striated,', 30, 170);
+      doc.text('                 spindle-shaped    cylindrical', 45, 177);
+      doc.text('Control          Involuntary       Voluntary', 30, 184);
+      doc.text('Location         Internal organs   Skeletal muscles', 30, 191);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 13.', 20, 205);
+    doc.text('Draw a neat diagram of a neuron and label any three parts. [3]', 25, 212);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 219);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Students should draw a neuron showing dendrite, axon, and nucleus.', 30, 226);
+      doc.text('Explanation: Neurons transmit electrical impulses from one part of the body to another.', 30, 233);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 14.', 20, 247);
+    doc.text('What will happen if we place a plant cell in: [3]', 25, 254);
+    doc.text('(a) Distilled water', 30, 261);
+    doc.text('(b) Concentrated salt solution', 30, 268);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 275);
+      doc.setFont('helvetica', 'normal');
+      doc.text('(a) The cell will swell up (endosmosis).', 30, 282);
+      doc.text('(b) The cell will shrink (exosmosis).', 30, 289);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 15.', 20, 303);
+    doc.text('Attempt either A or B [4]', 25, 310);
+    doc.text('A. Why are guard cells kidney-shaped?', 30, 317);
+    doc.text('Answer:', 30, 324);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Guard cells are kidney-shaped to control the opening and closing of stomatal pores for gas exchange.', 35, 331);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 338);
+    doc.text('B. Why are white blood cells called the soldiers of the body?', 30, 345);
+    doc.text('Answer:', 30, 352);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Because they defend the body from infections and destroy disease-causing microbes.', 35, 359);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 16.', 20, 373);
+    doc.text('Attempt either A or B [5]', 25, 380);
+    doc.text('A. How does irrigation affect crop yield? Mention two methods of irrigation.', 30, 387);
+    doc.text('Answer:', 30, 394);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Irrigation provides regular water supply, ensuring better growth.', 35, 401);
+      doc.text('Methods: Sprinkler and Drip irrigation.', 35, 408);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 415);
+    doc.text('B. Explain briefly how hybridisation helps in crop improvement.', 30, 422);
+    doc.text('Answer:', 30, 429);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Hybridisation combines the best traits of two varieties (like disease resistance and high yield), resulting in improved crops.', 35, 436);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    // Section B - Chemistry
+    doc.addPage();
+    
+    doc.setFontSize(14);
+    doc.text('Section – B (Chemistry)', 20, 20);
+    doc.setFontSize(10);
+    
+    doc.text('Question 17.', 20, 35);
+    doc.text('Which process changes water vapour directly into ice? [1]', 25, 42);
+    doc.text('(a) Condensation', 30, 49);
+    doc.text('(b) Freezing', 30, 56);
+    doc.text('(c) Sublimation', 30, 63);
+    doc.text('(d) Deposition', 30, 70);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (d) Deposition', 30, 77);
+    }
+    
+    doc.text('Question 18.', 20, 90);
+    doc.text('Which of the following is a colloidal solution? [1]', 25, 97);
+    doc.text('(a) Salt in water', 30, 104);
+    doc.text('(b) Mud in water', 30, 111);
+    doc.text('(c) Milk', 30, 118);
+    doc.text('(d) Alcohol in water', 30, 125);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Milk', 30, 132);
+    }
+    
+    doc.text('Question 19.', 20, 145);
+    doc.text('Calculate the formula mass of calcium chloride (CaCl₂). [1]', 25, 152);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 159);
+      doc.setFont('helvetica', 'normal');
+      doc.text('= 40 + (35.5 × 2) = 111 u', 30, 166);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 20.', 20, 180);
+    doc.text('Which of the following represents a physical change? [1]', 25, 187);
+    doc.text('(a) Burning of paper', 30, 194);
+    doc.text('(b) Rusting of iron', 30, 201);
+    doc.text('(c) Dissolving sugar in water', 30, 208);
+    doc.text('(d) Digestion of food', 30, 215);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Dissolving sugar in water', 30, 222);
+    }
+    
+    doc.text('Question 21.', 20, 235);
+    doc.text('Which law is verified by the equation:', 25, 242);
+    doc.text('2Mg + O₂ → 2MgO [1]', 25, 249);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 256);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Law of Conservation of Mass', 30, 263);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 22.', 20, 277);
+    doc.text('Which statement is correct about isotopes? [1]', 25, 284);
+    doc.text('(a) They have different numbers of protons.', 30, 291);
+    doc.text('(b) They have same atomic number but different mass numbers.', 30, 298);
+    doc.text('(c) They have different chemical properties.', 30, 305);
+    doc.text('(d) They have different electronic configurations.', 30, 312);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (b)', 30, 319);
+    }
+    
+    doc.text('Question 23.', 20, 332);
+    doc.text('An element X has 13 electrons and 14 neutrons. Represent the atom symbolically. [1]', 25, 339);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 346);
+      doc.setFont('helvetica', 'normal');
+      doc.text('¹³₂₇X', 30, 353);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 24.', 20, 367);
+    doc.text('Assertion (A): All compounds obey the law of constant proportions.', 25, 374);
+    doc.text('Reason (R): Compounds have fixed composition by mass. [1]', 25, 381);
+    doc.text('(a) Both A and R are true and R is the correct explanation of A.', 30, 388);
+    doc.text('(b) Both A and R are true but R is not the correct explanation of A.', 30, 395);
+    doc.text('(c) A is true but R is false.', 30, 402);
+    doc.text('(d) A is false but R is true.', 30, 409);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (a) Both A and R are true and R is the correct explanation of A.', 30, 416);
+    }
+    
+    doc.text('Question 25.', 20, 430);
+    doc.text('Write the electronic configuration of an atom with atomic number 17. [2]', 25, 437);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 444);
+      doc.setFont('helvetica', 'normal');
+      doc.text('K = 2, L = 8, M = 7 → 2, 8, 7', 30, 451);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 26.', 20, 465);
+    doc.text('Attempt either A or B [3]', 25, 472);
+    doc.text('A. Explain how evaporation causes cooling.', 30, 479);
+    doc.text('Answer:', 30, 486);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('When a liquid evaporates, it absorbs heat from its surroundings, lowering the temperature.', 35, 493);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 500);
+    doc.text('B. Explain how diffusion takes place in gases.', 30, 507);
+    doc.text('Answer:', 30, 514);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Particles of gases move freely and mix without stirring due to high kinetic energy.', 35, 521);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 27.', 20, 535);
+    doc.text('Differentiate between true solution, suspension, and colloid. [3]', 25, 542);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 549);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Property         True Solution    Colloid         Suspension', 30, 556);
+      doc.text('Particle size    <1 nm            1–1000 nm       >1000 nm', 30, 563);
+      doc.text('Stability        Stable           Stable          Unstable', 30, 570);
+      doc.text('Tyndall effect   No               Yes             Sometimes', 30, 577);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 28.', 20, 591);
+    doc.text('Isotopes of hydrogen are protium, deuterium, and tritium. Write one use of each. [4]', 25, 598);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 605);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Protium: Used in hydrogen fuel cells.', 30, 612);
+      doc.text('Deuterium: Used in nuclear reactors as moderator.', 30, 619);
+      doc.text('Tritium: Used in luminous paints and nuclear weapons.', 30, 626);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 29.', 20, 640);
+    doc.text('Attempt either A or B [5]', 25, 647);
+    doc.text('A. Explain Rutherford’s experiment and state its conclusions.', 30, 654);
+    doc.text('Answer:', 30, 661);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Rutherford bombarded α-particles on a gold foil and observed that most passed straight, few deflected, and very few bounced back.', 35, 668);
+      doc.text('Conclusions:', 35, 675);
+      doc.text('1. Atom has a small, dense, positively charged nucleus.', 40, 682);
+      doc.text('2. Most of the atom is empty space.', 40, 689);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 696);
+    doc.text('B. State the postulates of Bohr’s model of atom.', 30, 703);
+    doc.text('Answer:', 30, 710);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('1. Electrons revolve in fixed orbits around the nucleus.', 35, 717);
+      doc.text('2. Energy of each orbit is fixed.', 35, 724);
+      doc.text('3. Energy is absorbed or emitted when electrons jump between orbits.', 35, 731);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    // Section C - Physics
+    doc.addPage();
+    
+    doc.setFontSize(14);
+    doc.text('Section – C (Physics)', 20, 20);
+    doc.setFontSize(10);
+    
+    doc.text('Question 30.', 20, 35);
+    doc.text('Which of the following statements is correct? [1]', 25, 42);
+    doc.text('(a) Speed has both magnitude and direction.', 30, 49);
+    doc.text('(b) Velocity is a scalar quantity.', 30, 56);
+    doc.text('(c) Displacement can be zero even when distance is not.', 30, 63);
+    doc.text('(d) Acceleration is always positive.', 30, 70);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c)', 30, 77);
+    }
+    
+    doc.text('Question 31.', 20, 90);
+    doc.text('Sound cannot travel through: [1]', 25, 97);
+    doc.text('(a) Air', 30, 104);
+    doc.text('(b) Water', 30, 111);
+    doc.text('(c) Vacuum', 30, 118);
+    doc.text('(d) Iron', 30, 125);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (c) Vacuum', 30, 132);
+    }
+    
+    doc.text('Question 32.', 20, 145);
+    doc.text('Assertion (A): When velocity is constant, acceleration is zero.', 25, 152);
+    doc.text('Reason (R): Acceleration measures the rate of change of velocity. [1]', 25, 159);
+    doc.text('(a) Both A and R are true and R is the correct explanation of A.', 30, 166);
+    doc.text('(b) Both A and R are true but R is not the correct explanation of A.', 30, 173);
+    doc.text('(c) A is true but R is false.', 30, 180);
+    doc.text('(d) A is false but R is true.', 30, 187);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer: (a) Both A and R are true and R is the correct explanation of A.', 30, 194);
+    }
+    
+    doc.text('Question 33.', 20, 207);
+    doc.text('A car accelerates from rest at 2 m/s² for 5 seconds. Find its final velocity and distance covered. [2]', 25, 214);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 221);
+      doc.setFont('helvetica', 'normal');
+      doc.text('v = u + at = 0 + 2×5 = 10 m/s', 30, 228);
+      doc.text('s = ut + ½at² = 0 + ½×2×25 = 25 m', 30, 235);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 34.', 20, 249);
+    doc.text('Attempt either A or B [3]', 25, 256);
+    doc.text('A. Define echo and state one condition for hearing it.', 30, 263);
+    doc.text('Answer:', 30, 270);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Echo is the repetition of sound due to reflection.', 35, 277);
+      doc.text('Condition: The obstacle must be at least 17 m away.', 35, 284);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Or', 30, 291);
+    doc.text('B. Why is the speed of sound greater in solids than in gases?', 30, 298);
+    doc.text('Answer:', 30, 305);
+    if (withAnswers) {
+      doc.setFont('helvetica', 'normal');
+      doc.text('Because particles in solids are closely packed, allowing faster transfer of vibrations.', 35, 312);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 35.', 20, 326);
+    doc.text('A 500 g stone is thrown vertically upward with a velocity of 10 m/s. Find its potential energy at maximum height. [3]', 25, 333);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 340);
+      doc.setFont('helvetica', 'normal');
+      doc.text('At max height, KE = 0, all energy = PE = ½mv²', 30, 347);
+      doc.text('= ½ × 0.5 × 100 = 25 J', 30, 354);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 36.', 20, 368);
+    doc.text('A 4 kg object is lifted to a height of 2 m. Calculate its potential energy. [2]', 25, 375);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 382);
+      doc.setFont('helvetica', 'normal');
+      doc.text('PE = mgh = 4 × 9.8 × 2 = 78.4 J', 30, 389);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 37.', 20, 403);
+    doc.text('A sound wave travels 660 m in 2 seconds. Calculate its speed. [2]', 25, 410);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 417);
+      doc.setFont('helvetica', 'normal');
+      doc.text('v = d/t = 660/2 = 330 m/s', 30, 424);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 38.', 20, 438);
+    doc.text('A force of 20 N acts on a 2 kg object for 3 seconds. Calculate acceleration and final velocity. [4]', 25, 445);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 452);
+      doc.setFont('helvetica', 'normal');
+      doc.text('a = F/m = 20/2 = 10 m/s²', 30, 459);
+      doc.text('v = u + at = 0 + 10×3 = 30 m/s', 30, 466);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    doc.text('Question 39.', 20, 480);
+    doc.text('State the law of conservation of energy with an example. [2]', 25, 487);
+    
+    if (withAnswers) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Answer:', 25, 494);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Energy can neither be created nor destroyed, only transformed from one form to another.', 30, 501);
+      doc.text('Example: In a pendulum, potential energy converts into kinetic energy and back.', 30, 508);
+      doc.setFont('helvetica', 'bold');
+    }
+    
+    // Add debugging information
+    doc.setFontSize(8);
+    doc.text('PDF Generation Debug Info:', 20, 520);
+    doc.text('Page 3 - End of Physics Section', 20, 525);
+    doc.text('Questions 30-39 included', 20, 530);
+    doc.text('Total Questions: 39', 20, 535);
     
     // Save the PDF
-    doc.save('Class-9-Science-Sample-Paper.pdf');
+    doc.save(withAnswers ? 'Class-9-Science-Sample-Paper-With-Solutions.pdf' : 'Class-9-Science-Sample-Paper.pdf');
   };
 
   const generateClass10SciencePaper = () => {
@@ -503,6 +1002,567 @@ export const EnhancedStudyResourcesProvider: React.FC<{ children: ReactNode }> =
       getResourcesByClass,
       getResourcesBySubject,
       downloadResource,
+      openPaperInBrowser, // Add this new function
+      getPaperData: (resourceId: string) => {
+        // Return structured data for the question papers
+        if (resourceId === 'sample-9-science') {
+          return {
+            id: 'sample-9-science',
+            title: "CBSE Sample Papers for Class 9 Science – Set 1",
+            time: "3 Hours",
+            maxMarks: "80",
+            instructions: [
+              "This question paper consists of 39 questions divided into three sections:",
+              "Section A – Biology, Section B – Chemistry, and Section C – Physics.",
+              "All questions are compulsory. However, internal choices are provided.",
+              "Students are expected to attempt only one of the alternatives in such cases."
+            ],
+            sections: [
+              {
+                name: "Section – A (Biology)",
+                questions: [
+                  {
+                    id: 1,
+                    text: "Which of the following structures helps in gaseous exchange in plants?",
+                    marks: 1,
+                    options: ["(a) Cuticle", "(b) Stomata", "(c) Lenticels", "(d) Both (b) and (c)"],
+                    answer: "(d) Both (b) and (c)",
+                    explanation: "Stomata are small pores on leaves, and lenticels are openings on woody stems that help in exchange of gases."
+                  },
+                  {
+                    id: 2,
+                    text: "Xylem and phloem together form which type of tissue?",
+                    marks: 1,
+                    options: ["(a) Permanent tissue", "(b) Simple tissue", "(c) Complex tissue", "(d) Meristematic tissue"],
+                    answer: "(c) Complex tissue",
+                    explanation: "Xylem and phloem consist of more than one type of cell performing a common function — hence called complex tissues."
+                  },
+                  {
+                    id: 3,
+                    text: "Which of the following is a plant hormone that promotes cell division?",
+                    marks: 1,
+                    options: ["(a) Auxin", "(b) Gibberellin", "(c) Cytokinin", "(d) Abscisic acid"],
+                    answer: "(c) Cytokinin",
+                    explanation: "Cytokinins promote cell division in plant tissues, especially in roots and shoots."
+                  },
+                  {
+                    id: 4,
+                    text: "Which organelle is responsible for detoxifying harmful substances in liver cells?",
+                    marks: 1,
+                    options: ["(a) Ribosome", "(b) Lysosome", "(c) Smooth Endoplasmic Reticulum", "(d) Mitochondria"],
+                    answer: "(c) Smooth Endoplasmic Reticulum"
+                  },
+                  {
+                    id: 5,
+                    text: "Identify the correctly matched pair.",
+                    marks: 1,
+                    options: ["(a) Guard cells – Transpiration", "(b) Root hair – Photosynthesis", "(c) Stomata – Water absorption", "(d) Xylem – Transport of food"],
+                    answer: "(a) Guard cells – Transpiration"
+                  },
+                  {
+                    id: 6,
+                    text: "Which among the following is a rabi crop?",
+                    marks: 1,
+                    options: ["(a) Paddy", "(b) Maize", "(c) Mustard", "(d) Groundnut"],
+                    answer: "(c) Mustard"
+                  },
+                  {
+                    id: 7,
+                    text: "Rearing of fish for commercial purposes is called:",
+                    marks: 1,
+                    options: ["(a) Apiculture", "(b) Sericulture", "(c) Pisciculture", "(d) Floriculture"],
+                    answer: "(c) Pisciculture"
+                  },
+                  {
+                    id: 8,
+                    text: "Assertion (A): Phloem transports food from leaves to other parts of the plant.\nReason (R): Phloem conducts only water and minerals.",
+                    marks: 1,
+                    options: [
+                      "(a) Both A and R are true and R is the correct explanation of A.",
+                      "(b) Both A and R are true but R is not the correct explanation of A.",
+                      "(c) A is true but R is false.",
+                      "(d) A is false but R is true."
+                    ],
+                    answer: "(c) A is true but R is false."
+                  },
+                  {
+                    id: 9,
+                    text: "Assertion (A): Root hair increases the surface area for water absorption.\nReason (R): Root hair transports food materials to different plant organs.",
+                    marks: 1,
+                    answer: "(c) A is true but R is false."
+                  },
+                  {
+                    id: 10,
+                    text: "Why are mitochondria called the “powerhouse of the cell”?",
+                    marks: 2,
+                    answer: "Mitochondria produce energy in the form of ATP during cellular respiration. This ATP acts as the main energy currency for all cellular activities."
+                  },
+                  {
+                    id: 11,
+                    text: "Attempt either A or B.",
+                    marks: 2,
+                    subQuestions: [
+                      {
+                        id: "11A",
+                        text: "A. Write any two advantages of using biofertilisers in crop production.",
+                        answer: "1. They increase soil fertility naturally without harming soil microorganisms.\n2. They are eco-friendly and cost-effective compared to chemical fertilisers."
+                      },
+                  {
+                    id: "11B",
+                    text: "B. Explain the importance of crop rotation.",
+                    answer: "1. Crop rotation prevents depletion of specific nutrients from the soil.\n2. It reduces pest attacks and helps in maintaining soil fertility."
+                  }
+                ]
+              },
+              {
+                id: 12,
+                text: "Differentiate between smooth and striated muscles.",
+                marks: 2,
+                answer: "Feature          Smooth Muscle     Striated Muscle\nStructure        Non-striated,     Striated,\n                 spindle-shaped    cylindrical\nControl          Involuntary       Voluntary\nLocation         Internal organs   Skeletal muscles"
+              },
+              {
+                id: 13,
+                text: "Draw a neat diagram of a neuron and label any three parts.",
+                marks: 3,
+                answer: "Students should draw a neuron showing dendrite, axon, and nucleus.\nExplanation: Neurons transmit electrical impulses from one part of the body to another."
+              },
+              {
+                id: 14,
+                text: "What will happen if we place a plant cell in:\n(a) Distilled water\n(b) Concentrated salt solution",
+                marks: 3,
+                answer: "(a) The cell will swell up (endosmosis).\n(b) The cell will shrink (exosmosis)."
+              },
+              {
+                id: 15,
+                text: "Attempt either A or B",
+                marks: 4,
+                subQuestions: [
+                  {
+                    id: "15A",
+                    text: "A. Why are guard cells kidney-shaped?",
+                    answer: "Guard cells are kidney-shaped to control the opening and closing of stomatal pores for gas exchange."
+                  },
+                  {
+                    id: "15B",
+                    text: "B. Why are white blood cells called the soldiers of the body?",
+                    answer: "Because they defend the body from infections and destroy disease-causing microbes."
+                  }
+                ]
+              },
+              {
+                id: 16,
+                text: "Attempt either A or B",
+                marks: 5,
+                subQuestions: [
+                  {
+                    id: "16A",
+                    text: "A. How does irrigation affect crop yield? Mention two methods of irrigation.",
+                    answer: "Irrigation provides regular water supply, ensuring better growth.\nMethods: Sprinkler and Drip irrigation."
+                  },
+                  {
+                    id: "16B",
+                    text: "B. Explain briefly how hybridisation helps in crop improvement.",
+                    answer: "Hybridisation combines the best traits of two varieties (like disease resistance and high yield), resulting in improved crops."
+                  }
+                ]
+              }
+                ]
+              },
+              {
+                name: "Section – B (Chemistry)",
+                questions: [
+                  {
+                    id: 17,
+                    text: "Which process changes water vapour directly into ice?",
+                    marks: 1,
+                    options: ["(a) Condensation", "(b) Freezing", "(c) Sublimation", "(d) Deposition"],
+                    answer: "(d) Deposition"
+                  },
+                  {
+                    id: 18,
+                    text: "Which of the following is a colloidal solution?",
+                    marks: 1,
+                    options: ["(a) Salt in water", "(b) Mud in water", "(c) Milk", "(d) Alcohol in water"],
+                    answer: "(c) Milk"
+                  },
+                  {
+                    id: 19,
+                    text: "Calculate the formula mass of calcium chloride (CaCl₂).",
+                    marks: 1,
+                    answer: "= 40 + (35.5 × 2) = 111 u"
+                  },
+                  {
+                    id: 20,
+                    text: "Which of the following represents a physical change?",
+                    marks: 1,
+                    options: [
+                      "(a) Burning of paper",
+                      "(b) Rusting of iron",
+                      "(c) Dissolving sugar in water",
+                      "(d) Digestion of food"
+                    ],
+                    answer: "(c) Dissolving sugar in water"
+                  },
+                  {
+                    id: 21,
+                    text: "Which law is verified by the equation:\n2Mg + O₂ → 2MgO",
+                    marks: 1,
+                    answer: "Law of Conservation of Mass"
+                  },
+                  {
+                    id: 22,
+                    text: "Which statement is correct about isotopes?",
+                    marks: 1,
+                    options: [
+                      "(a) They have different numbers of protons.",
+                      "(b) They have same atomic number but different mass numbers.",
+                      "(c) They have different chemical properties.",
+                      "(d) They have different electronic configurations."
+                    ],
+                    answer: "(b)"
+                  },
+                  {
+                    id: 23,
+                    text: "An element X has 13 electrons and 14 neutrons. Represent the atom symbolically.",
+                    marks: 1,
+                    answer: "¹³₂₇X"
+                  },
+                  {
+                    id: 24,
+                    text: "Assertion (A): All compounds obey the law of constant proportions.\nReason (R): Compounds have fixed composition by mass.",
+                    marks: 1,
+                    options: [
+                      "(a) Both A and R are true and R is the correct explanation of A.",
+                      "(b) Both A and R are true but R is not the correct explanation of A.",
+                      "(c) A is true but R is false.",
+                      "(d) A is false but R is true."
+                    ],
+                    answer: "(a) Both A and R are true and R is the correct explanation of A."
+                  },
+                  {
+                    id: 25,
+                    text: "Write the electronic configuration of an atom with atomic number 17.",
+                    marks: 2,
+                    answer: "K = 2, L = 8, M = 7 → 2, 8, 7"
+                  },
+                  {
+                    id: 26,
+                    text: "Attempt either A or B",
+                    marks: 3,
+                    subQuestions: [
+                      {
+                        id: "26A",
+                        text: "A. Explain how evaporation causes cooling.",
+                        answer: "When a liquid evaporates, it absorbs heat from its surroundings, lowering the temperature."
+                      },
+                      {
+                        id: "26B",
+                        text: "B. Explain how diffusion takes place in gases.",
+                        answer: "Particles of gases move freely and mix without stirring due to high kinetic energy."
+                      }
+                    ]
+                  },
+                  {
+                    id: 27,
+                    text: "Differentiate between true solution, suspension, and colloid.",
+                    marks: 3,
+                    answer: "Property         True Solution    Colloid         Suspension\nParticle size    <1 nm            1–1000 nm       >1000 nm\nStability        Stable           Stable          Unstable\nTyndall effect   No               Yes             Sometimes"
+                  },
+                  {
+                    id: 28,
+                    text: "Isotopes of hydrogen are protium, deuterium, and tritium. Write one use of each.",
+                    marks: 4,
+                    answer: "Protium: Used in hydrogen fuel cells.\nDeuterium: Used in nuclear reactors as moderator.\nTritium: Used in luminous paints and nuclear weapons."
+                  },
+                  {
+                    id: 29,
+                    text: "Attempt either A or B",
+                    marks: 5,
+                    subQuestions: [
+                      {
+                        id: "29A",
+                        text: "A. Explain Rutherford’s experiment and state its conclusions.",
+                        answer: "Rutherford bombarded α-particles on a gold foil and observed that most passed straight, few deflected, and very few bounced back.\nConclusions:\n1. Atom has a small, dense, positively charged nucleus.\n2. Most of the atom is empty space."
+                      },
+                      {
+                        id: "29B",
+                        text: "B. State the postulates of Bohr’s model of atom.",
+                        answer: "1. Electrons revolve in fixed orbits around the nucleus.\n2. Energy of each orbit is fixed.\n3. Energy is absorbed or emitted when electrons jump between orbits."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                name: "Section – C (Physics)",
+                questions: [
+                  {
+                    id: 30,
+                    text: "Which of the following statements is correct?",
+                    marks: 1,
+                    options: [
+                      "(a) Speed has both magnitude and direction.",
+                      "(b) Velocity is a scalar quantity.",
+                      "(c) Displacement can be zero even when distance is not.",
+                      "(d) Acceleration is always positive."
+                    ],
+                    answer: "(c)"
+                  },
+                  {
+                    id: 31,
+                    text: "Sound cannot travel through:",
+                    marks: 1,
+                    options: ["(a) Air", "(b) Water", "(c) Vacuum", "(d) Iron"],
+                    answer: "(c) Vacuum"
+                  },
+                  {
+                    id: 32,
+                    text: "Assertion (A): When velocity is constant, acceleration is zero.\nReason (R): Acceleration measures the rate of change of velocity.",
+                    marks: 1,
+                    options: [
+                      "(a) Both A and R are true and R is the correct explanation of A.",
+                      "(b) Both A and R are true but R is not the correct explanation of A.",
+                      "(c) A is true but R is false.",
+                      "(d) A is false but R is true."
+                    ],
+                    answer: "(a) Both A and R are true and R is the correct explanation of A."
+                  },
+                  {
+                    id: 33,
+                    text: "A car accelerates from rest at 2 m/s² for 5 seconds. Find its final velocity and distance covered.",
+                    marks: 2,
+                    answer: "v = u + at = 0 + 2×5 = 10 m/s\ns = ut + ½at² = 0 + ½×2×25 = 25 m"
+                  },
+                  {
+                    id: 34,
+                    text: "Attempt either A or B",
+                    marks: 3,
+                    subQuestions: [
+                      {
+                        id: "34A",
+                        text: "A. Define echo and state one condition for hearing it.",
+                        answer: "Echo is the repetition of sound due to reflection.\nCondition: The obstacle must be at least 17 m away."
+                      },
+                      {
+                        id: "34B",
+                        text: "B. Why is the speed of sound greater in solids than in gases?",
+                        answer: "Because particles in solids are closely packed, allowing faster transfer of vibrations."
+                      }
+                    ]
+                  },
+                  {
+                    id: 35,
+                    text: "A 500 g stone is thrown vertically upward with a velocity of 10 m/s. Find its potential energy at maximum height.",
+                    marks: 3,
+                    answer: "At max height, KE = 0, all energy = PE = ½mv²\n= ½ × 0.5 × 100 = 25 J"
+                  },
+                  {
+                    id: 36,
+                    text: "A 4 kg object is lifted to a height of 2 m. Calculate its potential energy.",
+                    marks: 2,
+                    answer: "PE = mgh = 4 × 9.8 × 2 = 78.4 J"
+                  },
+                  {
+                    id: 37,
+                    text: "A sound wave travels 660 m in 2 seconds. Calculate its speed.",
+                    marks: 2,
+                    answer: "v = d/t = 660/2 = 330 m/s"
+                  },
+                  {
+                    id: 38,
+                    text: "A force of 20 N acts on a 2 kg object for 3 seconds. Calculate acceleration and final velocity.",
+                    marks: 4,
+                    answer: "a = F/m = 20/2 = 10 m/s²\nv = u + at = 0 + 10×3 = 30 m/s"
+                  },
+                  {
+                    id: 39,
+                    text: "State the law of conservation of energy with an example.",
+                    marks: 2,
+                    answer: "Energy can neither be created nor destroyed, only transformed from one form to another.\nExample: In a pendulum, potential energy converts into kinetic energy and back."
+                  }
+                ]
+              }
+            ]
+          };
+        } else if (resourceId === 'sample-10-science') {
+          return {
+            id: 'sample-10-science',
+            title: "Class 10 Science Sample Paper - Maximum Marks 80",
+            time: "",
+            maxMarks: "80",
+            instructions: [
+              "All questions are compulsory.",
+              "The question paper consists of five sections A-E.",
+              "Internal choices are provided in some questions.",
+              "Use of a calculator is not allowed.",
+              "Wherever necessary, draw neat, labeled diagrams."
+            ],
+            sections: [
+              {
+                name: "SECTION A (1 Mark each)",
+                questions: [
+                  {
+                    id: 1,
+                    text: "Define valency. Give the valency of magnesium.",
+                    marks: 1
+                  },
+                  {
+                    id: 2,
+                    text: "Why is respiration considered an exothermic reaction?",
+                    marks: 1
+                  },
+                  {
+                    id: 3,
+                    text: "What is the role of the iris in the human eye?",
+                    marks: 1
+                  },
+                  {
+                    id: 4,
+                    text: "State Ohm's Law.",
+                    marks: 1
+                  },
+                  {
+                    id: 5,
+                    text: "Why are LEDs preferred over filament bulbs?",
+                    marks: 1
+                  },
+                  {
+                    id: 6,
+                    text: "What are trophic levels?",
+                    marks: 1
+                  },
+                  {
+                    id: 7,
+                    text: "State one property that makes carbon an essential element for life.",
+                    marks: 1
+                  }
+                ]
+              },
+              {
+                name: "SECTION B (2 Marks each)",
+                questions: [
+                  {
+                    id: 8,
+                    text: "Write the chemical formula of washing soda and mention its two uses.",
+                    marks: 2
+                  },
+                  {
+                    id: 9,
+                    text: "State two differences between arteries and veins.",
+                    marks: 2
+                  },
+                  {
+                    id: 10,
+                    text: "What is the role of the diaphragm in respiration?",
+                    marks: 2
+                  },
+                  {
+                    id: 11,
+                    text: "Write two advantages of connecting electrical devices in parallel.",
+                    marks: 2
+                  },
+                  {
+                    id: 12,
+                    text: "Explain why excessive use of fertilizers is harmful to the environment.",
+                    marks: 2
+                  }
+                ]
+              },
+              {
+                name: "SECTION C (3 Marks each)",
+                questions: [
+                  {
+                    id: 13,
+                    text: "Explain the reactivity trends in the modern periodic table.",
+                    marks: 3
+                  },
+                  {
+                    id: 14,
+                    text: "Write the balanced chemical equation for:\n(a) Thermal decomposition of calcium carbonate.\n(b) Reaction between zinc and dilute sulphuric acid.",
+                    marks: 3
+                  },
+                  {
+                    id: 15,
+                    text: "Explain the process of nutrition in Amoeba with a neat labeled diagram.",
+                    marks: 3
+                  },
+                  {
+                    id: 16,
+                    text: "Differentiate between convex and concave lenses with one use of each.",
+                    marks: 3
+                  },
+                  {
+                    id: 17,
+                    text: "Draw a circuit diagram for the combination of three resistors R₁, R₂, and R₃ connected in parallel.\nDerive the formula for the equivalent resistance.",
+                    marks: 3
+                  },
+                  {
+                    id: 18,
+                    text: "State the three R's used for conservation of environment. Give one example for each.",
+                    marks: 3
+                  }
+                ]
+              },
+              {
+                name: "SECTION D (5 Marks each)",
+                questions: [
+                  {
+                    id: 19,
+                    text: "(a) Write the steps involved in the extraction of metals from ores.\n(b) Explain why copper and aluminium are used for making electrical wires.\n(c) Distinguish between calcination and roasting.",
+                    marks: 5
+                  },
+                  {
+                    id: 20,
+                    text: "(a) Draw a neat labeled diagram of the human heart.\n(b) Describe the flow of blood through it.\n(c) State one function each of arteries, veins, and capillaries.",
+                    marks: 5
+                  },
+                  {
+                    id: 21,
+                    text: "(a) Explain the formation of an image by a concave mirror when the object is placed:\nBetween the pole and focus.\nBeyond the center of curvature.\n(b) Write one use of concave mirror.\n(c) Define focal length.",
+                    marks: 5
+                  },
+                  {
+                    id: 22,
+                    text: "(a) Define electric power.\n(b) State and derive the formula for power in terms of current and resistance.\n(c) A 60 W bulb is used for 5 hours daily. Calculate energy consumed in one month (30 days) in kWh.",
+                    marks: 5
+                  }
+                ]
+              },
+              {
+                name: "SECTION E (Case-Based / Source-Based Questions)",
+                questions: [
+                  {
+                    id: 23,
+                    text: "(Chemistry – Acids, Bases, and Salts)\nA student tested four solutions – A, B, C, and D – using litmus paper and pH paper.\nThe pH values were found to be 2, 5, 8, and 12 respectively.\na. Which solution is strongly acidic and which is strongly basic?\nb. Write the effect of each on blue and red litmus paper.\nc. Identify which one could be a dilute solution of sodium hydroxide.\nd. Explain the importance of maintaining pH in our digestive system.",
+                    marks: 4
+                  },
+                  {
+                    id: 24,
+                    text: "(Biology – Control and Coordination)\nRavi accidentally touches a hot object and immediately withdraws his hand.\nLater, while smelling food, his mouth starts watering.\na. Differentiate between the two responses.\nb. Name the parts of the nervous system involved in each case.\nc. What is the role of the spinal cord?\nd. Explain how hormones control responses differently from nerves.",
+                    marks: 4
+                  },
+                  {
+                    id: 25,
+                    text: "(Physics – Effects of Electric Current)\nAn electric heater of 1000 W is operated for 30 minutes in a 220 V circuit.\na. Calculate the current drawn by the heater.\nb. Calculate the heat produced in joules.\nc. If the same heater is used for 2 hours daily, find total energy consumed in one week in kWh.\nd. Mention two devices that use the heating effect of electric current.",
+                    marks: 4
+                  }
+                ]
+              },
+              {
+                name: "INTERNAL ASSESSMENT - 20 Marks",
+                questions: [
+                  {
+                    id: 26,
+                    text: "Component                            Marks\nPeriodic Tests                        10\nNotebook Submission                  5\nPractical Work (Lab Record + Viva)   5\nTotal                                20 Marks",
+                    marks: 20
+                  }
+                ]
+              }
+            ]
+          };
+        }
+        return null;
+      },
       reportBrokenLink,
       verifyResource,
       getResourceVerificationLogs,

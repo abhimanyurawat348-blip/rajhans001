@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useEnhancedStudyResources } from '../contexts/EnhancedStudyResourcesContext';
 import { 
@@ -17,6 +17,8 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
+import QuestionPaperDisplay from '../components/QuestionPaperDisplay';
+import { StudyResource } from '../types';
 
 const EnhancedStudyResources: React.FC = () => {
   const { 
@@ -28,11 +30,14 @@ const EnhancedStudyResources: React.FC = () => {
     downloadResource, 
     reportBrokenLink,
     verifyResource,
-    refreshResources
+    refreshResources,
+    openPaperInBrowser,
+    getPaperData
   } = useEnhancedStudyResources();
 
   const [showFilters, setShowFilters] = useState(false);
   const [currentUser, setCurrentUser] = useState({ id: 'user-123', role: 'student' });
+  const [displayedPaper, setDisplayedPaper] = useState<any>(null);
 
   // Filter resources to show only sample papers
   const filteredResources = resources
@@ -88,6 +93,30 @@ const EnhancedStudyResources: React.FC = () => {
     if (currentUser.role === 'teacher' || currentUser.role === 'admin') {
       await verifyResource(resourceId);
     }
+  };
+
+  const handleViewPaper = (resource: StudyResource) => {
+    const paperData = getPaperData(resource.id);
+    if (paperData) {
+      setDisplayedPaper({ ...paperData, viewMode: 'full' });
+    } else {
+      // Fallback to download if no data available
+      openPaperInBrowser(resource);
+    }
+  };
+
+  const handleViewSolutions = (resource: StudyResource) => {
+    const paperData = getPaperData(resource.id);
+    if (paperData) {
+      setDisplayedPaper({ ...paperData, viewMode: 'solutions' });
+    } else {
+      // Fallback to download solutions if no data available
+      downloadResource(resource, true);
+    }
+  };
+
+  const handleCloseDisplay = () => {
+    setDisplayedPaper(null);
   };
 
   if (loading) {
@@ -315,12 +344,39 @@ const EnhancedStudyResources: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
+                  {resource.has_solutions ? (
+                    <>
+                      <button
+                        onClick={() => handleViewPaper(resource)}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>See Paper</span>
+                      </button>
+                      <button
+                        onClick={() => handleViewSolutions(resource)}
+                        className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                      >
+                        <FileText className="h-4 w-4" />
+                        <span>See Solutions</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleViewPaper(resource)}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>See Paper</span>
+                    </button>
+                  )}
+                  
                   <button
-                    onClick={() => downloadResource(resource)}
-                    className="flex-1 flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    onClick={() => downloadResource(resource, false)}
+                    className="flex items-center justify-center p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Download as PDF"
                   >
                     <Download className="h-4 w-4" />
-                    <span>Download</span>
                   </button>
                   
                   <button
@@ -382,6 +438,20 @@ const EnhancedStudyResources: React.FC = () => {
           </p>
         </motion.div>
       </div>
+
+      {/* Question Paper Display Modal */}
+      {displayedPaper && (
+        <QuestionPaperDisplay
+          resource={displayedPaper}
+          onClose={handleCloseDisplay}
+          onDownload={(resource, withSolutions) => {
+            // Since we're only dealing with StudyResource in this context
+            if ('downloadUrl' in resource) {
+              downloadResource(resource as StudyResource, withSolutions);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

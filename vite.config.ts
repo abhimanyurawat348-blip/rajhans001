@@ -18,17 +18,17 @@ export default defineConfig({
         theme_color: '#2563eb',
         background_color: '#ffffff',
         display: 'standalone',
-        // Fixed: Removed invalid 'icon' property and referenced actual icon files
+        // Using the final RHPS app icon in SVG format
         icons: [
           {
-            src: 'public/app-icon-192.png',
+            src: 'public/app-icon-final.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: 'public/app-icon-512.png',
+            src: 'public/app-icon-final.svg',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/svg+xml'
           }
         ]
       }
