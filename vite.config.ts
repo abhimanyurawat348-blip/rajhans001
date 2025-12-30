@@ -38,6 +38,20 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   server: {
+    host: '0.0.0.0',
+    port: 5173,
+    cors: {
+      origin: ['https://github.dev', 'https://*.github.dev', 'https://*.app.github.dev', '*'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      allowedHeaders: ['X-Requested-With', 'content-type', 'Authorization', 'Cache-Control'],
+      credentials: true
+    },
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization, Cache-Control',
+      'Access-Control-Allow-Credentials': 'true'
+    },
     // Vite handles history API fallback automatically for SPA routing
   },
   preview: {
