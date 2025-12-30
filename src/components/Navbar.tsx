@@ -2,15 +2,17 @@ import React, { useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { School, LogOut, Menu, X, Moon, Sun } from 'lucide-react';
+import { School, LogOut, Menu, X, Moon, Sun, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
 import RHPSLogo from './RHPSLogo';
+import ThemeSelector from './ThemeSelector';
 
 const Navbar: React.FC = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [themeSelectorOpen, setThemeSelectorOpen] = React.useState(false);
 
   // Memoize navigation items to prevent unnecessary re-renders
   const navItems = useMemo(() => [
@@ -70,6 +72,13 @@ const Navbar: React.FC = () => {
 
           {/* Desktop User Actions */}
           <div className="hidden md:flex items-center space-x-3">
+            <button
+              onClick={() => setThemeSelectorOpen(true)}
+              className="p-2 rounded-full text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Choose theme"
+            >
+              <Palette className="h-5 w-5" />
+            </button>
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-full text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -133,6 +142,15 @@ const Navbar: React.FC = () => {
               <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex items-center px-3">
                   <button
+                    onClick={() => setThemeSelectorOpen(true)}
+                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 w-full text-left"
+                  >
+                    <Palette className="h-5 w-5 mr-2" />
+                    Choose Theme
+                  </button>
+                </div>
+                <div className="flex items-center px-3">
+                  <button
                     onClick={toggleDarkMode}
                     className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 w-full text-left"
                   >
@@ -175,6 +193,12 @@ const Navbar: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Theme Selector */}
+      <ThemeSelector
+        isOpen={themeSelectorOpen}
+        onClose={() => setThemeSelectorOpen(false)}
+      />
     </nav>
   );
 };

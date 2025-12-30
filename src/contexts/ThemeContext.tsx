@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
+export type ThemeVariant = 'default' | 'emerald' | 'purple' | 'rose' | 'amber' | 'indigo' | 'teal';
+
 interface ThemeContextType {
   darkMode: boolean;
+  theme: ThemeVariant;
   toggleDarkMode: () => void;
   setDarkMode: (enabled: boolean) => void;
+  setTheme: (theme: ThemeVariant) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -18,30 +22,48 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // Check localStorage first, then system preference
-    const savedTheme = localStorage.getItem('theme');
+    const savedTheme = localStorage.getItem('darkMode');
     if (savedTheme !== null) {
-      return savedTheme === 'dark';
+      return savedTheme === 'true';
     }
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  const [theme, setThemeState] = useState<ThemeVariant>(() => {
+    const savedTheme = localStorage.getItem('theme') as ThemeVariant;
+    return savedTheme || 'default';
+  });
+
   // Apply theme to document element
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+    const root = document.documentElement;
+
+    // Remove all theme classes
+    root.classList.remove('theme-default', 'theme-emerald', 'theme-purple', 'theme-rose', 'theme-amber', 'theme-indigo', 'theme-teal');
+
+    // Add current theme class
+    if (theme !== 'default') {
+      root.classList.add(`theme-${theme}`);
     }
-  }, [darkMode]);
+
+    // Handle dark mode
+    if (darkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
+
+    // Save theme
+    localStorage.setItem('theme', theme);
+  }, [darkMode, theme]);
 
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
-      if (localStorage.getItem('theme') === null) {
+      if (localStorage.getItem('darkMode') === null) {
         setDarkMode(e.matches);
       }
     };
@@ -54,10 +76,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setDarkMode(prev => !prev);
   }, []);
 
+  const setTheme = useCallback((newTheme: ThemeVariant) => {
+    setThemeState(newTheme);
+  }, []);
+
   const value = {
     darkMode,
+    theme,
     toggleDarkMode,
-    setDarkMode
+    setDarkMode,
+    setTheme
   };
 
   return (

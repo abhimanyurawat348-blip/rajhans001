@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Sun, Moon, Bell, BookOpen } from 'lucide-react';
+import { X, Sun, Moon, Bell, BookOpen, Palette } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import ThemeSelector from './ThemeSelector';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -8,9 +9,10 @@ interface SettingsDialogProps {
 }
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
-  const { darkMode, toggleDarkMode } = useTheme();
+  const { darkMode, toggleDarkMode, theme } = useTheme();
   const [classNotifications, setClassNotifications] = useState(true);
   const [homeworkNotifications, setHomeworkNotifications] = useState(true);
+  const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -56,6 +58,30 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
                           darkMode ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme Selection */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Theme</h4>
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Palette className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                      <div>
+                        <span className="font-medium text-gray-900 dark:text-white">Color Theme</span>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                          {theme === 'default' ? 'Blue (Default)' : theme}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setThemeSelectorOpen(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Change
                     </button>
                   </div>
                 </div>
@@ -122,6 +148,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Theme Selector */}
+      <ThemeSelector
+        isOpen={themeSelectorOpen}
+        onClose={() => setThemeSelectorOpen(false)}
+      />
     </div>
   );
 };

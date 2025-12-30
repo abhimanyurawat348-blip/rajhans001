@@ -29,6 +29,10 @@ import PersonalizedLearningPath from './components/PersonalizedLearningPath';
 import VirtualLabSimulation from './components/VirtualLabSimulation';
 import RHPSConnect from './components/RHPSConnect';
 import PremiumSubscription from './components/PremiumSubscription';
+import InvestorDashboard from './components/InvestorDashboard';
+import APIMarketplace from './components/APIMarketplace';
+import SecurityDashboard from './components/SecurityDashboard';
+import PredictiveAnalytics from './components/PredictiveAnalytics';
 
 // Lazy load pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -416,6 +420,12 @@ function App() {
                                       <Premium />
                                     </ProtectedRoute>
                                   } />
+                                  
+                                  {/* Investor-focused features */}
+                                  <Route path="/investor-dashboard" element={<InvestorDashboard />} />
+                                  <Route path="/api-marketplace" element={<APIMarketplace />} />
+                                  <Route path="/security-dashboard" element={<SecurityDashboard />} />
+                                  <Route path="/predictive-analytics" element={<PredictiveAnalytics />} />
                                 </Routes>
                               </Suspense>
                             </div>
