@@ -43,14 +43,17 @@ export default defineConfig({
     cors: {
       origin: ['https://github.dev', 'https://*.github.dev', 'https://*.app.github.dev', '*'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['X-Requested-With', 'content-type', 'Authorization', 'Cache-Control'],
+      allowedHeaders: ['X-Requested-With', 'content-type', 'Authorization', 'Cache-Control', 'X-Forwarded-Host', 'X-Forwarded-Proto'],
       credentials: true
     },
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization, Cache-Control',
-      'Access-Control-Allow-Credentials': 'true'
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization, Cache-Control, X-Forwarded-Host, X-Forwarded-Proto',
+      'Access-Control-Allow-Credentials': 'true',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-XSS-Protection': '1; mode=block'
     },
     // Vite handles history API fallback automatically for SPA routing
   },
