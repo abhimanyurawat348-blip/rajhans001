@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true
+        enabled: false // Disable PWA in development for GitHub.dev compatibility
       },
       manifest: {
         name: 'RHPS School Portal',
@@ -32,7 +32,43 @@ export default defineConfig({
           }
         ]
       }
-    })
+    }),
+    // Custom CORS middleware for GitHub.dev
+    {
+      name: 'cors-middleware',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          // Set CORS headers for all requests
+          const origin = req.headers.origin || req.headers.referer || '*';
+          res.setHeader('Access-Control-Allow-Origin', origin);
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
+          res.setHeader('Access-Control-Allow-Headers', 
+            'X-Requested-With, content-type, Authorization, Cache-Control, X-Forwarded-Host, X-Forwarded-Proto, X-GitHub-Dev-Tunnel, Accept, Accept-Encoding, Accept-Language, Connection, Host, Referer, Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, User-Agent'
+          );
+          res.setHeader('Access-Control-Allow-Credentials', 'true');
+          res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+          
+          // Handle preflight requests
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+          
+          next();
+        });
+        
+        // Handle manifest requests specifically
+        server.middlewares.use('/manifest.webmanifest', (req, res, next) => {
+          if (req.method === 'GET') {
+            res.setHeader('Content-Type', 'application/manifest+json');
+            res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+            // Let Vite handle the file serving
+          }
+          next();
+        });
+      }
+    }
   ],
   optimizeDeps: {
     exclude: ['lucide-react'],
@@ -40,21 +76,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    cors: {
-      origin: ['https://github.dev', 'https://*.github.dev', 'https://*.app.github.dev', '*'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['X-Requested-With', 'content-type', 'Authorization', 'Cache-Control', 'X-Forwarded-Host', 'X-Forwarded-Proto'],
-      credentials: true
-    },
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization, Cache-Control, X-Forwarded-Host, X-Forwarded-Proto',
-      'Access-Control-Allow-Credentials': 'true',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block'
-    },
+    // CORS is handled by custom middleware above
     // Vite handles history API fallback automatically for SPA routing
   },
   preview: {
