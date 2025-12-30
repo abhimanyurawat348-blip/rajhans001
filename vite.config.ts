@@ -38,21 +38,43 @@ export default defineConfig({
       name: 'cors-middleware',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          // Set CORS headers for all requests
-          const origin = req.headers.origin || req.headers.referer || '*';
-          res.setHeader('Access-Control-Allow-Origin', origin);
-          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
-          res.setHeader('Access-Control-Allow-Headers', 
-            'X-Requested-With, content-type, Authorization, Cache-Control, X-Forwarded-Host, X-Forwarded-Proto, X-GitHub-Dev-Tunnel, Accept, Accept-Encoding, Accept-Language, Connection, Host, Referer, Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, User-Agent'
-          );
-          res.setHeader('Access-Control-Allow-Credentials', 'true');
-          res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours
+          // Handle GitHub.dev tunneling specifically
+          const isGitHubDev = req.headers.referer?.includes('github.dev') || 
+                             req.headers.origin?.includes('github.dev') ||
+                             req.headers.host?.includes('github.dev') ||
+                             req.url?.includes('github.dev');
           
-          // Handle preflight requests
-          if (req.method === 'OPTIONS') {
-            res.statusCode = 200;
-            res.end();
-            return;
+          if (isGitHubDev) {
+            // For GitHub.dev requests, allow all origins and methods
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
+            res.setHeader('Access-Control-Allow-Headers', '*');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Max-Age', '86400');
+            
+            // Handle preflight requests
+            if (req.method === 'OPTIONS') {
+              res.statusCode = 200;
+              res.end();
+              return;
+            }
+          } else {
+            // Standard CORS for other requests
+            const origin = req.headers.origin || req.headers.referer || '*';
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD');
+            res.setHeader('Access-Control-Allow-Headers', 
+              'X-Requested-With, content-type, Authorization, Cache-Control, X-Forwarded-Host, X-Forwarded-Proto, Accept, Accept-Encoding, Accept-Language, Connection, Host, Referer, Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site, User-Agent'
+            );
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Max-Age', '86400');
+            
+            // Handle preflight requests
+            if (req.method === 'OPTIONS') {
+              res.statusCode = 200;
+              res.end();
+              return;
+            }
           }
           
           next();
@@ -62,7 +84,7 @@ export default defineConfig({
         server.middlewares.use('/manifest.webmanifest', (req, res, next) => {
           if (req.method === 'GET') {
             res.setHeader('Content-Type', 'application/manifest+json');
-            res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+            res.setHeader('Access-Control-Allow-Origin', '*');
             // Let Vite handle the file serving
           }
           next();
@@ -75,7 +97,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 5173, // Back to 5173 to match GitHub.dev configuration
     // CORS is handled by custom middleware above
     // Vite handles history API fallback automatically for SPA routing
   },
