@@ -2,119 +2,155 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Function to get user role
-    function getUserRole() {
-      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    function signedIn() {
+      return request.auth != null;
     }
-    
-    // Function to get teacher's assigned class and section
-    function getTeacherClassSection() {
-      return request.auth != null ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null;
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
     }
-    
-    // Function to check if user is a student
+
+    function role() {
+      return signedIn() && userDoc(request.auth.uid).exists()
+        ? userDoc(request.auth.uid).data.role
+        : null;
+    }
+
+    function isStaff() {
+      return role() in ['teacher', 'staff', 'admin'];
+    }
+
     function isStudent() {
-      return request.auth != null && getUserRole() == 'student';
+      return role() == 'student';
     }
-    
-    // Function to check if user is a teacher
-    function isTeacher() {
-      return request.auth != null && getUserRole() == 'teacher';
-    }
-    
-    // Function to check if user is a parent
+
     function isParent() {
-      return request.auth != null && getUserRole() == 'parent';
+      return role() == 'parent';
     }
-    
-    // Function to check if teacher can access specific class/section
-    function canAccessClassSection(class, section) {
-      let teacherData = getTeacherClassSection();
-      return teacherData != null && 
-             teacherData.class_assigned == class && 
-             teacherData.section_assigned == section;
+
+    function isOwnUser(userId) {
+      return signedIn() && request.auth.uid == userId;
     }
-    
-    // Function to get student's class and section
-    function getStudentClassSection(studentId) {
-      return get(/databases/$(database)/documents/users/$(studentId)).data;
+
+    function isParentOf(studentId) {
+      return isParent() && userDoc(request.auth.uid).data.studentId == studentId;
     }
-    
-    // Function to check if parent can access student data
-    function canAccessStudent(studentId) {
-      // Check if student exists
-      let studentDoc = get(/databases/$(database)/documents/users/$(studentId));
-      if (!studentDoc.exists) {
-        return false;
-      }
-      
-      // For parents, check if this student is their child
-      if (isParent()) {
-        let parentDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-        return parentDoc.data.studentId == studentId;
-      }
-      
-      // For students, check if it's their own data
-      if (isStudent()) {
-        return request.auth.uid == studentId;
-      }
-      
-      return false;
+
+    // User profiles contain authorization data and must never be publicly readable.
+    // Students/parents may create only their own low-privilege account. Staff/admin
+    // accounts must be provisioned by an administrator rather than self-registered.
+    match /users/{userId} {
+      allow read: if isOwnUser(userId) || isStaff();
+      allow create: if isOwnUser(userId)
+                    && request.resource.data.role in ['student', 'parent'];
+      allow update: if isOwnUser(userId)
+                    && request.resource.data.role == resource.data.role
+                    || isStaff();
+      allow delete: if isStaff();
     }
-    
-    // Students collection
+
+    // Student records.
     match /students/{studentId} {
-      // Students can read their own data, teachers can read student data
-      allow read: if isStudent() && request.auth.uid == studentId || 
-                   isTeacher() || 
-                   isParent() && canAccessStudent(studentId);
-      
-      // Only teachers can write student data
-      allow write: if isTeacher();
-      
-      // Marks subcollection
+      allow read: if isStaff() || isOwnUser(studentId) || isParentOf(studentId);
+      allow create: if isStaff();
+      allow update, delete: if isStaff();
+
       match /marks/{examType} {
-        // Students can read their own marks, parents can read their children's marks, teachers can read
-        allow read: if isStudent() && request.auth.uid == studentId || 
-                     isParent() && canAccessStudent(studentId) || 
-                     isTeacher();
-        
-        // Only teachers can write marks, and only for their assigned classes
-        allow write: if isTeacher() && 
-                      canAccessClassSection(
-                        getStudentClassSection(studentId).class, 
-                        getStudentClassSection(studentId).section
-                      );
+        allow read: if isStaff() || isOwnUser(studentId) || isParentOf(studentId);
+        allow write: if isStaff();
       }
     }
-    
-    // Parents collection
+
     match /parents/{parentId} {
-      // Parents can read their own data, teachers can read parent data
-      allow read: if isParent() && request.auth.uid == parentId || isTeacher();
-      
-      // Only parents can write their own data
-      allow write: if isParent() && request.auth.uid == parentId;
+      allow read: if isStaff() || isOwnUser(parentId);
+      allow create: if isOwnUser(parentId) && request.resource.data.role == 'parent';
+      allow update: if isOwnUser(parentId) || isStaff();
+      allow delete: if isStaff();
     }
-    
-    // Teachers collection
+
     match /teachers/{teacherId} {
-      // Teachers can read their own data
-      allow read: if isTeacher() && request.auth.uid == teacherId;
-      
-      // Only teachers can write their own data
-      allow write: if isTeacher() && request.auth.uid == teacherId;
+      allow read: if isStaff() || isOwnUser(teacherId);
+      allow create, update, delete: if isStaff() && (isOwnUser(teacherId) || role() == 'admin');
     }
-    
-    // Unregistered student marks (temporary storage)
+
+    // Staff-only operational data.
     match /unregistered_student_marks/{document} {
-      // Only teachers can read/write
-      allow read, write: if isTeacher();
+      allow read, write: if isStaff();
     }
-    
-    // Allow read access to all users for public data
+
+    match /complaints/{document} {
+      allow read, update, delete: if isStaff();
+      allow create: if signedIn();
+    }
+
+    match /registrations/{document} {
+      allow read, update, delete: if isStaff();
+      allow create: if signedIn();
+    }
+
+    // Academic content. Authenticated users may read; staff manage it.
+    match /study_resources/{document} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /question_paper_blueprints/{document} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /paper_download_logs/{document} {
+      allow create: if signedIn();
+      allow read, update, delete: if isStaff();
+    }
+
+    match /resource_verification_logs/{document} {
+      allow create: if signedIn();
+      allow read, update, delete: if isStaff();
+    }
+
+    // Personal/communication data.
+    match /messages/{document} {
+      allow read: if isStaff()
+                  || (signedIn() && (resource.data.receiverId == request.auth.uid || resource.data.senderId == request.auth.uid));
+      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isStaff() || (signedIn() && resource.data.receiverId == request.auth.uid);
+      allow delete: if isStaff() || (signedIn() && resource.data.senderId == request.auth.uid);
+    }
+
+    match /attendance/{document} {
+      allow read: if isStaff()
+                  || (isStudent() && resource.data.studentId == request.auth.uid)
+                  || (isParentOf(resource.data.studentId));
+      allow create, update: if isStaff();
+      allow delete: if isStaff();
+    }
+
+    match /homework/{document} {
+      allow read: if isStaff()
+                  || (isStudent() && resource.data.studentId == request.auth.uid)
+                  || isParentOf(resource.data.studentId);
+      allow create, update, delete: if isStaff();
+    }
+
+    match /notifications/{document} {
+      allow read: if isStaff() || (signedIn() && resource.data.receiverId == request.auth.uid);
+      allow create: if isStaff();
+      allow update: if isStaff() || (signedIn() && resource.data.receiverId == request.auth.uid);
+      allow delete: if isStaff();
+    }
+
+    match /ptm/{document} {
+      allow read: if isStaff()
+                  || (isParent() && isParentOf(resource.data.studentId))
+                  || (isStudent() && resource.data.studentId == request.auth.uid);
+      allow create, update, delete: if isStaff();
+    }
+
+    // Secure by default. Any collection not explicitly listed above is denied.
+    // This replaces the previous recursive public-read rule.
     match /{document=**} {
-      allow read: if true;
+      allow read, write: if false;
     }
   }
 }
