@@ -1,67 +1,59 @@
 # Environment Setup Guide
 
 ## Overview
-This guide explains how to set up the development environment for the school management system, including API keys and security configurations.
+This guide explains how to configure the school management system without committing credentials or provider secrets to the repository.
 
 ## Environment Variables
-The system uses environment variables to securely store API keys and configuration settings. These are stored in the `.env` file at the root of the project.
-
-### Required Environment Variables
+Copy `.env.example` to `.env` locally. Never commit `.env`.
 
 ```env
-# Dronacharya AI Configuration
-# Get your API key from https://aistudio.google.com/
-VITE_GEMINI_API_KEY=your_google_gemini_api_key_here
-
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=AIzaSyB4Lcm36gvIon6hM93f_O4vBFubDe7PB5U
-VITE_FIREBASE_AUTH_DOMAIN=rajhans001-fa156.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=rajhans001-fa156
-VITE_FIREBASE_STORAGE_BUCKET=rajhans001-fa156.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=372023550449
-VITE_FIREBASE_APP_ID=1:372023550449:web:4410d181e6315ed9976450
-VITE_FIREBASE_MEASUREMENT_ID=G-Y2YY37ET32
+# Firebase web configuration. These values are required at build time.
+VITE_FIREBASE_API_KEY=your_firebase_api_key_here
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain_here
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id_here
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket_here
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id_here
+VITE_FIREBASE_APP_ID=your_firebase_app_id_here
+VITE_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id_here
 ```
 
+Provider secrets such as Gemini/Cohere API keys must NOT be placed in `VITE_*` variables because Vite exposes those variables to browser code. AI provider credentials must live on a trusted server/backend and be accessed through an authenticated endpoint.
+
 ## Security Best Practices
-
-### API Key Protection
-- Never commit API keys to version control
-- Use environment variables for all sensitive data
-- Rotate API keys regularly
-- Restrict API key usage by domain/IP when possible
-
-### Firebase Security
-- Implement Firestore security rules to control data access
-- Use Firebase Authentication for user management
-- Enable email/password authentication only
-- Regularly audit security rules
+- Never commit credentials, API keys, passwords, tokens, or private student data.
+- Treat any credential previously committed to Git as compromised and rotate it.
+- Use Firebase Authentication for identity and Firestore rules for authorization.
+- Keep Firestore rules default-deny for collections that are not explicitly required.
+- Restrict Firebase web API keys by application/domain where supported.
+- Deploy and test the repository's `firestore.rules` before production use.
+- Add scoped Firebase Storage rules before enabling user uploads in production.
 
 ## Setup Process
 
 ### 1. Firebase Configuration
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Select your project: **rajhans001-fa156**
-3. Click on the gear icon (Settings) → Project Settings
-4. Copy the configuration values to your `.env` file
+1. Open the Firebase Console for the project.
+2. Copy the web-app configuration values into your local `.env` file.
+3. Enable the authentication methods required by the application.
+4. Create/provision staff accounts through Firebase Authentication; do not self-assign staff roles from the client.
+5. Deploy `firestore.rules` and verify access with the Firebase Rules simulator/emulator.
 
-### 2. Google AI Configuration
-1. Go to [Google AI Studio](https://aistudio.google.com/)
-2. Create a new API key
-3. Add the key to your `.env` file
+### 2. AI Configuration
+AI provider credentials must be configured only in the server-side environment of the backend endpoint that calls the provider. Do not expose those credentials through `VITE_*` variables.
 
 ### 3. Development Server
 1. Install dependencies: `npm install`
 2. Start development server: `npm run dev`
-3. Access the application at `http://localhost:5173`
+3. Access the application locally using the URL printed by Vite.
 
 ## Production Deployment
-- Ensure all environment variables are set in the production environment
-- Never expose `.env` files in public repositories
-- Use CI/CD pipelines to manage environment variables securely
-- Test all functionality after deployment
+- Set environment variables through the hosting provider's secret/environment configuration.
+- Never expose `.env` files in public repositories.
+- Deploy Firestore and Storage rules as part of the release process.
+- Enable appropriate authentication protections and monitoring.
+- Test authorization as an unprivileged user before launch.
 
 ## Troubleshooting
-- If API calls fail, verify your API keys are correct
-- If Firebase connections fail, check your configuration values
-- For authentication issues, ensure Firebase Auth is enabled
+- If Firebase initialization fails, verify all required `VITE_FIREBASE_*` variables exist locally.
+- If authentication fails, verify the account exists in Firebase Authentication and its profile has the intended role.
+- If a Firestore operation is denied, review the explicit collection rule and the user's role/ownership.
+- AI requests should be routed through the secure backend rather than directly from browser code.
