@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  sendSignInLinkToEmail, 
-  isSignInWithEmailLink, 
+import {
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
   signInWithEmailLink,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { User } from '../types';
 
@@ -27,9 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -40,239 +38,114 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Memoize isAuthenticated to prevent unnecessary re-renders
   const isAuthenticated = useMemo(() => !!user, [user]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setUser({
-              id: firebaseUser.uid,
-              ...userDoc.data()
-            } as User);
-          } else {
-            // Create a default user profile if one doesn't exist
-            const defaultUser: User = {
-              id: firebaseUser.uid,
-              fullName: 'Student User',
-              email: firebaseUser.email || '',
-              role: 'student',
-              admissionNumber: 'RHPS2025001',
-              class: '12',
-              section: 'A',
-              dateOfBirth: '2007-01-01',
-              fatherName: 'Father Name',
-              motherName: 'Mother Name'
-            };
-            await setDoc(doc(db, 'users', firebaseUser.uid), defaultUser);
-            setUser(defaultUser);
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      } else {
+    return onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (!firebaseUser) {
         setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const snapshot = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (!snapshot.exists()) {
+          await signOut(auth);
+          setUser(null);
+        } else {
+          setUser({ id: firebaseUser.uid, ...snapshot.data() } as User);
+        }
+      } catch (error) {
+        console.error('Error loading authenticated user:', error);
+        await signOut(auth);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     });
-
-    return unsubscribe;
   }, []);
-
-  const getClientIP = useCallback(async (): Promise<string> => {
-    try {
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      return data.ip;
-    } catch {
-      return 'Unknown';
-    }
-  }, []);
-
-  const logLoginRecord = useCallback(async (email: string, otpVerified: boolean) => {
-    try {
-      const ipAddress = await getClientIP();
-      const loginRecord = {
-        id: Date.now().toString(),
-        email,
-        ipAddress,
-        loginTime: new Date(),
-        otpVerified
-      };
-      
-      await setDoc(doc(db, 'loginRecords', loginRecord.id), loginRecord);
-    } catch (error) {
-      console.error('Error logging login record:', error);
-    }
-  }, [getClientIP]);
 
   const login = useCallback(async (email: string, role: 'student' | 'teacher'): Promise<boolean> => {
-    if (authLoading) return false;
-    
+    if (authLoading || role !== 'student') return false;
     setAuthLoading(true);
-    
-    // Validate email based on role
-    if (role === 'student' && !email.endsWith('@gmail.com')) {
+
+    if (!email.trim().endsWith('@gmail.com')) {
       setAuthLoading(false);
-      alert('Student emails must end with @gmail.com');
-      return false;
-    }
-    
-    if (role === 'teacher' && !email.endsWith('@rhpsschool.edu.in')) {
-      setAuthLoading(false);
-      alert('Teacher emails must end with @rhpsschool.edu.in');
       return false;
     }
 
     try {
-      if (role === 'student') {
-        const actionCodeSettings = {
-          url: window.location.origin + '/verify-email',
-          handleCodeInApp: true,
-        };
-        
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem('emailForSignIn', email);
-        
-        setPendingAuth({ email, role });
-        setOtpSent(true);
-        setAuthLoading(false);
-        alert('OTP sent to your email. Please check your inbox.');
-        return true;
-      }
-      
-      setAuthLoading(false);
-      return false;
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      setPendingAuth({ email, role });
+      await sendSignInLinkToEmail(auth, email.trim(), {
+        url: `${window.location.origin}/verify-email`,
+        handleCodeInApp: true
+      });
+      window.localStorage.setItem('emailForSignIn', email.trim());
+      setPendingAuth({ email: email.trim(), role });
       setOtpSent(true);
-      console.log('Mock OTP sent: 123456');
-      alert('OTP sent to your email. Please check your inbox.');
-      setAuthLoading(false);
       return true;
-    }
-  }, [authLoading]);
-
-  const verifyOTP = useCallback(async (otp: string): Promise<boolean> => {
-    if (authLoading || !pendingAuth) return false;
-    
-    setAuthLoading(true);
-    
-    try {
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        let email = window.localStorage.getItem('emailForSignIn');
-        if (!email) {
-          email = pendingAuth.email;
-        }
-        
-        const result = await signInWithEmailLink(auth, email, window.location.href);
-        window.localStorage.removeItem('emailForSignIn');
-        
-        const mockUser: User = {
-          id: result.user.uid,
-          fullName: 'Student User',
-          email: email,
-          role: 'student',
-          admissionNumber: 'RHPS2025001',
-          class: '12',
-          section: 'A',
-          dateOfBirth: '2007-01-01',
-          fatherName: 'Father Name',
-          motherName: 'Mother Name'
-        };
-        
-        await setDoc(doc(db, 'users', result.user.uid), mockUser);
-        
-        await logLoginRecord(email, true);
-        
-        setUser(mockUser);
-        setPendingAuth(null);
-        setOtpSent(false);
-        setAuthLoading(false);
-        alert('Login successful!');
-        return true;
-      }
-      
-      if (otp === '123456') {
-        const mockUser: User = {
-          id: '1',
-          fullName: pendingAuth.role === 'student' ? 'Student User' : 'Teacher User',
-          email: pendingAuth.email,
-          role: pendingAuth.role,
-          ...(pendingAuth.role === 'student' && {
-            admissionNumber: 'RHPS2025001',
-            class: '12',
-            section: 'A',
-            dateOfBirth: '2007-01-01',
-            fatherName: 'Father Name',
-            motherName: 'Mother Name'
-          })
-        };
-        
-        await logLoginRecord(pendingAuth.email, true);
-        
-        setUser(mockUser);
-        setPendingAuth(null);
-        setOtpSent(false);
-        setAuthLoading(false);
-        alert('Login successful!');
-        return true;
-      }
-      
-      setAuthLoading(false);
-      alert('Invalid OTP. Please try again.');
-      return false;
     } catch (error) {
-      console.error('Error verifying OTP:', error);
-      setAuthLoading(false);
-      alert('Error verifying OTP. Please try again.');
+      console.error('Error sending sign-in link:', error);
       return false;
-    }
-  }, [authLoading, pendingAuth, logLoginRecord]);
-
-  const logout = useCallback(async (): Promise<void> => {
-    if (authLoading) return;
-    
-    setAuthLoading(true);
-    
-    try {
-      await signOut(auth);
-      alert('You have been logged out successfully.');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      alert('Error signing out. Please try again.');
     } finally {
-      setUser(null);
-      setOtpSent(false);
-      setPendingAuth(null);
       setAuthLoading(false);
     }
   }, [authLoading]);
 
-  const updateUserName = useCallback(async (name: string): Promise<void> => {
-    if (!user || authLoading) return;
-    
+  const verifyOTP = useCallback(async (_otp: string): Promise<boolean> => {
+    if (authLoading || !pendingAuth) return false;
     setAuthLoading(true);
-    
+
     try {
-      await setDoc(doc(db, 'users', user.id), { ...user, fullName: name }, { merge: true });
-      
-      setUser({ ...user, fullName: name });
-      setAuthLoading(false);
-      alert('Name updated successfully!');
+      if (!isSignInWithEmailLink(auth, window.location.href)) return false;
+
+      const email = window.localStorage.getItem('emailForSignIn') || pendingAuth.email;
+      const result = await signInWithEmailLink(auth, email, window.location.href);
+      window.localStorage.removeItem('emailForSignIn');
+
+      const existing = await getDoc(doc(db, 'users', result.user.uid));
+      if (!existing.exists()) {
+        const profile: User = {
+          id: result.user.uid,
+          fullName: result.user.displayName || 'Student User',
+          email,
+          role: 'student'
+        };
+        await setDoc(doc(db, 'users', result.user.uid), profile);
+        setUser(profile);
+      } else {
+        setUser({ id: result.user.uid, ...existing.data() } as User);
+      }
+
+      setPendingAuth(null);
+      setOtpSent(false);
+      return true;
     } catch (error) {
-      console.error('Error updating user name:', error);
+      console.error('Error verifying email sign-in:', error);
+      return false;
+    } finally {
       setAuthLoading(false);
-      alert('Error updating name. Please try again.');
-      throw error;
+    }
+  }, [authLoading, pendingAuth]);
+
+  const logout = useCallback(async () => {
+    await signOut(auth);
+    setUser(null);
+    setOtpSent(false);
+    setPendingAuth(null);
+  }, []);
+
+  const updateUserName = useCallback(async (name: string) => {
+    if (!user || authLoading) return;
+    setAuthLoading(true);
+    try {
+      await setDoc(doc(db, 'users', user.id), { fullName: name }, { merge: true });
+      setUser({ ...user, fullName: name });
+    } finally {
+      setAuthLoading(false);
     }
   }, [user, authLoading]);
 
-  // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     user,
     login,
@@ -285,20 +158,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading
   }), [user, login, verifyOTP, logout, isAuthenticated, otpSent, pendingAuth, updateUserName, loading]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
