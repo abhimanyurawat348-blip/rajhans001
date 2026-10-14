@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Storage is default-deny until each upload path has a narrowly scoped rule.
+    // Do not add public read/write access for student or parent files.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
