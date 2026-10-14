@@ -33,35 +33,29 @@ A comprehensive school management system for RHPS Public School with portals for
 - Real-time notifications for all activities
 
 ### Security & Best Practices
-- Firebase Authentication for secure login
-- Firestore security rules for data protection
-- Environment variables for API key management
-- Real-time data synchronization across all portals
-- Input validation to prevent unauthorized access
+- Firebase Authentication for login
+- Firestore security rules with default-deny access
+- No staff passwords or provider API keys committed to source code
+- Environment variables for public Firebase configuration
+- Server-side AI credentials only
+- Role-based authorization enforced by Firestore rules
 
 ## Mobile App (PWA)
-The platform now supports Progressive Web App (PWA) functionality, allowing users to:
-- Install the platform on mobile devices like a native app
-- Access all features offline
-- Receive push notifications
-- Experience app-like performance
-
-To install as an app:
-1. Open the website in a modern browser (Chrome, Safari, Edge)
-2. Look for the install prompt or "Add to Home Screen" option
-3. Click to install and use like any mobile app
+The platform supports Progressive Web App (PWA) functionality.
 
 ## Technical Stack
 - **Frontend**: React, TypeScript, Tailwind CSS, Framer Motion
 - **Backend**: Firebase (Authentication, Firestore, Storage)
-- **AI**: Google Gemini for chatbot functionality
+- **AI**: AI integration should use an authenticated server-side endpoint; provider secrets must not be shipped to the browser
 - **Deployment**: Vite build system
 
 ## Setup Instructions
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Configure environment variables (see ENVIRONMENT_SETUP.md)
-4. Start development server: `npm run dev`
+4. Provision staff accounts through Firebase Authentication; do not put credentials in the repository
+5. Deploy the Firestore rules in `firestore.rules`
+6. Start development server: `npm run dev`
 
 ## Documentation
 - [Parent Portal Guide](PARENT_PORTAL.md)
@@ -77,9 +71,7 @@ To install as an app:
 - **Staff Portal**: `/staff-portal`
 
 ## Authentication
-- **Staff Login**: rajhans_001@gmail.com / abhimanyu0304
-- **Student Login**: Create account via student signup
-- **Parent Login**: Register with student validation
+Staff authentication is handled by Firebase Authentication plus a role stored in the authenticated user's profile. Credentials must never be documented in the repository.
 
 ## Contributing
-This is a private school management system. Please contact the administration for contribution guidelines.
+This is a school management system. Keep student, parent, staff, and AI data protected and never commit credentials or private data.
