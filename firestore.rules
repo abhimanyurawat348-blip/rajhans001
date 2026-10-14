@@ -32,24 +32,26 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == userId;
     }
 
-    function isParentOf(studentId) {
-      return isParent() && userDoc(request.auth.uid).data.studentId == studentId;
+    function parentStudentId() {
+      return userDoc(request.auth.uid).data.studentUid;
     }
 
-    // User profiles contain authorization data and must never be publicly readable.
-    // Students/parents may create only their own low-privilege account. Staff/admin
-    // accounts must be provisioned by an administrator rather than self-registered.
+    function isParentOf(studentId) {
+      return isParent() && parentStudentId() == studentId;
+    }
+
+    // Authorization data is private. Low-privilege student accounts may be created
+    // by the client. Parent/staff/admin roles must be provisioned by staff.
     match /users/{userId} {
       allow read: if isOwnUser(userId) || isStaff();
       allow create: if isOwnUser(userId)
-                    && request.resource.data.role in ['student', 'parent'];
-      allow update: if isOwnUser(userId)
-                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.role == 'student';
+      allow update: if (isOwnUser(userId)
+                        && request.resource.data.role == resource.data.role)
                     || isStaff();
       allow delete: if isStaff();
     }
 
-    // Student records.
     match /students/{studentId} {
       allow read: if isStaff() || isOwnUser(studentId) || isParentOf(studentId);
       allow create: if isStaff();
@@ -63,8 +65,12 @@ service cloud.firestore {
 
     match /parents/{parentId} {
       allow read: if isStaff() || isOwnUser(parentId);
-      allow create: if isOwnUser(parentId) && request.resource.data.role == 'parent';
-      allow update: if isOwnUser(parentId) || isStaff();
+      // Parent profiles are provisioned by staff so a user cannot choose an
+      // arbitrary child UID and gain access to that student's records.
+      allow create: if isStaff();
+      allow update: if isStaff()
+                    || (isOwnUser(parentId)
+                        && request.resource.data.studentUid == resource.data.studentUid);
       allow delete: if isStaff();
     }
 
@@ -73,7 +79,6 @@ service cloud.firestore {
       allow create, update, delete: if isStaff() && (isOwnUser(teacherId) || role() == 'admin');
     }
 
-    // Staff-only operational data.
     match /unregistered_student_marks/{document} {
       allow read, write: if isStaff();
     }
@@ -88,7 +93,6 @@ service cloud.firestore {
       allow create: if signedIn();
     }
 
-    // Academic content. Authenticated users may read; staff manage it.
     match /study_resources/{document} {
       allow read: if signedIn();
       allow write: if isStaff();
@@ -109,7 +113,6 @@ service cloud.firestore {
       allow read, update, delete: if isStaff();
     }
 
-    // Personal/communication data.
     match /messages/{document} {
       allow read: if isStaff()
                   || (signedIn() && (resource.data.receiverId == request.auth.uid || resource.data.senderId == request.auth.uid));
@@ -121,9 +124,8 @@ service cloud.firestore {
     match /attendance/{document} {
       allow read: if isStaff()
                   || (isStudent() && resource.data.studentId == request.auth.uid)
-                  || (isParentOf(resource.data.studentId));
-      allow create, update: if isStaff();
-      allow delete: if isStaff();
+                  || isParentOf(resource.data.studentId);
+      allow create, update, delete: if isStaff();
     }
 
     match /homework/{document} {
@@ -147,8 +149,7 @@ service cloud.firestore {
       allow create, update, delete: if isStaff();
     }
 
-    // Secure by default. Any collection not explicitly listed above is denied.
-    // This replaces the previous recursive public-read rule.
+    // Secure by default: collections not explicitly listed above are denied.
     match /{document=**} {
       allow read, write: if false;
     }
